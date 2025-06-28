@@ -23,6 +23,8 @@ import jakarta.servlet.http.HttpServletRequest; // Usar jakarta.servlet
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 /*
  * Componente de Spring que escucha eventos de autenticacion para fines de auditoria.
  *
@@ -61,11 +63,16 @@ public class AuditLoginEventListener {
         // Obtiene la direccion IP del cliente que realizo la solicitud.
         String ipAddress = getClientIpAddress();
 
-        if (usuario != null) { // Asegurarse de que el usuario exista antes de registrar el acceso
-            // Crea y guarda un nuevo registro de AccesoUsuario.
-            AccesoUsuario acceso = new AccesoUsuario(usuario, LocalDateTime.now(), "LOGIN_EXITOSO", ipAddress);
-            accesoUsuarioRepository.save(acceso);
-        }
+        if (usuario != null) {
+        // Usa el patrón Builder para crear la instancia de AccesoUsuario
+        AccesoUsuario acceso = AccesoUsuario.builder()
+            .usuario(usuario)
+            .fechaHoraAcceso(LocalDateTime.now())
+            .tipoAcceso("LOGIN_EXITOSO")
+            .ipAddress(ipAddress)
+            .build(); // No necesitas pasar el ID aquí, la DB lo generará.
+        accesoUsuarioRepository.save(acceso);
+    }
     }
 
     /**
@@ -94,7 +101,12 @@ public class AuditLoginEventListener {
         // Crea y guarda un nuevo registro de AccesoUsuario para el intento fallido.
         // Si 'usuario' es nulo, el registro de acceso quedara sin un usuario especifico,
         // lo cual es util para auditar intentos contra cuentas inexistentes.
-        AccesoUsuario acceso = new AccesoUsuario(usuario, LocalDateTime.now(), "LOGIN_FALLIDO", ipAddress);
+        AccesoUsuario acceso = AccesoUsuario.builder()
+        .usuario(usuario)
+        .fechaHoraAcceso(LocalDateTime.now())
+        .tipoAcceso("LOGIN_FALLIDO")
+        .ipAddress(ipAddress)
+        .build();
         accesoUsuarioRepository.save(acceso);
     }
 

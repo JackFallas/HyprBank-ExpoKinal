@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-/
+/* 
  * DTO (Data Transfer Object) para respuestas genericas.
  *
  * Utilizado para comunicar el resultado de una operacion (exito/error)

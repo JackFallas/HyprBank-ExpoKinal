@@ -103,7 +103,7 @@ public class TransaccionService {
      * o si el monto del deposito no es positivo.
      */
     @Transactional
-    public Movimiento realizarDeposito(MovimientoRequestDTO request, Long usuarioId) {
+    public Movimiento realizarDeposito(MovimientoRequest request, Long usuarioId) {
         logger.info("Iniciando deposito para usuario ID: {} en cuenta: {} con monto: {}", usuarioId, request.getNumeroCuenta(), request.getMonto());
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -143,7 +143,7 @@ public class TransaccionService {
      * si el monto no es positivo, o si hay fondos insuficientes en la cuenta.
      */
     @Transactional
-    public Movimiento realizarRetiro(MovimientoRequestDTO request, Long usuarioId) {
+    public Movimiento realizarRetiro(MovimientoRequest request, Long usuarioId) {
         logger.info("Iniciando retiro para usuario ID: {} de cuenta: {} con monto: {}", usuarioId, request.getNumeroCuenta(), request.getMonto());
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -189,8 +189,10 @@ public class TransaccionService {
      * si las cuentas de origen y destino son las mismas, el monto no es positivo,
      * o si hay fondos insuficientes en la cuenta de origen.
      */
+
+     /*NO ESTOY SEGURO SI VA ASI */
     @Transactional
-    public List<Movimiento> realizarTransferencia(TransferenciaDTO request, Long usuarioId) {
+    public List<Movimiento> realizarTransferencia(TransferenciaRequest request, Long usuarioId) {
         logger.info("Iniciando transferencia interna para usuario ID: {} de cuenta: {} a cuenta: {} con monto: {}",
                 usuarioId, request.getNumeroCuentaOrigen(), request.getNumeroCuentaDestino(), request.getMonto());
 
@@ -265,7 +267,7 @@ public class TransaccionService {
      * si el monto no es positivo, o si hay fondos insuficientes en la cuenta de origen.
      */
     @Transactional
-    public TransferenciaExternaResponseDTO procesarTransferenciaExterna(TransferenciaExternaRequestDTO request, Long usuarioOrigenId) {
+    public TransferenciaExternaResponse procesarTransferenciaExterna(TransferenciaExternaRequest request, Long usuarioOrigenId) {
         logger.info("Iniciando procesamiento de transferencia externa para usuario ID: {} desde cuenta: {} a cuenta: {} con monto: {}",
                 usuarioOrigenId, request.getCuentaOrigen(), request.getCuentaDestino(), request.getMonto());
 
@@ -340,7 +342,7 @@ public class TransaccionService {
         ingreso = movimientoRepository.save(ingreso);
         logger.debug("Movimiento de ingreso registrado: {}", ingreso.getId());
 
-        TransferenciaExternaResponseDTO responseDTO = new TransferenciaExternaResponseDTO();
+        TransferenciaExternaResponse responseDTO = new TransferenciaExternaResponse();
         responseDTO.setMensaje("Transferencia externa realizada con exito.");
         responseDTO.setNuevoSaldoCuentaOrigen(cuentaOrigen.getSaldo());
 

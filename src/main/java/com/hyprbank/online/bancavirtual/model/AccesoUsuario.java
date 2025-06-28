@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor; // Este constructor no es el que usaría JPA, pero es útil para tests/creacion manual
-
+import lombok.Builder;
 /*
  * Entidad JPA que representa un registro de acceso de usuario en la base de datos.
  *
@@ -24,7 +24,7 @@ import lombok.AllArgsConstructor; // Este constructor no es el que usaría JPA, 
 @Data // Anotacion lombok que genera automaticamente lo anterior mencionado
 @NoArgsConstructor // Anotacion lombok que genera constructor sin argumentos (OBLIGATORIO PARA JPA)
 @AllArgsConstructor // Anotacion lombok que genera un constructor con todos los argumentos (Util para conveniencia, no para JPA directamente)
-
+@Builder
 public class AccesoUsuario {
 
     @Id // Marca este campo como la clave primaria de la tabla

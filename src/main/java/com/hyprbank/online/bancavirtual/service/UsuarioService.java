@@ -3,6 +3,7 @@ package com.hyprbank.online.bancavirtual.service;
 import com.hyprbank.online.bancavirtual.dto.RegistroRequest;
 import com.hyprbank.online.bancavirtual.model.Usuario;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public interface UsuarioService extends UserDetailsService {
      * @param registroDTO El DTO que contiene los datos del usuario a registrar.
      * @return La entidad {@link Usuario} guardada con sus datos completos (incluyendo ID generado).
      */
-    Usuario guardar(UsuarioRegistroDTO registroDTO);
+    Usuario guardar(RegistroRequest registroDTO);
 
     /**
      * Lista todos los usuarios registrados en el sistema.

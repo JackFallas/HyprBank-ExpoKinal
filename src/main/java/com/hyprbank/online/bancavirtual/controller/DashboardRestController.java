@@ -89,11 +89,11 @@ public class DashboardRestController {
         }
 
         // Crear el DTO con la informacion resumida del dashboard.
-        DashboardUserDTO userDTO = new DashboardUserDTO(
-            usuario.getNombre() + " " + usuario.getApellido(),
-            usuario.getEmail(),
-            saldoTotal
-        );
+        DashboardUserDTO userDTO = DashboardUserDTO.builder()
+    .nombreCompleto(usuario.getNombre() + " " + usuario.getApellido())
+    .email(usuario.getEmail())
+    .saldoTotal(saldoTotal) // Asignamos el saldoTotal directamente.
+    .build();
 
         // Devolver una respuesta exitosa con el DTO.
         return ResponseEntity.ok(userDTO);
