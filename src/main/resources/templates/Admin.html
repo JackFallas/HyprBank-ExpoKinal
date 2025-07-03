@@ -58,36 +58,29 @@
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
               >Transacciones</a
             >
+            <!-- NUEVO: Enlace para Depósito -->
+            <a
+              href="#"
+              data-id="deposito"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                Depósito
+            </a>
             <a
               href="#"
               data-id="reportes"
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
               >Reportes</a
             >
-            <a
-              href="#"
-              data-id="gestionCuentas"
-              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Gestión de cuentas</a
-            >
-            <a
-              href="#"
-              data-id="citas"
-              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Citas</a
-            >
-            <a
-              href="#"
-              data-id="cuentas"
-              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Cuentas</a
-            >
-            <a
-              href="#"
-              data-id="configuracion"
-              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Configuración</a
-            >
+            <!-- ELIMINADO: Gestión de cuentas -->
+            <!-- <a href="#" data-id="gestionCuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Gestión de cuentas</a> -->
+            <!-- ELIMINADO: Citas -->
+            <!-- <a href="#" data-id="citas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Citas</a> -->
+            <!-- ELIMINADO: Cuentas (ya no es una sección separada, se gestiona en Depósito o Clientes) -->
+            <!-- <a href="#" data-id="cuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Cuentas</a> -->
+            <!-- ELIMINADO: Configuración -->
+            <!-- <a href="#" data-id="configuracion" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Configuración</a> -->
 
             <div class="mt-auto">
                 <a href="/logout" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
@@ -207,48 +200,33 @@
         // transacciones y cuentas se mantienen ficticias si no las pasas desde el backend
         transacciones: [
           {
-            fecha: "2025-06-10",
-            descripcion: "Depósito efectivo",
-            tipo: "Depósito",
-            monto: 1500,
+            date: "2025-06-10", // CAMBIO: 'date' en lugar de 'fecha'
+            description: "Depósito efectivo", // CAMBIO: 'description'
+            type: "INCOME", // CAMBIO: 'type' (enum)
+            amount: 1500,
+            accountNumber: "1000000001" // Añadido para simulación
           },
           {
-            fecha: "2025-06-12",
-            descripcion: "Retiro cajero",
-            tipo: "Retiro",
-            monto: 500,
+            date: "2025-06-12",
+            description: "Retiro cajero",
+            type: "EXPENSE",
+            amount: 500,
+            accountNumber: "1000000002"
           },
           {
-            fecha: "2025-06-14",
-            descripcion: "Transferencia a C002",
-            tipo: "Transferencia",
-            monto: 700,
+            date: "2025-06-14",
+            description: "Transferencia a C002",
+            type: "EXPENSE",
+            amount: 700,
+            accountNumber: "1000000001"
           },
         ],
-        cuentas: [
-          {
-            id: "A001",
-            titular: "Juan Pérez",
-            tipo: "Ahorro",
-            saldo: 12000,
-            estado: "Activo",
-          },
-          {
-            id: "A002",
-            titular: "Ana Gómez",
-            tipo: "Corriente",
-            saldo: 5000,
-            estado: "Bloqueada",
-          },
-          {
-            id: "A003",
-            titular: "Luis Martínez",
-            tipo: "Ahorro",
-            saldo: 0,
-            estado: "Inactiva",
-          },
-        ],
+        // Las cuentas se cargarán desde el backend para el depósito
+        // cuentas: [ ... ]
       };
+
+      // Variable para almacenar todas las cuentas del sistema (para el admin)
+      let allSystemAccounts = [];
 
       // Función para formatear números a moneda
       function formatoMoneda(num) {
@@ -291,363 +269,221 @@
       // Contenido dinámico para cada pestaña
       const secciones = {
         dashboard: `
-      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
-        <h1 class="text-4xl font-bold mb-8 text-emerald-400 text-center">Dashboard</h1>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-            <h2 class="text-xl font-semibold mb-2">Clientes Registrados</h2>
-            <p class="text-5xl font-mono text-emerald-400">${
-              datos.totalClientes
-            }</p>
-            <button
-              data-id="clientes"
-              class="mt-3 bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-            >Ver más</button>
+        <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+          <h1 class="text-4xl font-bold mb-8 text-emerald-400 text-center">Dashboard</h1>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Clientes Registrados</h2>
+              <p class="text-5xl font-mono text-emerald-400">${
+                datos.totalClientes
+              }</p>
+              <button
+                data-id="clientes"
+                class="mt-3 bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+              >Ver más</button>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Saldo Global del Banco</h2>
+              <p class="text-4xl font-mono text-emerald-400">${formatoMoneda(
+                datos.saldoGlobal
+              )}</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Cuentas Activas / Inactivas</h2>
+              <p class="text-3xl font-mono text-emerald-400">${
+                datos.cuentasActivas
+              } / ${datos.cuentasInactivas}</p>
+            </div>
           </div>
-          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-            <h2 class="text-xl font-semibold mb-2">Saldo Global del Banco</h2>
-            <p class="text-4xl font-mono text-emerald-400">${formatoMoneda(
-              datos.saldoGlobal
-            )}</p>
-          </div>
-          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-            <h2 class="text-xl font-semibold mb-2">Cuentas Activas / Inactivas</h2>
-            <p class="text-3xl font-mono text-emerald-400">${
-              datos.cuentasActivas
-            } / ${datos.cuentasInactivas}</p>
-          </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h3 class="text-xl font-semibold mb-4 text-emerald-400">Nuevos Clientes por Semana</h3>
-            <canvas id="graficoClientes"></canvas>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Nuevos Clientes por Semana</h3>
+              <canvas id="graficoClientes"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Volumen de Transacciones por Mes (GTQ)</h3>
+              <canvas id="graficoTransacciones"></canvas>
+            </div>
           </div>
-          <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h3 class="text-xl font-semibold mb-4 text-emerald-400">Volumen de Transacciones por Mes (GTQ)</h3>
-            <canvas id="graficoTransacciones"></canvas>
-          </div>
-        </div>
 
-        <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-xl mx-auto text-center">
-          <h3 class="text-xl font-semibold mb-4 text-yellow-400">Indicadores de alerta</h3>
-          <p>Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong></p>
-          <p>Citas sin confirmar: <strong>${
-            datos.citasSinConfirmar
-          }</strong></p>
-        </div>
-      </section>
-    `,
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-xl mx-auto text-center">
+            <h3 class="text-xl font-semibold mb-4 text-yellow-400">Indicadores de alerta</h3>
+            <p>Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong></p>
+            <p>Citas sin confirmar: <strong>${
+              datos.citasSinConfirmar
+            }</strong></p>
+          </div>
+        </section>
+      `,
 
         clientes: `
-      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
-        <div class="flex justify-between items-center mb-6">
-          <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
-          <a
-            href="/register"
-            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-          >Agregar Cliente</a>
-        </div>
-        <input
-          type="text"
-          id="buscadorClientes"
-          placeholder="Buscar por nombre, email o ID..."
-          class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-          <thead class="bg-gray-700 text-gray-300">
-            <tr>
-              <th class="py-3 px-4 text-left">ID</th>
-              <th class="py-3 px-4 text-left">Nombre</th>
-              <th class="py-3 px-4 text-left">Apellido</th>
-              <th class="py-3 px-4 text-left">Email</th>
-              <th class="py-3 px-4 text-left">DPI</th>
-              <th class="py-3 px-4 text-left">NIT</th>
-              <th class="py-3 px-4 text-left">Teléfono</th>
-              <th class="py-3 px-4 text-left">Estado</th>
-              <th class="py-3 px-4 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaClientes" class="text-gray-100">
-            <!-- Aquí se cargan los clientes dinámicamente -->
-          </tbody>
-        </table>
-      </section>
-    `,
-
-        transacciones: `
-      <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transacciones</h1>
-
-        <div class="flex flex-wrap gap-4 mb-6">
-          <input
-            type="date"
-            id="filtroFechaInicio"
-            class="px-3 py-2 rounded-md bg-gray-700 text-white"
-            placeholder="Fecha inicio"
-          />
-          <input
-            type="date"
-            id="filtroFechaFin"
-            class="px-3 py-2 rounded-md bg-gray-700 text-white"
-            placeholder="Fecha fin"
-          />
-          <select
-            id="filtroTipo"
-            class="px-3 py-2 rounded-md bg-gray-700 text-white"
-          >
-            <option value="">Tipo de transacción</option>
-            <option value="Depósito">Depósito</option>
-            <option value="Retiro">Retiro</option>
-            <option value="Transferencia">Transferencia</option>
-          </select>
+        <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+          <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
+            <a
+              href="/register"
+              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+            >Agregar Cliente</a>
+          </div>
           <input
             type="text"
-            id="buscadorTransacciones"
-            placeholder="Buscar por ID o descripción"
-            class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px]"
+            id="buscadorClientes"
+            placeholder="Buscar por nombre, email o ID..."
+            class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <button
-            id="btnExportarTransacciones"
-            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-          >
-            Exportar PDF/Excel
-          </button>
-        </div>
+          <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+            <thead class="bg-gray-700 text-gray-300">
+              <tr>
+                <th class="py-3 px-4 text-left">ID</th>
+                <th class="py-3 px-4 text-left">Nombre</th>
+                <th class="py-3 px-4 text-left">Apellido</th>
+                <th class="py-3 px-4 text-left">Email</th>
+                <th class="py-3 px-4 text-left">DPI</th>
+                <th class="py-3 px-4 text-left">NIT</th>
+                <th class="py-3 px-4 text-left">Teléfono</th>
+                <th class="py-3 px-4 text-left">Estado</th>
+                <th class="py-3 px-4 text-left">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaClientes" class="text-gray-100">
+              <!-- Aquí se cargan los clientes dinámicamente -->
+            </tbody>
+          </table>
+        </section>
+      `,
 
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-          <thead class="bg-gray-700 text-gray-300">
-            <tr>
-              <th class="py-3 px-4 text-left cursor-pointer" data-orden="fecha">Fecha ↑↓</th>
-              <th class="py-3 px-4 text-left">Descripción</th>
-              <th class="py-3 px-4 text-left">Tipo</th>
-              <th class="py-3 px-4 text-left cursor-pointer" data-orden="monto">Monto ↑↓</th>
-            </tr>
-          </thead>
-          <tbody id="tablaTransacciones" class="text-gray-100">
-            <!-- Aquí se cargan las transacciones -->
-          </tbody>
-        </table>
-      </section>
-    `,
+        transacciones: `
+        <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
+          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transacciones</h1>
 
-        reportes: `
-      <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white flex flex-col items-center justify-center">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Reportes</h1>
-
-        <div class="w-full max-w-md mb-6">
-          <label class="block mb-2 font-semibold" for="rangoFechasReporte">Rango de fechas:</label>
-          <input type="date" id="rangoInicioReporte" class="w-full mb-2 px-3 py-2 rounded-md bg-gray-700 text-white" />
-          <input type="date" id="rangoFinReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white" />
-        </div>
-
-        <div class="w-full max-w-md mb-6">
-          <label class="block mb-2 font-semibold" for="tipoReporte">Tipo de reporte:</label>
-          <select id="tipoReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white">
-            <option value="mensual">Mensual</option>
-            <option value="anual">Anual</option>
-            <option value="porCliente">Por Cliente</option>
-            <option value="porCuenta">Por Cuenta</option>
-          </select>
-        </div>
-
-        <button
-          id="btnGenerarReporte"
-          class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
-        >
-          Generar Reporte
-        </button>
-
-        <div id="vistaPreviaReporte" class="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-3xl text-center text-gray-300 hidden">
-          Aquí aparecerá la vista previa del reporte generado.
-        </div>
-
-        <button
-          id="btnEnviarCorreoReporte"
-          class="mt-4 bg-blue-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition hidden"
-        >
-          Enviar por correo
-        </button>
-      </section>
-    `,
-
-        gestionCuentas: `
-      <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
-        <div class="flex justify-between items-center mb-6">
-          <h1 class="text-3xl font-bold text-emerald-400">Gestión de Cuentas</h1>
-          <button
-            id="btnAgregarCuenta"
-            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-          >Agregar Nueva Cuenta</button>
-        </div>
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg mb-6">
-          <thead class="bg-gray-700 text-gray-300">
-            <tr>
-              <th class="py-3 px-4 text-left">ID Cuenta</th>
-              <th class="py-3 px-4 text-left">Titular</th>
-              <th class="py-3 px-4 text-left">Tipo</th>
-              <th class="py-3 px-4 text-left">Saldo</th>
-              <th class="py-3 px-4 text-left">Estado</th>
-              <th class="py-3 px-4 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCuentasGestion" class="text-gray-100">
-            <!-- Aquí se cargan las cuentas -->
-          </tbody>
-        </table>
-      </section>
-    `,
-
-        citas: `
-      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Gestión de Citas</h1>
-        <button
-          id="btnNuevaCita"
-          class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition mb-6"
-        >Nueva Cita</button>
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-          <thead class="bg-gray-700 text-gray-300">
-            <tr>
-              <th class="py-3 px-4 text-left">Fecha</th>
-              <th class="py-3 px-4 text-left">Cliente</th>
-              <th class="py-3 px-4 text-left">Estado</th>
-              <th class="py-3 px-4 text-left">Empleado Asignado</th>
-              <th class="py-3 px-4 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCitas" class="text-gray-100">
-            <tr><td colspan="5" class="text-center py-6 text-gray-500">No hay citas programadas en este momento.</td></tr>
-          </tbody>
-        </table>
-      </section>
-    `,
-
-        cuentas: `
-      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Información de Cuentas</h1>
-        <input
-          type="text"
-          id="buscadorCuentas"
-          placeholder="Buscar por número o titular..."
-          class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
-        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-          <thead class="bg-gray-700 text-gray-300">
-            <tr>
-              <th class="py-3 px-4 text-left">Número de Cuenta</th>
-              <th class="py-3 px-4 text-left">Titular</th>
-              <th class="py-3 px-4 text-left">Tipo</th>
-              <th class="py-3 px-4 text-left">Saldo</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCuentas" class="text-gray-100">
-            <!-- Aquí se cargan las cuentas -->
-          </tbody>
-        </table>
-        <button
-          id="btnDescargarCuentas"
-          class="mt-6 bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
-        >
-          Descargar lista en Excel
-        </button>
-      </section>
-    `,
-
-        configuracion: `
-      <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Configuración</h1>
-
-        <form id="formConfiguracion" class="space-y-6">
-          <div>
-            <label for="nombreAdmin" class="block mb-2 font-semibold">Nombre administrador:</label>
+          <div class="flex flex-wrap gap-4 mb-6">
+            <input
+              type="date"
+              id="filtroFechaInicio"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+              placeholder="Fecha inicio"
+            />
+            <input
+              type="date"
+              id="filtroFechaFin"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+              placeholder="Fecha fin"
+            />
+            <select
+              id="filtroTipo"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+            >
+              <option value="">Tipo de transacción</option>
+              <option value="INCOME">Depósito</option>
+              <option value="EXPENSE">Retiro/Transferencia</option>
+            </select>
             <input
               type="text"
-              id="nombreAdmin"
-              name="nombreAdmin"
-              value="Admin KinalBank"
-              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+              id="buscadorTransacciones"
+              placeholder="Buscar por ID o descripción"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px]"
             />
+            <button
+              id="btnExportarTransacciones"
+              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+            >
+              Exportar PDF/Excel
+            </button>
           </div>
 
-          <div>
-            <label for="claveAdmin" class="block mb-2 font-semibold">Cambiar clave:</label>
-            <input
-              type="password"
-              id="claveAdmin"
-              name="claveAdmin"
-              placeholder="Nueva clave"
-              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
-            />
+          <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+            <thead class="bg-gray-700 text-gray-300">
+              <tr>
+                <th class="py-3 px-4 text-left cursor-pointer" data-orden="date">Fecha ↑↓</th>
+                <th class="py-3 px-4 text-left">Descripción</th>
+                <th class="py-3 px-4 text-left">Tipo</th>
+                <th class="py-3 px-4 text-left">Monto</th>
+                <th class="py-3 px-4 text-left">Cuenta</th> <!-- Nueva columna para cuenta -->
+              </tr>
+            </thead>
+            <tbody id="tablaTransacciones" class="text-gray-100">
+              <!-- Aquí se cargan las transacciones -->
+            </tbody>
+          </table>
+        </section>
+      `,
+        // NUEVA SECCIÓN: Depósito para Administradores
+        deposito: `
+            <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Realizar Depósito
+                    </h2>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Realiza un depósito a cualquier cuenta del sistema.</p>
+                    
+                    <form id="formDepositoAdmin" class="space-y-4">
+                        <div>
+                            <label for="cuentaDepositoAdmin" class="block font-semibold mb-1">Seleccionar Cuenta:</label>
+                            <select id="cuentaDepositoAdmin" name="cuentaDepositoAdmin" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Cargando cuentas...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="montoDepositoAdmin" class="block font-semibold mb-1">Monto a depositar (GTQ):</label>
+                            <input type="number" id="montoDepositoAdmin" name="montoDepositoAdmin" min="0.01" step="0.01" placeholder="Ej. 500.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="descripcionDepositoAdmin" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionDepositoAdmin" name="descripcionDepositoAdmin" placeholder="Ej. Depósito en ventanilla" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                            Confirmar Depósito
+                        </button>
+                        <p id="mensajeDepositoAdmin" class="mt-4 text-center"></p>
+                    </form>
+                </div>
+            </section>
+        `,
+        reportes: `
+        <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white flex flex-col items-center justify-center">
+          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Reportes</h1>
+
+          <div class="w-full max-w-md mb-6">
+            <label class="block mb-2 font-semibold" for="rangoFechasReporte">Rango de fechas:</label>
+            <input type="date" id="rangoInicioReporte" class="w-full mb-2 px-3 py-2 rounded-md bg-gray-700 text-white" />
+            <input type="date" id="rangoFinReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white" />
           </div>
 
-          <div>
-            <label for="tema" class="block mb-2 font-semibold">Tema:</label>
-            <select
-              id="tema"
-              name="tema"
-              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
-            >
-              <option value="oscuro" selected>Oscuro</option>
-              <option value="claro">Claro</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="idioma" class="block mb-2 font-semibold">Idioma:</label>
-            <select
-              id="idioma"
-              name="idioma"
-              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
-            >
-              <option value="es" selected>Español</option>
-              <option value="en">Inglés</option>
-              <option value="fr">Francés</option>
-            </select>
-          </div>
-
-          <div class="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="notificaciones"
-              name="notificaciones"
-              checked
-            />
-            <label for="notificaciones" class="font-semibold"
-              >Notificaciones activadas</label
-            >
-          </div>
-
-          <div>
-            <label for="permisos" class="block mb-2 font-semibold"
-              >Permisos de usuarios:</label
-            >
-            <select
-              id="permisos"
-              name="permisos"
-              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
-            >
-              <option value="admin" selected>Administrador</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="usuario">Usuario</option>
+          <div class="w-full max-w-md mb-6">
+            <label class="block mb-2 font-semibold" for="tipoReporte">Tipo de reporte:</label>
+            <select id="tipoReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white">
+              <option value="mensual">Mensual</option>
+              <option value="anual">Anual</option>
+              <option value="porCliente">Por Cliente</option>
+              <option value="porCuenta">Por Cuenta</option>
             </select>
           </div>
 
           <button
-            type="submit"
+            id="btnGenerarReporte"
             class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
           >
-            Guardar Cambios
+            Generar Reporte
           </button>
-        </form>
 
-        <button
-          id="btnCerrarSesion"
-          class="mt-6 bg-red-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-red-700 transition"
-        >
-          Cerrar Sesión
-        </button>
-      </section>
-    `,
+          <div id="vistaPreviaReporte" class="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-3xl text-center text-gray-300 hidden">
+            Aquí aparecerá la vista previa del reporte generado.
+          </div>
+
+          <button
+            id="btnEnviarCorreoReporte"
+            class="mt-4 bg-blue-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition hidden"
+          >
+            Enviar por correo
+          </button>
+        </section>
+      `,
+        // ELIMINADO: gestionCuentas
+        // ELIMINADO: citas
+        // ELIMINADO: cuentas
+        // ELIMINADO: configuracion
       };
 
       // Función para mostrar un modal de mensaje
@@ -731,6 +567,7 @@
                     document.getElementById("editarDPI").value = clienteAEditar.dpi || '';
                     document.getElementById("editarNIT").value = clienteAEditar.nit || '';
                     document.getElementById("editarTelefono").value = clienteAEditar.phoneNumber || '';
+                    // Asumiendo que 'enabled' se mapea a 'Activo'/'Inactivo' en el select
                     document.getElementById("editarEstado").value = clienteAEditar.enabled ? 'Activo' : 'Inactivo';
                     modalEditar.classList.remove("hidden");
                 }
@@ -770,7 +607,8 @@
               dpi: dpi,
               nit: nit,
               phoneNumber: phoneNumber,
-              estado: estado // Se envía el string de estado
+              // Convertir el string de estado a booleano para 'enabled'
+              enabled: estado === 'Activo' ? true : false // Ajuste para el campo 'enabled'
           };
 
           try {
@@ -834,88 +672,176 @@
 
 
     // Renderiza la tabla de transacciones
-      function renderTransacciones() {
+    async function renderTransacciones() {
         const tbody = document.getElementById("tablaTransacciones");
-        // Para simplicidad, no aplicamos filtros aún
-        let html = "";
-        if (datos.transacciones.length === 0) {
-          html = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay transacciones registradas.</td></tr>`;
-        } else {
-          datos.transacciones.forEach((t) => {
-            html += `
-              <tr>
-                <td class="py-3 px-4">${t.fecha}</td>
-                <td class="py-3 px-4">${t.descripcion}</td>
-                <td class="py-3 px-4">${t.tipo}</td>
-                <td class="py-3 px-4">${formatoMoneda(t.monto)}</td>
-              </tr>
-            `;
-          });
-        }
-        tbody.innerHTML = html;
-      }
+        const filtroFechaInicio = document.getElementById("filtroFechaInicio").value;
+        const filtroFechaFin = document.getElementById("filtroFechaFin").value;
+        const filtroTipo = document.getElementById("filtroTipo").value;
+        const buscadorTransacciones = document.getElementById("buscadorTransacciones").value.toLowerCase();
 
-      // Renderiza la tabla de gestión de cuentas
-      function renderGestionCuentas() {
-        const tbody = document.getElementById("tablaCuentasGestion");
-        let html = "";
-        if (datos.cuentas.length === 0) {
-          html = `<tr><td colspan="6" class="text-center py-6 text-gray-500">No hay cuentas registradas.</td></tr>`;
-        } else {
-          datos.cuentas.forEach((c) => {
-            html += `
-              <tr>
-                <td class="py-3 px-4">${c.id}</td>
-                <td class="py-3 px-4">${c.titular}</td>
-                <td class="py-3 px-4">${c.tipo}</td>
-                <td class="py-3 px-4">${formatoMoneda(c.saldo)}</td>
-                <td class="py-3 px-4">${c.estado}</td>
-                <td class="py-3 px-4 space-x-2">
-                  <button class="text-emerald-400 hover:underline btnEditarCuenta" data-id="${
-                    c.id
-                  }">Editar</button>
-                  <button class="text-red-500 hover:underline btnEliminarCuenta" data-id="${
-                    c.id
-                  }">Eliminar</button>
-                </td>
-              </tr>
-            `;
-          });
-        }
-        tbody.innerHTML = html;
-      }
+        let url = '/api/movements/history?';
+        const params = new URLSearchParams();
 
-      // Renderiza tabla cuentas solo vista general
-      function renderCuentas() {
-        const tbody = document.getElementById("tablaCuentas");
-        const filtro =
-          document.getElementById("buscadorCuentas")?.value.toLowerCase() || "";
-        let filtradas = datos.cuentas;
-        if (filtro) {
-          filtradas = datos.cuentas.filter(
-            (c) =>
-              c.id.toLowerCase().includes(filtro) ||
-              c.titular.toLowerCase().includes(filtro)
-          );
+        if (filtroFechaInicio) params.append('startDate', filtroFechaInicio);
+        if (filtroFechaFin) params.append('endDate', filtroFechaFin);
+        if (filtroTipo) params.append('type', filtroTipo); // Ya viene en MAYÚSCULAS (INCOME/EXPENSE)
+        // No hay un parámetro de búsqueda por descripción o ID en el backend actual para movimientos,
+        // así que el filtro del buscador se aplicará en el frontend si es necesario.
+
+        url += params.toString();
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener las transacciones.');
+            }
+            const transaccionesData = await response.json();
+
+            let html = "";
+            let filteredTransactions = transaccionesData;
+
+            // Filtrado por buscador en el frontend (si el backend no lo soporta)
+            if (buscadorTransacciones) {
+                filteredTransactions = transaccionesData.filter(t => 
+                    (t.description && t.description.toLowerCase().includes(buscadorTransacciones)) ||
+                    (t.accountNumber && t.accountNumber.includes(buscadorTransacciones))
+                );
+            }
+
+            if (filteredTransactions.length === 0) {
+                html = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No se encontraron transacciones.</td></tr>`;
+            } else {
+                filteredTransactions.forEach((t) => {
+                    const tipoDisplay = t.type === 'INCOME' ? 'Depósito' : 
+                                        (t.type === 'EXPENSE' ? 'Retiro/Transferencia' : t.type);
+                    html += `
+                        <tr class="border-b border-gray-700 last:border-b-0">
+                            <td class="py-3 px-4">${t.date}</td>
+                            <td class="py-3 px-4">${t.description}</td>
+                            <td class="py-3 px-4">${tipoDisplay}</td>
+                            <td class="py-3 px-4 ${t.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">${formatoMoneda(t.amount)}</td>
+                            <td class="py-3 px-4">${t.accountNumber || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+            }
+            tbody.innerHTML = html;
+        } catch (error) {
+            console.error('Error cargando transacciones:', error);
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-400">Error al cargar transacciones.</td></tr>`;
+        }
+    }
+
+
+    // Función para cargar todas las cuentas del sistema para el admin
+    async function cargarTodasLasCuentas() {
+        try {
+            const response = await fetch('/api/accounts/all'); // Endpoint para todas las cuentas
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener todas las cuentas.');
+            }
+            allSystemAccounts = await response.json(); // Almacena en la variable global
+            return allSystemAccounts;
+        } catch (error) {
+            console.error('Error al cargar todas las cuentas:', error);
+            allSystemAccounts = [];
+            return [];
+        }
+    }
+
+    // Función para rellenar un select con todas las cuentas del sistema
+    function populateAllAccountsSelect(selectId) {
+        const selectElement = document.getElementById(selectId);
+        if (!selectElement) return;
+
+        selectElement.innerHTML = ''; // Limpiar opciones previas
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Selecciona una cuenta';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        selectElement.appendChild(defaultOption);
+
+        if (allSystemAccounts.length === 0) {
+            const noAccountsOption = document.createElement('option');
+            noAccountsOption.value = '';
+            noAccountsOption.textContent = 'No hay cuentas disponibles';
+            noAccountsOption.disabled = true;
+            selectElement.appendChild(noAccountsOption);
+            return;
         }
 
-        let html = "";
-        if (filtradas.length === 0) {
-          html = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No se encontraron cuentas.</td></tr>`;
-        } else {
-          filtradas.forEach((c) => {
-            html += `
-              <tr>
-                <td class="py-3 px-4">${c.id}</td>
-                <td class="py-3 px-4">${c.titular}</td>
-                <td class="py-3 px-4">${c.tipo}</td>
-                <td class="py-3 px-4">${formatoMoneda(c.saldo)}</td>
-              </tr>
-            `;
-          });
-        }
-        tbody.innerHTML = html;
-      }
+        allSystemAccounts.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.accountNumber;
+            option.textContent = `${account.accountNumber} - ${account.userName} (${account.accountType}) - Saldo: ${formatoMoneda(account.balance)}`;
+            selectElement.appendChild(option);
+        });
+    }
+
+    // NUEVA FUNCIÓN: Inicializa la sección de Depósito para Administradores
+    async function inicializarDepositoAdmin() {
+        const form = document.getElementById('formDepositoAdmin');
+        const mensaje = document.getElementById('mensajeDepositoAdmin');
+        const cuentaSelect = document.getElementById('cuentaDepositoAdmin');
+
+        if (!form) return;
+
+        // Cargar y poblar las cuentas
+        await cargarTodasLasCuentas();
+        populateAllAccountsSelect('cuentaDepositoAdmin');
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const accountNumber = cuentaSelect.value;
+            const amount = parseFloat(form.montoDepositoAdmin.value);
+            const description = form.descripcionDepositoAdmin.value.trim();
+
+            if (!accountNumber || isNaN(amount) || amount <= 0) {
+                mostrarMensaje("Error", 'Por favor complete todos los campos correctamente.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/transactions/deposit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accountNumber: accountNumber,
+                        amount: amount,
+                        description: description,
+                        type: 'INCOME' // Siempre INCOME para depósitos
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje("Error", data.message || 'Error al realizar el depósito.', true);
+                    return;
+                }
+
+                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.movement.account.balance)}`);
+                form.reset(); // Limpiar el formulario
+                await cargarTodasLasCuentas(); // Recargar cuentas para actualizar saldos en el select
+                populateAllAccountsSelect('cuentaDepositoAdmin'); // Repopular select
+            } catch (error) {
+                console.error('Error al realizar el depósito:', error);
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
+            }
+        };
+    }
+
 
       // Función para cargar sección y activar enlaces
       function cambiarPestania(id) {
@@ -973,7 +899,13 @@
           }, 50);
         } else if (id === "transacciones") {
           setTimeout(() => {
-            renderTransacciones();
+            renderTransacciones(); // Ahora llama a la función actualizada
+
+            // Adjuntar listeners para filtros y buscador
+            document.getElementById("filtroFechaInicio").addEventListener("change", renderTransacciones);
+            document.getElementById("filtroFechaFin").addEventListener("change", renderTransacciones);
+            document.getElementById("filtroTipo").addEventListener("change", renderTransacciones);
+            document.getElementById("buscadorTransacciones").addEventListener("input", renderTransacciones);
 
             // Botón exportar
             document
@@ -982,8 +914,11 @@
                 mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel aún no implementada.");
               });
 
-            // Aquí podrían implementarse filtros y ordenamientos
           }, 50);
+        } else if (id === "deposito") { // NUEVO: Inicializa la sección de depósito
+            setTimeout(() => {
+                inicializarDepositoAdmin();
+            }, 50);
         } else if (id === "reportes") {
           setTimeout(() => {
             // Botones de reportes
@@ -1011,131 +946,17 @@
                 mostrarMensaje("Información", "Reporte enviado por correo (simulado).");
               });
           }, 50);
-        } else if (id === "gestionCuentas") {
-          setTimeout(() => {
-            renderGestionCuentas();
-
-            document
-              .getElementById("btnAgregarCuenta")
-              .addEventListener("click", () => {
-                mostrarMensaje("Información", "Funcionalidad para agregar nueva cuenta aún no implementada.");
-              });
-          }, 50);
-        } else if (id === "citas") {
-          setTimeout(() => {
-            document
-              .getElementById("btnNuevaCita")
-              .addEventListener("click", () => {
-                mostrarMensaje("Información", "Funcionalidad para crear nueva cita aún no implementada.");
-              });
-          }, 50);
-        } else if (id === "cuentas") {
-          setTimeout(() => {
-            renderCuentas();
-
-            const inputBuscarCuentas =
-              document.getElementById("buscadorCuentas");
-            if (inputBuscarCuentas) {
-              inputBuscarCuentas.addEventListener("input", renderCuentas);
-            }
-
-            document
-              .getElementById("btnDescargarCuentas")
-              .addEventListener("click", () => {
-                mostrarMensaje("Información", "Funcionalidad para descargar lista en Excel aún no implementada.");
-              });
-          }, 50);
-        } else if (id === "configuracion") {
-          setTimeout(() => {
-            // Cambio tema
-            document.getElementById("tema").addEventListener("change", (e) => {
-              if (e.target.value === "claro") {
-                document.documentElement.classList.remove("dark");
-              } else {
-                document.documentElement.classList.add("dark");
-              }
-            });
-
-            document
-              .getElementById("formConfiguracion")
-              .addEventListener("submit", (e) => {
-                e.preventDefault();
-                mostrarMensaje("Éxito", "Cambios guardados (simulado).");
-              });
-
-            document
-              .getElementById("btnCerrarSesion")
-              .addEventListener("click", () => {
-                mostrarMensaje("Información", "Sesión cerrada (simulado).");
-              });
-          }, 50);
         }
+        // ELIMINADAS: gestionCuentas, citas, cuentas, configuracion
       }
 
-      // Función para formatear moneda local GTQ
-      function formatoMoneda(valor) {
-        return new Intl.NumberFormat("es-GT", {
-          style: "currency",
-          currency: "GTQ",
-          minimumFractionDigits: 2,
-        }).format(valor);
-      }
+      // Función para formatear moneda local GTQ (ya existe, se mantiene)
+      // function formatoMoneda(valor) { ... }
 
-      // Función para crear gráfico con Chart.js
-      function crearGrafico(ctx, etiquetas, datosGrafico, etiqueta, color) {
-        if (!ctx) return;
-        // Destruir gráfico previo si existe
-        if (ctx.chart) {
-          ctx.chart.destroy();
-        }
-        ctx.chart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: etiquetas,
-            datasets: [
-              {
-                label: etiqueta,
-                data: datosGrafico,
-                borderColor: color,
-                backgroundColor: "rgba(34,197,94,0.3)",
-                fill: true,
-                tension: 0.3,
-                pointRadius: 4,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                labels: {
-                  color: "#d1d5db",
-                },
-              },
-            },
-            scales: {
-              x: {
-                ticks: {
-                  color: "#9ca3af",
-                },
-                grid: {
-                  color: "#374151",
-                },
-              },
-              y: {
-                ticks: {
-                  color: "#9ca3af",
-                },
-                grid: {
-                  color: "#374151",
-                },
-              },
-            },
-          },
-        });
-      }
+      // Función para crear gráfico con Chart.js (ya existe, se mantiene)
+      // function crearGrafico(ctx, etiquetas, datosGrafico, etiqueta, color) { ... }
 
-      // Evento click en links sidebar
+      // Evento click en links sidebar (ya existe, se mantiene)
       sidebarLinks.forEach((link) => {
         link.addEventListener("click", (e) => {
           e.preventDefault();
@@ -1200,6 +1021,13 @@ formEditar.addEventListener("submit", function (e) {
 btnConfirmarCancelar.addEventListener("click", () => {
     modalConfirmacion.classList.add("hidden");
 });
+
+      // Manejar el cierre de sesión
+      document.querySelector('a[data-id="cerrarSesion"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        // Redirige a la URL de logout de Spring Security
+        window.location.href = '/logout'; 
+      });
 
 
       // Mostrar dashboard por defecto
