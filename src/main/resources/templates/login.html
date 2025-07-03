@@ -2,84 +2,94 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="utf-8">
-	<title>Inicio de Sesion</title>
-	<!-- Latest compiled and minified CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-		integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <meta charset="utf-8">
+    <title>Inicio de Sesion</title>
+    <!-- Latest compiled and minified CSS -->
+    <!-- Apunta a tu archivo local de Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 
-	<!-- Optional theme -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-		integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <!-- Apunta a tu archivo local del tema de Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
+
+    <!-- ¡Hemos eliminado la referencia a SweetAlert2 ya que no la usaremos aquí! -->
 </head>
 
 <body>
 
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span
+                        class="icon-bar"></span> <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" th:href="@{/}">Registro y
+                    inicio de sesión</a>
+            </div>
+        </div>
+    </nav>
 
-	<nav class="navbar navbar-inverse navbar-fixed-top">
-		<div class="container">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-					aria-expanded="false" aria-controls="navbar">
-					<span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span
-						class="icon-bar"></span> <span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="#" th:href="@{/}">Registro y
-					inicio de sesión</a>
-			</div>
-		</div>
-	</nav>
+    <br>
+    <br>
 
-	<br>
-	<br>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
 
-	<div class="container">
-		<div class="row">
-			<div class="col-md-6 col-md-offset-3">
+                <h1>Inicia Sesión</h1>
+                <form th:action="@{/login}" method="post">
 
-				<h1>Inicia Sesión</h1>
-				<form th:action="@{/login}" method="post">
+                    <!-- Mensaje de error de login (se muestra si el parámetro 'error' está en la URL) -->
+                    <div th:if="${param.error}">
+                        <div class="alert alert-danger">Usuario o Contraseña inválidos</div>
+                    </div>
 
-					<div th:if="${param.error}">
-						<div class="alert alert-danger">Usuario o Contraseña inválidos </div>
-					</div>
+                    <!-- Mensaje de cierre de sesión (se muestra si el parámetro 'logout' está en la URL) -->
+                    <div th:if="${param.logout}">
+                        <div class="alert alert-info">Se ha cerrado la sesión</div>
+                    </div>
 
-
-					<div th:if="${param.logout}">
-						<div class="alert alert-info">Se ha cerrado la sesión </div>
-					</div>
-
-					<div class="form-group">
-						<label class="control-label" for="username">Username: </label> <input id="username" name="username" type="text"
-							class="form-control" required autofocus="autofocus" placeholder="Digite su email ID">
-					</div>
-
-					<div class="form-group">
-						<label class="control-label" for="password">Password: </label> <input id="password" type="password" name="password"
-							class="form-control" required autofocus="autofocus" placeholder="Digite su contraseña">
-					</div>
-
-					<div class="form-group">
-						<div class="row">
-							<div class="col-md-6 col-md-offset-3">
-								<input type="submit" class="form-control btn btn-primary" id="login-submit" value="Iniciar Sesión" />
-							</div>
-						</div>
-					</div>
-				</form>
-				<div class="form-group">
-					<span>¿Eres nuevo? <a th:href="@{/registro}">Registrate Aqui!</a></span>
-				</div>
-
-			</div>
-		</div>
-	</div>
+                    <!-- Si tuvieras un mensaje de "acceso denegado" (param.denegado), lo añadirías aquí: -->
+                    <!-- <div th:if="${param.denegado}">
+                        <div class="alert alert-warning">No tienes permisos para acceder a esta página.</div>
+                    </div> -->
 
 
-	<!-- Latest compiled and minified JavaScript -->
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-		crossorigin="anonymous"></script>
+                    <div class="form-group">
+                        <label class="control-label" for="username">Username: </label> <input id="username" name="username" type="text"
+                            class="form-control" required autofocus="autofocus" placeholder="Digite su email ID">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="password">Password: </label> <input id="password" type="password" name="password"
+                            class="form-control" required autofocus="autofocus" placeholder="Digite su contraseña">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-6 col-md-offset-3">
+                                <input type="submit" class="form-control btn btn-primary" id="login-submit" value="Iniciar Sesión" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="form-group">
+                    <!-- Aquí el enlace para registrarse. Asegúrate de que la URL sea correcta para tu AuthController -->
+                    <!-- Si tu AuthController mapea a /register, entonces th:href="@{/register}" -->
+                    <!-- Si solo el administrador crea cuentas, considera cambiar el texto o eliminar este enlace. -->
+                    <span>¿Eres nuevo? <a th:href="@{/register}">Registrate Aquí!</a></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Apunta a tu archivo local de jQuery JS (Bootstrap 3 lo necesita) -->
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <!-- Apunta a tu archivo local de Bootstrap JS -->
+    <script th:src="@{/js/bootstrap.min.js}"></script>
 </body>
 
 </html>

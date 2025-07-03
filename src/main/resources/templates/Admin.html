@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <head>
     <meta charset="UTF-8" />
     <title>Administrador | kinalBAnk</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js para gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body class="bg-gray-900 text-white font-sans">
+    <!-- *** LÍNEA DE DEPURACIÓN CRÍTICA: SI ESTO NO APARECE, HAY UN PROBLEMA DE PARSEO HTML/THYMELEAF *** -->
+    <script>
+      console.log("¡El body se está cargando y este script INICIAL se ejecutó!");
+    </script>
+    <!----------------------------------------------------------------------------------------------------->
+
     <div class="flex min-h-screen">
       <button
         id="btnToggleSidebar"
@@ -93,25 +100,43 @@
           </nav>
         </div>
       </aside>
+
 <!-- Modal para editar cliente -->
 <div id="modalEditarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
   <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
     <h2 class="text-2xl font-bold mb-4 text-emerald-400">✏️ Editar Cliente</h2>
     <form id="formEditarCliente" class="space-y-4">
+      <input type="hidden" id="editarIdCliente" /> <!-- Campo oculto para el ID del cliente -->
       <div>
         <label class="block mb-1 text-sm">Nombre</label>
-        <input type="text" id="editarNombre" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <input type="text" id="editarNombre" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Apellido</label>
+        <input type="text" id="editarApellido" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
       </div>
       <div>
         <label class="block mb-1 text-sm">Email</label>
-        <input type="email" id="editarEmail" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <input type="email" id="editarEmail" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">DPI</label>
+        <input type="text" id="editarDPI" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">NIT</label>
+        <input type="text" id="editarNIT" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Teléfono</label>
+        <input type="text" id="editarTelefono" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
       </div>
       <div>
         <label class="block mb-1 text-sm">Estado</label>
         <select id="editarEstado" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600">
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-          <option value="bloqueado">Bloqueado</option>
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+          <option value="Bloqueado">Bloqueado</option>
         </select>
       </div>
       <div class="flex justify-end space-x-3 pt-4">
@@ -122,6 +147,28 @@
   </div>
 </div>
 
+<!-- Modal de Confirmación para Eliminar -->
+<div id="modalConfirmacion" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+    <h2 class="text-2xl font-bold mb-4 text-red-400">⚠️ Confirmar Eliminación</h2>
+    <p class="mb-6 text-gray-300">¿Estás seguro de que deseas eliminar este usuario?</p>
+    <div class="flex justify-center space-x-4">
+      <button type="button" id="btnConfirmarCancelar" class="px-5 py-2 bg-gray-700 rounded-full hover:bg-gray-600">Cancelar</button>
+      <button type="button" id="btnConfirmarEliminar" class="px-5 py-2 bg-red-600 rounded-full hover:bg-red-700">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Mensajes (para éxito/error) -->
+<div id="modalMensaje" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+    <h2 id="modalMensajeTitulo" class="text-2xl font-bold mb-4"></h2>
+    <p id="modalMensajeContenido" class="mb-6 text-gray-300"></p>
+    <button type="button" id="btnCerrarMensaje" class="px-5 py-2 bg-emerald-600 rounded-full hover:bg-emerald-700">Cerrar</button>
+  </div>
+</div>
+
+
       <!-- Contenedor principal para contenido dinámico -->
       <main
         id="contenido"
@@ -129,7 +176,15 @@
       ></main>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+      // *** VERIFICACIÓN DE SCRIPT: SI VES ESTO EN LA CONSOLA, EL JS SE ESTÁ EJECUTANDO ***
+      console.log("Admin.html script principal está ejecutándose.");
+
+      // Asegúrate de que los datos de los usuarios estén disponibles en el JavaScript
+      // Esto es crucial para que la tabla se pueda poblar.
+      const serverUsers = /*[[${users != null ? users : '[]'}]]*/ [];
+      console.log("Usuarios del servidor:", serverUsers); // Depuración: ver qué datos llegan
+
       const sidebarLinks = document.querySelectorAll(".sidebar-link");
       sidebarLinks.forEach((link) => {
         link.addEventListener("click", () => {
@@ -141,34 +196,15 @@
 
       // Datos ficticios para mostrar (puedes reemplazar con API real)
       const datos = {
-        totalClientes: 1520,
-        saldoGlobal: 98765432.15,
+        totalClientes: serverUsers.length, // Se calculará dinámicamente
+        saldoGlobal: 98765432.15, // Estos podrían venir del backend también
         cuentasActivas: 1340,
         cuentasInactivas: 180,
         cuentasBloqueadas: 15,
         citasSinConfirmar: 4,
         nuevosClientesSemana: [5, 8, 10, 15, 12, 20, 18], // últimos 7 días
         volumenTransaccionesMes: [120000, 95000, 110000, 130000, 90000, 150000], // últimos 6 meses
-        clientes: [
-          {
-            id: "C001",
-            nombre: "Juan Pérez",
-            email: "juan@example.com",
-            estado: "Activo",
-          },
-          {
-            id: "C002",
-            nombre: "Ana Gómez",
-            email: "ana@example.com",
-            estado: "Bloqueado",
-          },
-          {
-            id: "C003",
-            nombre: "Luis Martínez",
-            email: "luis@example.com",
-            estado: "Inactivo",
-          },
-        ],
+        // transacciones y cuentas se mantienen ficticias si no las pasas desde el backend
         transacciones: [
           {
             fecha: "2025-06-10",
@@ -307,10 +343,10 @@
       <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
-          <button
-            id="btnAgregarCliente"
+          <a
+            href="/register"
             class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-          >Agregar Cliente</button>
+          >Agregar Cliente</a>
         </div>
         <input
           type="text"
@@ -323,7 +359,11 @@
             <tr>
               <th class="py-3 px-4 text-left">ID</th>
               <th class="py-3 px-4 text-left">Nombre</th>
+              <th class="py-3 px-4 text-left">Apellido</th>
               <th class="py-3 px-4 text-left">Email</th>
+              <th class="py-3 px-4 text-left">DPI</th>
+              <th class="py-3 px-4 text-left">NIT</th>
+              <th class="py-3 px-4 text-left">Teléfono</th>
               <th class="py-3 px-4 text-left">Estado</th>
               <th class="py-3 px-4 text-left">Acciones</th>
             </tr>
@@ -610,29 +650,63 @@
     `,
       };
 
+      // Función para mostrar un modal de mensaje
+      function mostrarMensaje(titulo, contenido, esError = false) {
+          const modal = document.getElementById("modalMensaje");
+          const modalTitulo = document.getElementById("modalMensajeTitulo");
+          const modalContenido = document.getElementById("modalMensajeContenido");
+
+          modalTitulo.textContent = titulo;
+          modalContenido.textContent = contenido;
+
+          if (esError) {
+              modalTitulo.classList.remove("text-emerald-400");
+              modalTitulo.classList.add("text-red-400");
+          } else {
+              modalTitulo.classList.remove("text-red-400");
+              modalTitulo.classList.add("text-emerald-400");
+          }
+          modal.classList.remove("hidden");
+      }
+
+      // Cerrar modal de mensaje
+      document.getElementById("btnCerrarMensaje").addEventListener("click", () => {
+          document.getElementById("modalMensaje").classList.add("hidden");
+      });
+
+
       // Renderiza la lista de clientes con filtro y acciones
       function renderClientes() {
         const tbody = document.getElementById("tablaClientes");
-        const filtro = document
-          .getElementById("buscadorClientes")
-          .value.toLowerCase();
+        const buscadorClientes = document.getElementById("buscadorClientes");
+        const filtro = buscadorClientes ? buscadorClientes.value.toLowerCase() : "";
         let html = "";
-        const filtrados = datos.clientes.filter(
+
+        const filtrados = serverUsers.filter(
           (c) =>
-            c.id.toLowerCase().includes(filtro) ||
-            c.nombre.toLowerCase().includes(filtro) ||
-            c.email.toLowerCase().includes(filtro)
+            c.id.toString().includes(filtro) ||
+            c.firstName.toLowerCase().includes(filtro) ||
+            c.lastName.toLowerCase().includes(filtro) ||
+            c.email.toLowerCase().includes(filtro) ||
+            (c.dpi && c.dpi.toLowerCase().includes(filtro)) ||
+            (c.nit && c.nit.toLowerCase().includes(filtro)) ||
+            (c.phoneNumber && c.phoneNumber.toLowerCase().includes(filtro))
         );
+
         if (filtrados.length === 0) {
-          html = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
+          html = `<tr><td colspan="9" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
         } else {
           filtrados.forEach((c) => {
             html += `
-              <tr>
+              <tr class="border-b border-gray-700 last:border-b-0">
                 <td class="py-3 px-4">${c.id}</td>
-                <td class="py-3 px-4">${c.nombre}</td>
+                <td class="py-3 px-4">${c.firstName}</td>
+                <td class="py-3 px-4">${c.lastName}</td>
                 <td class="py-3 px-4">${c.email}</td>
-                <td class="py-3 px-4">${c.estado}</td>
+                <td class="py-3 px-4">${c.dpi || 'N/A'}</td>
+                <td class="py-3 px-4">${c.nit || 'N/A'}</td>
+                <td class="py-3 px-4">${c.phoneNumber || 'N/A'}</td>
+                <td class="py-3 px-4">${c.enabled ? 'Activo' : 'Inactivo'}</td>
                 <td class="py-3 px-4 space-x-2">
                   <button class="text-emerald-400 hover:underline btnVerCliente" data-id="${c.id}">Ver</button>
                   <button class="text-yellow-400 hover:underline btnEditarCliente" data-id="${c.id}">Editar</button>
@@ -644,10 +718,122 @@
         }
         tbody.innerHTML = html;
 
-        // Aquí puedes agregar eventos para los botones (Ver, Editar, Eliminar)
+        // Re-adjuntar listeners para los botones de edición y eliminación después de renderizar
+        document.querySelectorAll(".btnEditarCliente").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const clienteId = e.target.dataset.id;
+                const clienteAEditar = serverUsers.find(user => user.id.toString() === clienteId);
+                if (clienteAEditar) {
+                    editarIdCliente.value = clienteAEditar.id;
+                    document.getElementById("editarNombre").value = clienteAEditar.firstName;
+                    document.getElementById("editarApellido").value = clienteAEditar.lastName;
+                    document.getElementById("editarEmail").value = clienteAEditar.email;
+                    document.getElementById("editarDPI").value = clienteAEditar.dpi || '';
+                    document.getElementById("editarNIT").value = clienteAEditar.nit || '';
+                    document.getElementById("editarTelefono").value = clienteAEditar.phoneNumber || '';
+                    document.getElementById("editarEstado").value = clienteAEditar.enabled ? 'Activo' : 'Inactivo';
+                    modalEditar.classList.remove("hidden");
+                }
+            });
+        });
+
+        document.querySelectorAll(".btnEliminarCliente").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const clienteId = e.target.dataset.id;
+                // Mostrar modal de confirmación
+                document.getElementById("modalConfirmacion").classList.remove("hidden");
+                // Adjuntar listener al botón de confirmar eliminación del modal
+                document.getElementById("btnConfirmarEliminar").onclick = () => {
+                    eliminarCliente(clienteId);
+                    document.getElementById("modalConfirmacion").classList.add("hidden");
+                };
+            });
+        });
       }
 
-      // Renderiza la tabla de transacciones
+      // Función para enviar la solicitud de actualización de cliente
+      async function actualizarCliente() {
+          const id = document.getElementById("editarIdCliente").value;
+          const firstName = document.getElementById("editarNombre").value;
+          const lastName = document.getElementById("editarApellido").value;
+          const email = document.getElementById("editarEmail").value;
+          const dpi = document.getElementById("editarDPI").value;
+          const nit = document.getElementById("editarNIT").value;
+          const phoneNumber = document.getElementById("editarTelefono").value;
+          const estado = document.getElementById("editarEstado").value; // 'Activo', 'Inactivo', 'Bloqueado'
+
+          const data = {
+              id: id,
+              firstName: firstName,
+              lastName: lastName,
+              email: email,
+              dpi: dpi,
+              nit: nit,
+              phoneNumber: phoneNumber,
+              estado: estado // Se envía el string de estado
+          };
+
+          try {
+              const response = await fetch(`/api/users/${id}`, {
+                  method: 'PUT',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+              });
+
+              if (response.ok) {
+                  const updatedUser = await response.json();
+                  mostrarMensaje("Éxito", "Cliente actualizado exitosamente.");
+                  // Actualizar serverUsers y re-renderizar tabla
+                  const index = serverUsers.findIndex(user => user.id.toString() === id);
+                  if (index !== -1) {
+                      // Actualizar el objeto en serverUsers con los datos de la respuesta
+                      serverUsers[index] = updatedUser;
+                  }
+                  renderClientes(); // Vuelve a renderizar la tabla para mostrar los cambios
+              } else {
+                  const errorText = await response.text();
+                  mostrarMensaje("Error", `Error al actualizar cliente: ${errorText}`, true);
+              }
+          } catch (error) {
+              console.error('Error al enviar la solicitud de actualización:', error);
+              mostrarMensaje("Error", "No se pudo conectar con el servidor para actualizar el cliente.", true);
+          } finally {
+              modalEditar.classList.add("hidden"); // Cierra el modal de edición
+          }
+      }
+
+      // Función para enviar la solicitud de eliminación de cliente
+      async function eliminarCliente(id) {
+          try {
+              const response = await fetch(`/api/users/${id}`, {
+                  method: 'DELETE',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  }
+              });
+
+              if (response.ok) {
+                  mostrarMensaje("Éxito", "Cliente eliminado exitosamente.");
+                  // Eliminar el usuario de serverUsers y re-renderizar tabla
+                  const index = serverUsers.findIndex(user => user.id.toString() === id);
+                  if (index !== -1) {
+                      serverUsers.splice(index, 1); // Elimina el usuario del array
+                  }
+                  renderClientes(); // Vuelve a renderizar la tabla
+              } else {
+                  const errorText = await response.text();
+                  mostrarMensaje("Error", `Error al eliminar cliente: ${errorText}`, true);
+              }
+          } catch (error) {
+              console.error('Error al enviar la solicitud de eliminación:', error);
+              mostrarMensaje("Error", "No se pudo conectar con el servidor para eliminar el cliente.", true);
+          }
+      }
+
+
+    // Renderiza la tabla de transacciones
       function renderTransacciones() {
         const tbody = document.getElementById("tablaTransacciones");
         // Para simplicidad, no aplicamos filtros aún
@@ -784,17 +970,6 @@
             document
               .getElementById("buscadorClientes")
               .addEventListener("input", renderClientes);
-
-            // Botón agregar cliente (aquí solo alerta)
-            document
-              .getElementById("btnAgregarCliente")
-              .addEventListener("click", () => {
-                alert(
-                  "Funcionalidad para agregar cliente aún no implementada."
-                );
-              });
-
-            // Aquí se podrían agregar eventos para botones Ver, Editar, Eliminar
           }, 50);
         } else if (id === "transacciones") {
           setTimeout(() => {
@@ -804,9 +979,7 @@
             document
               .getElementById("btnExportarTransacciones")
               .addEventListener("click", () => {
-                alert(
-                  "Funcionalidad para exportar PDF/Excel aún no implementada."
-                );
+                mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel aún no implementada.");
               });
 
             // Aquí podrían implementarse filtros y ordenamientos
@@ -835,7 +1008,7 @@
             document
               .getElementById("btnEnviarCorreoReporte")
               .addEventListener("click", () => {
-                alert("Reporte enviado por correo (simulado).");
+                mostrarMensaje("Información", "Reporte enviado por correo (simulado).");
               });
           }, 50);
         } else if (id === "gestionCuentas") {
@@ -845,9 +1018,7 @@
             document
               .getElementById("btnAgregarCuenta")
               .addEventListener("click", () => {
-                alert(
-                  "Funcionalidad para agregar nueva cuenta aún no implementada."
-                );
+                mostrarMensaje("Información", "Funcionalidad para agregar nueva cuenta aún no implementada.");
               });
           }, 50);
         } else if (id === "citas") {
@@ -855,9 +1026,7 @@
             document
               .getElementById("btnNuevaCita")
               .addEventListener("click", () => {
-                alert(
-                  "Funcionalidad para crear nueva cita aún no implementada."
-                );
+                mostrarMensaje("Información", "Funcionalidad para crear nueva cita aún no implementada.");
               });
           }, 50);
         } else if (id === "cuentas") {
@@ -873,9 +1042,7 @@
             document
               .getElementById("btnDescargarCuentas")
               .addEventListener("click", () => {
-                alert(
-                  "Funcionalidad para descargar lista en Excel aún no implementada."
-                );
+                mostrarMensaje("Información", "Funcionalidad para descargar lista en Excel aún no implementada.");
               });
           }, 50);
         } else if (id === "configuracion") {
@@ -893,13 +1060,13 @@
               .getElementById("formConfiguracion")
               .addEventListener("submit", (e) => {
                 e.preventDefault();
-                alert("Cambios guardados (simulado).");
+                mostrarMensaje("Éxito", "Cambios guardados (simulado).");
               });
 
             document
               .getElementById("btnCerrarSesion")
               .addEventListener("click", () => {
-                alert("Sesión cerrada (simulado).");
+                mostrarMensaje("Información", "Sesión cerrada (simulado).");
               });
           }, 50);
         }
@@ -910,6 +1077,7 @@
         return new Intl.NumberFormat("es-GT", {
           style: "currency",
           currency: "GTQ",
+          minimumFractionDigits: 2,
         }).format(valor);
       }
 
@@ -1007,37 +1175,38 @@
       overlay.addEventListener("click", () => {
         ocultarSidebar();
       });
+
 // Referencias a modal y botones
 const modalEditar = document.getElementById("modalEditarCliente");
 const btnCancelarEditar = document.getElementById("btnCancelarEditar");
 const formEditar = document.getElementById("formEditarCliente");
+const editarIdCliente = document.getElementById("editarIdCliente");
 
-// Abrir modal al hacer clic en cualquier botón editar
-document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("btnEditarCliente")) {
-    // Aquí podrías llenar los campos con datos reales
-    document.getElementById("editarNombre").value = "Juan Pérez";
-    document.getElementById("editarEmail").value = "juan@example.com";
-    document.getElementById("editarEstado").value = "activo";
+const modalConfirmacion = document.getElementById("modalConfirmacion");
+const btnConfirmarCancelar = document.getElementById("btnConfirmarCancelar");
 
-    modalEditar.classList.remove("hidden");
-  }
-});
-
-// Cerrar modal al hacer clic en cancelar
+// Cerrar modal de edición al hacer clic en cancelar
 btnCancelarEditar.addEventListener("click", () => {
   modalEditar.classList.add("hidden");
 });
 
-// Simular guardar cambios
+// Enviar formulario de edición al backend
 formEditar.addEventListener("submit", function (e) {
-  e.preventDefault();
-  alert("Cliente actualizado (simulado).");
-  modalEditar.classList.add("hidden");
+  e.preventDefault(); // Evitar el envío de formulario por defecto
+  actualizarCliente(); // Llama a la función para enviar la actualización
 });
 
+// Cerrar modal de confirmación al hacer clic en cancelar
+btnConfirmarCancelar.addEventListener("click", () => {
+    modalConfirmacion.classList.add("hidden");
+});
+
+
       // Mostrar dashboard por defecto
-      cambiarPestania("dashboard");
+      // Se ejecuta después de que el DOM esté completamente cargado
+      document.addEventListener('DOMContentLoaded', () => {
+          cambiarPestania("dashboard");
+      });
     </script>
   </body>
 </html>

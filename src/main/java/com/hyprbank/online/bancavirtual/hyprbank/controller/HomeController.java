@@ -70,37 +70,4 @@ public class HomeController {
         return "index"; // Devuelve el nombre de la plantilla Thymeleaf: src/main/resources/templates/index.html
     }
 
-    /**
-     * Maneja las solicitudes GET a la ruta "/dashboard".
-     * Esta es la página principal para los usuarios autenticados después de iniciar sesión.
-     * Obtiene la información del usuario autenticado y la pasa a la vista.
-     *
-     * @param model El objeto Model de Spring MVC para pasar datos a la vista.
-     * @return El nombre de la vista "Admin" (src/main/resources/templates/Admin.html).
-     */
-    @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
-        // Obtener la información de autenticación del contexto de seguridad
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName(); // El email es el username en Spring Security
-
-        // Buscar el usuario completo en la base de datos usando el servicio
-        User user = userService.findByEmail(userEmail);
-
-        if (user != null) {
-            // Añadir atributos al modelo para que la vista los use
-            model.addAttribute("userName", user.getFirstName());
-            model.addAttribute("userLastName", user.getLastName());
-            // Aquí podrías añadir el saldo de la cuenta principal del usuario,
-            // lista de cuentas, etc., obteniéndolo del servicio de cuentas.
-            // Ejemplo: model.addAttribute("mainBalance", accountService.getBalance(user.getId()));
-        } else {
-            // Manejar el caso de usuario no encontrado (debería ser raro después de la autenticación exitosa)
-            model.addAttribute("error", "No se pudo cargar la información del usuario.");
-            // Podrías redirigir a una página de error o al logout
-            // return "redirect:/logout";
-        }
-
-        return "Admin"; // ¡¡¡CAMBIO AQUÍ: Ahora devuelve "Admin" para que busque Admin.html!!!
-    }
 }

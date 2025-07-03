@@ -1,14 +1,14 @@
 package com.hyprbank.online.bancavirtual.hyprbank.config; 
 
 // Importaciones de Entidades
-import com.hyprbank.online.bancavirtual.hyprbank.model.UserAccess; 
-import com.hyprbank.online.bancavirtual.hyprbank.model.User; 
+import com.hyprbank.online.bancavirtual.hyprbank.model.UserAccess;
+import com.hyprbank.online.bancavirtual.hyprbank.model.User;
 
 // Importaciones de Repositorios
-import com.hyprbank.online.bancavirtual.hyprbank.repository.UserAccessRepository; 
+import com.hyprbank.online.bancavirtual.hyprbank.repository.UserAccessRepository;
 
 // Importaciones de Servicios
-import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; 
+import com.hyprbank.online.bancavirtual.hyprbank.service.UserService;
 
 // Importaciones de Spring Framework
 import org.springframework.context.event.EventListener;
@@ -70,6 +70,7 @@ public class AuditLoginEventListener {
                 .accessDateTime(LocalDateTime.now()) // Nombre de campo actualizado
                 .accessType("LOGIN_SUCCESS") // Valor actualizado
                 .ipAddress(ipAddress)
+                .attemptedUsername(username) // <--- Añadido: Registra el nombre de usuario que inició sesión
                 .build();
             userAccessRepository.save(userAccess); // Nombre de repositorio y variable actualizado
         }
@@ -85,14 +86,15 @@ public class AuditLoginEventListener {
     public void handleAuthenticationFailure(AuthenticationFailureBadCredentialsEvent event) {
         // Obtiene el nombre de usuario (email) que se intento usar para el login fallido.
         // El 'principal' en un evento de fallo puede ser un String si no se autentico ningun UserDetails.
-        String username = (String) event.getAuthentication().getPrincipal();
+        String usernameAttempted = (String) event.getAuthentication().getPrincipal();
 
         // Intenta buscar el usuario en la base de datos. Puede ser nulo si el email no existe.
         User user = null; // Nombre de variable actualizado
         try {
-            user = userService.findByEmail(username); // Nombre de metodo actualizado
+            user = userService.findByEmail(usernameAttempted); // Nombre de metodo actualizado
         } catch (UsernameNotFoundException e) {
             // No hacer nada, el usuario simplemente no existe, y el registro se hara sin relacionar al usuario.
+            // Esto es correcto si 'user_id' es nullable en la DB.
         }
 
         // Obtiene la direccion IP del cliente.
@@ -102,10 +104,11 @@ public class AuditLoginEventListener {
         // Si 'user' es nulo, el registro de acceso quedara sin un usuario especifico,
         // lo cual es util para auditar intentos contra cuentas inexistentes.
         UserAccess userAccess = UserAccess.builder() // Nombre de clase y variable actualizado
-            .user(user) // Puede ser null si el usuario no existe - Nombre de campo actualizado
+            .user(user) // Puede ser null si el usuario no existe (gracias a nullable=true en la entidad)
             .accessDateTime(LocalDateTime.now()) // Nombre de campo actualizado
             .accessType("LOGIN_FAILED") // Valor actualizado
             .ipAddress(ipAddress)
+            .attemptedUsername(usernameAttempted) // <--- Añadido: Registra el nombre de usuario que se intentó usar
             .build();
         userAccessRepository.save(userAccess); // Nombre de repositorio y variable actualizado
     }

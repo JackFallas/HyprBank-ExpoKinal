@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<title>Registro de usuarios</title>
+<!-- Latest compiled and minified CSS -->
+<!-- Si ya configuraste Bootstrap localmente, usa th:href="@{/css/bootstrap.min.css}" -->
+<link rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+
+<!-- Optional theme -->
+<!-- Si ya configuraste Bootstrap localmente, usa th:href="@{/css/bootstrap-theme.min.css}" -->
+<link rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+    xintegrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+    crossorigin="anonymous">
+</head>
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed"
+                    data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+                    aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span> <span
+                        class="icon-bar"></span> <span class="icon-bar"></span> <span
+                        class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" th:href="@{/}">Registro y
+                    inicio de sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <br>
+    <br>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <!-- Mensaje de éxito si viene el parámetro 'exito' -->
+                <div th:if="${param.exito}">
+                    <div class="alert alert-info">Se ha registrado exitosamente a
+                        la aplicación</div>
+                </div>
+
+                <!-- Mensaje de éxito si viene el atributo flash 'registrationSuccess' (como en tu AuthController) -->
+                <div th:if="${registrationSuccess}" class="alert alert-info">
+                    <p th:text="${registrationSuccess}"></p>
+                </div>
+
+                <!-- Mensaje de error si viene el atributo flash 'registrationError' (como en tu AuthController) -->
+                <div th:if="${registrationError}" class="alert alert-danger">
+                    <p th:text="${registrationError}"></p>
+                </div>
+
+                <h1>Regístrate</h1>
+                <!-- th:object="${user}" coincide con @ModelAttribute("user") en AuthController -->
+                <form th:action="@{/register}" th:object="${user}" method="post">
+
+                    <div class="form-group">
+                        <label class="control-label" for="firstName">Nombre : </label>
+                        <input id="firstName" type="text" class="form-control" th:field="*{firstName}"
+                            required autofocus="autofocus">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="lastName">Apellido : </label>
+                        <input id="lastName" class="form-control" th:field="*{lastName}"
+                            required autofocus="autofocus">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="email">Email : </label>
+                        <input id="email" type="email" class="form-control" th:field="*{email}"
+                            required autofocus="autofocus">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="password">Password : </label>
+                        <input type="password" id="password" class="form-control" th:field="*{password}"
+                            required autofocus="autofocus">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="dpi">DPI : </label>
+                        <input id="dpi" type="text" class="form-control" th:field="*{dpi}"
+                            required placeholder="Ingrese el DPI del cliente">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="nit">NIT : </label>
+                        <input id="nit" type="text" class="form-control" th:field="*{nit}"
+                            required placeholder="Ingrese el NIT del cliente">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label" for="phoneNumber">Número de Teléfono : </label>
+                        <input id="phoneNumber" type="text" class="form-control" th:field="*{phoneNumber}"
+                            required placeholder="Ingrese el número de teléfono del cliente">
+                    </div>
+               
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">Registrar</button>
+                        <!-- Enlace para iniciar sesión si ya está registrado -->
+                        <span>Si estas registrado <a th:href="@{/login}">inicia sesión aquí</a></span>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <!-- Si ya configuraste jQuery y Bootstrap JS localmente, usa th:src="@{/js/jquery.min.js}" y th:src="@{/js/bootstrap.min.js}" -->
+    <script
+        src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        xintegrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,12 +1,13 @@
 package com.hyprbank.online.bancavirtual.hyprbank.service;
 
 import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationRequest;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.UserUpdateRequest;
 import com.hyprbank.online.bancavirtual.hyprbank.model.User;
 import com.hyprbank.online.bancavirtual.hyprbank.model.Role;
 import com.hyprbank.online.bancavirtual.hyprbank.model.Account;
 import com.hyprbank.online.bancavirtual.hyprbank.repository.UserRepository;
 import com.hyprbank.online.bancavirtual.hyprbank.repository.AccountRepository;
-import com.hyprbank.online.bancavirtual.hyprbank.repository.RoleRepository; // ¡IMPORTANTE: Nuevo import!
+import com.hyprbank.online.bancavirtual.hyprbank.repository.RoleRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,9 +35,8 @@ import java.util.stream.Collectors;
  *
  * Esta clase provee la lógica de negocio para la gestión de usuarios,
  * incluyendo el registro, la consulta, la integración con Spring Security para la autenticación,
- * la creación automática de cuentas bancarias y la inicialización de usuarios clave.
- *
- * Esta versión utiliza un RoleRepository para una gestión más robusta y estándar de las entidades Role.
+ * la creación automática de cuentas bancarias y la inicialización de usuarios clave,
+ * así como la actualización y eliminación de usuarios.
  */
 @Service
 public class UserServiceImpl implements UserService {
@@ -44,19 +44,19 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
-    private final RoleRepository roleRepository; // ¡NUEVO: Inyección del RoleRepository!
+    private final RoleRepository roleRepository;
 
     /*
      * Constructor para inyección de dependencias.
-     * Spring inyectará las instancias necesarias, incluyendo RoleRepository.
+     * Spring inyectará las instancias necesarias.
      */
     @Autowired
     public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
-                           AccountRepository accountRepository, RoleRepository roleRepository) { // ¡NUEVO: Añadido RoleRepository!
+                           AccountRepository accountRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.accountRepository = accountRepository;
-        this.roleRepository = roleRepository; // ¡NUEVO: Asignación de RoleRepository!
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -75,10 +75,8 @@ public class UserServiceImpl implements UserService {
         }
 
         // --- 1. Obtener o crear el rol por defecto (ROLE_USER) ---
-        // Esta es la forma recomendada: buscar el rol. Si no existe, crearlo y guardarlo.
         Role userRole = roleRepository.findByName("ROLE_USER")
-                                    .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_USER")));
-
+                                     .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_USER")));
 
         // --- 2. Crear y guardar el usuario ---
         User user = User.builder()
@@ -86,8 +84,12 @@ public class UserServiceImpl implements UserService {
                 .lastName(registrationDTO.getLastName())
                 .email(registrationDTO.getEmail())
                 .password(passwordEncoder.encode(registrationDTO.getPassword()))
-                .accounts(new ArrayList<>()) // Inicializa la lista de cuentas vacía
-                .roles(Collections.singletonList(userRole)) // Usa el rol obtenido/creado por el RoleRepository
+                .dpi(registrationDTO.getDpi())
+                .nit(registrationDTO.getNit())
+                .phoneNumber(registrationDTO.getPhoneNumber())
+                .accounts(new ArrayList<>())
+                .roles(Collections.singletonList(userRole))
+                .enabled(true) // Los nuevos usuarios se crean activos por defecto
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -113,7 +115,7 @@ public class UserServiceImpl implements UserService {
 
         newAccount.setAccountNumber(generatedAccountNumber);
         savedUser.addAccount(newAccount);
-        accountRepository.save(newAccount); // Mantenemos esta línea explícita por claridad
+        accountRepository.save(newAccount);
 
         return savedUser;
     }
@@ -154,6 +156,64 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
     }
 
+    /**
+     * Busca un usuario por su ID.
+     *
+     * @param id El ID del usuario a buscar.
+     * @return Un {@link Optional} que contiene la entidad {@link User} si se encuentra, o vacío si no.
+     */
+    @Override
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    /**
+     * Actualiza la informacion de un usuario existente a partir de un DTO de actualizacion.
+     *
+     * @param updateRequest El DTO con la informacion actualizada del usuario.
+     * @return La entidad {@link User} actualizada.
+     * @throws RuntimeException Si el usuario no se encuentra o hay un problema al actualizar.
+     */
+    @Override
+    @Transactional
+    public User updateUser(UserUpdateRequest updateRequest) {
+        // Buscar el usuario existente por ID
+        User existingUser = userRepository.findById(updateRequest.getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + updateRequest.getId()));
+
+        // Actualizar los campos desde el DTO
+        existingUser.setFirstName(updateRequest.getFirstName());
+        existingUser.setLastName(updateRequest.getLastName());
+        existingUser.setEmail(updateRequest.getEmail());
+        existingUser.setDpi(updateRequest.getDpi());
+        existingUser.setNit(updateRequest.getNit());
+        existingUser.setPhoneNumber(updateRequest.getPhoneNumber());
+
+        // Mapear el String 'estado' del DTO al boolean 'enabled' de la entidad User
+        // "Activo" -> true, cualquier otro valor -> false
+        existingUser.setEnabled("Activo".equalsIgnoreCase(updateRequest.getEstado()));
+
+        // No actualizamos la contraseña aquí por seguridad; debería ser un proceso separado.
+
+        return userRepository.save(existingUser);
+    }
+
+    /**
+     * Elimina un usuario por su ID.
+     *
+     * @param id El ID del usuario a eliminar.
+     * @throws RuntimeException Si el usuario no se encuentra.
+     */
+    @Override
+    @Transactional
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("Usuario no encontrado con ID: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+
     // Método auxiliar para mapear roles a GrantedAuthority, necesario para Spring Security
     private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<Role> roles) {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
@@ -161,30 +221,61 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Método que se ejecuta después de que el bean se ha inicializado.
-     * Crea un usuario administrador por defecto si no existe.
+     * Crea o actualiza un usuario administrador por defecto si no existe o si necesita ser reseteado.
      */
     @PostConstruct
     @Transactional
     public void initAdmin() {
-        if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
-            // --- Obtener o crear el rol de ADMINISTRADOR (ROLE_ADMIN) ---
-            // Usamos RoleRepository para buscar el rol. Si no existe, lo creamos y guardamos.
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                                        .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_ADMIN")));
+        Optional<User> adminOptional = userRepository.findByEmail("admin@admin.com");
+        User admin;
+        String defaultAdminPassword = "admin123"; // La contraseña por defecto sin codificar
 
-            User admin = User.builder()
+        if (adminOptional.isEmpty()) {
+            // Si el admin no existe, lo creamos
+            System.out.println("ℹ️ Usuario administrador 'admin@admin.com' no encontrado. Creándolo...");
+            // --- Obtener o crear el rol de ADMINISTRADOR (ROLE_ADMIN) ---
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                                         .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_ADMIN")));
+
+            admin = User.builder()
                     .firstName("Admin")
                     .lastName("Principal")
                     .email("admin@admin.com")
-                    .password(passwordEncoder.encode("admin123"))
+                    .password(passwordEncoder.encode(defaultAdminPassword)) // Codificar la contraseña
+                    .dpi("1234567890123")
+                    .nit("1234567-8")
+                    .phoneNumber("50212345678")
                     .accounts(new ArrayList<>())
-                    .roles(Collections.singletonList(adminRole)) // Usa el rol obtenido/creado por el RoleRepository
+                    .roles(Collections.singletonList(adminRole))
+                    .enabled(true) // Asegurar que el admin esté habilitado
                     .build();
 
             userRepository.save(admin);
             System.out.println("✅ Usuario administrador 'admin@admin.com' creado con contraseña 'admin123'.");
         } else {
-            System.out.println("ℹ️ Usuario administrador 'admin@admin.com' ya existe.");
+            // Si el admin ya existe, lo actualizamos para asegurar que esté habilitado y con la contraseña correcta
+            admin = adminOptional.get();
+            boolean needsUpdate = false;
+
+            // Asegurarse de que esté habilitado
+            if (!admin.isEnabled()) {
+                admin.setEnabled(true);
+                needsUpdate = true;
+                System.out.println("✅ Usuario administrador 'admin@admin.com' habilitado.");
+            }
+
+            // Opcional: Si quieres forzar la actualización de la contraseña cada vez que inicia la app
+            // Esto es útil en desarrollo para evitar problemas de contraseña, pero no para producción.
+            // if (!passwordEncoder.matches(defaultAdminPassword, admin.getPassword())) {
+            //     admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
+            //     needsUpdate = true;
+            //     System.out.println("✅ Contraseña del administrador 'admin@admin.com' reseteada a 'admin123'.");
+            // }
+
+            if (needsUpdate) {
+                userRepository.save(admin);
+            }
+            System.out.println("ℹ️ Usuario administrador 'admin@admin.com' ya existe y está verificado.");
         }
     }
 }

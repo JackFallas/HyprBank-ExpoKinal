@@ -1,5 +1,4 @@
 package com.hyprbank.online.bancavirtual.hyprbank.model;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,11 +7,12 @@ import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList; // Asegurate de que esta importacion este presente para ArrayList
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +20,7 @@ import java.util.ArrayList; // Asegurate de que esta importacion este presente p
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "accounts"})
 public class User implements UserDetails {
 
     @Id
@@ -38,9 +39,23 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String dpi;
+
+    @Column(nullable = true)
+    private String nit;
+
+    @Column(nullable = true)
+    private String phoneNumber;
+
+    // --- NUEVO CAMPO AÑADIDO: 'enabled' ---
+    @Column(nullable = false) // Generalmente un usuario está habilitado o deshabilitado
+    private boolean enabled;
+    // --- FIN NUEVO CAMPO ---
+
     // Relación OneToMany con Account: Un usuario puede tener muchas cuentas
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Account> accounts = new ArrayList<>(); // Inicializar para evitar NullPointerException
+    private List<Account> accounts = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -50,19 +65,19 @@ public class User implements UserDetails {
     )
     private Collection<Role> roles;
 
-    // --- Métodos de utilidad para la relación bidireccional (tomado de la copia, adaptado a nombres) ---
+    // --- Métodos de utilidad para la relación bidireccional ---
     public void addAccount(Account account) {
         if (this.accounts == null) {
             this.accounts = new ArrayList<>();
         }
         this.accounts.add(account);
-        account.setUser(this); // Asegura que la cuenta también sepa a qué usuario pertenece
+        account.setUser(this);
     }
 
     public void removeAccount(Account account) {
         if (this.accounts != null) {
             this.accounts.remove(account);
-            account.setUser(null); // Desvincula la cuenta del usuario
+            account.setUser(null);
         }
     }
     // --- FIN Métodos de utilidad ---
@@ -72,7 +87,6 @@ public class User implements UserDetails {
         if (this.roles != null && !this.roles.isEmpty()) {
             return this.roles;
         }
-        // Si no hay roles específicos, asignar un rol por defecto
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
@@ -83,26 +97,28 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // El email es el nombre de usuario para Spring Security
+        return email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Lógica por defecto, se puede cambiar para gestionar la expiración de la cuenta
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Lógica por defecto, se puede cambiar para gestionar el bloqueo de la cuenta
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Lógica por defecto, se puede cambiar para gestionar la expiración de credenciales
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Lógica por defecto, se puede cambiar para habilitar/deshabilitar usuarios
+        // Este método es parte de UserDetails y ahora devuelve el valor de la propiedad 'enabled'
+        return this.enabled;
     }
 }
+

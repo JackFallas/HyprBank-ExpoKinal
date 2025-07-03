@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import com.hyprbank.online.bancavirtual.hyprbank.config.RolAccess;
 
 // Importaciones para CORS
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,6 +30,12 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+
+    private final RolAccess accesoRol;
+
+    public SecurityConfiguration(RolAccess accesoRol) {
+        this.accesoRol = accesoRol;
+    }
 
     /**
      * Define el bean para el codificador de contraseñas.
@@ -69,42 +76,37 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Deshabilita CSRF (considera habilitarlo en producción con formularios)
+            .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authorize -> authorize
-                // 1. **Rutas públicas (permitAll()):**
-                // Estas rutas son accesibles sin autenticación.
-                // Hemos ELIMINADO "/" de aquí para que sea una ruta protegida.
+                // Rutas públicas: accesibles sin autenticación.
+                // ¡Hemos quitado /register y /register** de aquí!
                 .requestMatchers(
-                    "/login",                // La URL de tu página de login (GET)
-                    "/login**",              // Captura /login?error, /login?logout, etc.
-                    "/register",             // Tu página de registro (GET)
-                    "/register**",           // Captura /register?success, etc.
-                    "/css/**",               // Recursos estáticos
-                    "/js/**",
-                    "/img/**",
-                    "/webjars/**"
-                ).permitAll()                // Permite acceso sin autenticación a estas rutas
+                    "/login", "/login**",
+                    "/css/**", "/js/**", "/img/**", "/webjars/**"
+                ).permitAll()
 
-                // 2. **Rutas protegidas (authenticated()):**
-                // CUALQUIER OTRA SOLICITUD requiere autenticación.
-                // Esto incluye la raíz "/", lo que forzará la redirección al login.
+                .requestMatchers("/register", "/register**").hasRole("ADMIN")
+
+                // Rutas protegidas por roles específicos.
+                .requestMatchers("/dashboard/admin").hasRole("ADMIN")
+                .requestMatchers("/dashboard/user").hasRole("USER")
+
+                // Cualquier otra solicitud no especificada requiere autenticación.
                 .anyRequest().authenticated()
             )
-            // Configuración del formulario de login
             .formLogin(form -> form
-                .loginPage("/login")             // Especifica la URL de tu página de login
-                .loginProcessingUrl("/login")    // URL a la que se envían las credenciales del formulario
-                .defaultSuccessUrl("/dashboard", true) // Redirige a /dashboard después de un login exitoso
-                .failureUrl("/login?error")      // Redirige a /login?error si el login falla
-                .permitAll()                     // Permite acceso a la página de login y al proceso de autenticación
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .successHandler(accesoRol)
+                .failureUrl("/login?error")
+                .permitAll()
             )
-            // Configuración del logout
             .logout(logout -> logout
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout") // Redirige a /login?logout después de cerrar sesión
+                .logoutSuccessUrl("/login?logout")
                 .permitAll()
             );
 
