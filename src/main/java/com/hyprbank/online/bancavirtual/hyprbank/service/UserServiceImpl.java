@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList; // Necesario para inicializar la lista de cuentas
+import java.util.Collections; // Necesario para inicializar la coleccion de roles
+import com.hyprbank.online.bancavirtual.hyprbank.model.Role; // Importar Role
 
 /*
  * Implementacion de la interfaz {@link UserService}.
@@ -43,15 +46,15 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User save(RegistrationRequest registrationDTO) {
-        // Crea una nueva instancia de User a partir del DTO.
-        User user = new User(
-                registrationDTO.getId(),
-                registrationDTO.getFirstName(),
-                registrationDTO.getLastName(),
-                registrationDTO.getEmail(),
-                passwordEncoder.encode(registrationDTO.getPassword()), // Encripta la contrasena
-                null // La lista de cuentas se inicializa en el constructor de User
-        );
+        // Crea una nueva instancia de User a partir del DTO usando el Builder.
+        User user = User.builder()
+                .firstName(registrationDTO.getFirstName())
+                .lastName(registrationDTO.getLastName())
+                .email(registrationDTO.getEmail())
+                .password(passwordEncoder.encode(registrationDTO.getPassword()))
+                .accounts(new ArrayList<>()) // Inicializa la lista de cuentas vacia
+                .roles(Collections.singletonList(new Role(null, "ROLE_USER"))) // Asigna un rol por defecto
+                .build();
         // Guarda el usuario en el repositorio.
         return userRepository.save(user);
     }

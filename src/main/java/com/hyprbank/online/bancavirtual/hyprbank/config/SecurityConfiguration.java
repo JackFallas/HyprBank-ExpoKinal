@@ -1,7 +1,7 @@
-package com.hyprbank.online.bancavirtual.hyprbank.config; 
+package com.hyprbank.online.bancavirtual.hyprbank.config;
 
 // Importaciones de Servicios
-import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; 
+// import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; // ¡Eliminar esta importacion si no se usa directamente en el constructor!
 
 // Importaciones de Spring Security
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.core.userdetails.UserDetailsService; // Importar UserDetailsService
 
 // Importaciones para CORS
 import org.springframework.web.cors.CorsConfiguration;
@@ -33,13 +34,8 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    // Inyeccion de la implementacion de UserService (que tambien es UserDetailsService)
-    private final UserService userService; // Nombre de campo actualizado
-
-    @Autowired
-    public SecurityConfiguration(UserService userService) { // Nombre de parametro actualizado
-        this.userService = userService; // Nombre de campo actualizado
-    }
+    // No inyectamos UserService directamente en el constructor aqui para evitar el ciclo.
+    // Spring Security encontrara el UserDetailsService a traves del contexto.
 
     /**
      * Define el bean para el codificador de contrasenas.
@@ -54,15 +50,16 @@ public class SecurityConfiguration {
 
     /**
      * Configura el proveedor de autenticacion DAO (Data Access Object).
-     * Este proveedor utiliza el {@link UserService} (que implementa UserDetailsService)
+     * Este proveedor utiliza el {@link UserDetailsService} (que tu UserService implementa)
      * para cargar los detalles del usuario y el {@link BCryptPasswordEncoder} para verificar la contrasena.
      *
+     * @param userDetailsService Spring inyectara automaticamente tu implementacion de UserDetailsService.
      * @return Una instancia de {@link DaoAuthenticationProvider}.
      */
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) { // Inyectar UserDetailsService aqui
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
-        auth.setUserDetailsService(userService); // Usa tu implementacion de UserDetailsService
+        auth.setUserDetailsService(userDetailsService); // Usa la instancia inyectada
         auth.setPasswordEncoder(passwordEncoder()); // Usa el codificador de contrasenas definido
         return auth;
     }
@@ -92,7 +89,7 @@ public class SecurityConfiguration {
                 .requestMatchers(
                     "/",           // Pagina principal de bienvenida (si existe)
                     "/login",      // Tu pagina de login personalizada
-                    "/register**", // Tu pagina de registro y sus parametros (ej. /register?success) - Nombre de ruta actualizado
+                    "/register**", // Tu pagina de registro y sus parametros (ej. /register?success)
                     "/css/**",     // Recursos CSS estaticos
                     "/js/**",      // Recursos JavaScript estaticos
                     "/img/**",     // Recursos de imagenes estaticos
@@ -101,12 +98,12 @@ public class SecurityConfiguration {
                 // Rutas protegidas: requieren autenticacion.
                 // Asumo que 'Usuario.html' es tu dashboard principal.
                 .requestMatchers(
-                    "/dashboard",  // Nueva ruta para el dashboard despues del login
-                    "/user-dashboard.html", // Si esta es tu pagina de dashboard (nombre actualizado)
+                    "/dashboard",
+                    "/user-dashboard.html",
                     "/api/dashboard/**",
-                    "/api/movements/**", // Nombre actualizado
-                    "/api/transactions/**", // Nombre actualizado
-                    "/api/reports/**" // Nombre actualizado
+                    "/api/movements/**",
+                    "/api/transactions/**",
+                    "/api/reports/**"
                 ).authenticated() // Estas rutas requieren que el usuario este autenticado
                 // Cualquier otra solicitud no especificada requiere autenticacion
                 .anyRequest().authenticated()
@@ -126,9 +123,9 @@ public class SecurityConfiguration {
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // URL para cerrar sesion
                 .logoutSuccessUrl("/login?logout") // Redirige a /login?logout despues de cerrar sesion
                 .permitAll() // Permite el acceso al proceso de logout
-            )
-            // Asegura que el DaoAuthenticationProvider personalizado sea usado
-            .authenticationProvider(authenticationProvider());
+            );
+            // Ya no necesitas .authenticationProvider(authenticationProvider()); aqui,
+            // Spring Security lo encontrara automaticamente si es un bean.
 
         return http.build();
     }
@@ -146,7 +143,8 @@ public class SecurityConfiguration {
         configuration.setAllowedOrigins(Arrays.asList(
             "http://127.0.0.1:5500", // Comunes para Live Server
             "http://localhost:5500", // Comunes para Live Server
-            "http://localhost:8080"  // Si el frontend corre en el mismo puerto del backend o si es un cliente web simple
+            "http://localhost:8080", // Si el frontend corre en el mismo puerto del backend o si es un cliente web simple
+            "http://localhost:8081" // Si tu frontend esta en este puerto
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Metodos HTTP permitidos
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Cabeceras permitidas

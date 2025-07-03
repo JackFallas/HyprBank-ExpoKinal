@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Builder; // Asegurate de que esta importacion este presente
 
 /*
  * DTO (Data Transfer Object) para el Dashboard del Usuario.
@@ -23,11 +23,11 @@ import lombok.Builder;
 @Data // Anotacion lombok que genera automaticamente lo anterior mencionado
 @NoArgsConstructor // Anotacion lombok que genera constructor sin argumentos
 @AllArgsConstructor // Anotacion lombok que genera un constructor con todos los argumentos
-@Builder
+@Builder // ¡Añade esta anotacion para habilitar el patron Builder!
 public class DashboardUserDTO {
     private Long id;
-    private String fullName; // Nombre de campo actualizado
+    private String fullName;
     private String email;
-    private BigDecimal totalBalance; // Nombre de campo actualizado
-    private List<AccountDTO> accounts; // Nombre de DTO actualizado
+    private BigDecimal totalBalance;
+    private List<AccountDTO> accounts;
 }

@@ -10,7 +10,7 @@ import com.hyprbank.online.bancavirtual.hyprbank.repository.UserRepository;
 
 // Importaciones de DTOs
 import com.hyprbank.online.bancavirtual.hyprbank.dto.AccountDTO;
-import com.hyprbank.online.bancavirtual.hyprbank.dto.DashboardUserDTO;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.DashboardUserDTO; // Importa DashboardUserDTO
 
 // Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 // Importaciones de Java Utilities
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; // No usada directamente aqui, pero podria ser en el DTO
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,21 +79,38 @@ public class DashboardRestController {
 
         // Calcular el saldo total sumando los saldos de todas las cuentas del usuario.
         BigDecimal totalBalance = BigDecimal.ZERO;
-        // Se accede a las cuentas del usuario directamente desde la entidad.
-        // Es importante que la relacion @OneToMany en User este configurada para cargar las cuentas
-        // (idealmente LAZY y luego accederlas, o con EAGER si es siempre necesario).
         if (user.getAccounts() != null && !user.getAccounts().isEmpty()) {
             totalBalance = user.getAccounts().stream()
                                .map(Account::getBalance)
                                .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
 
-        // Crear el DTO con la informacion resumida del dashboard.
-        DashboardUserDTO userDTO = new DashboardUserDTO(
-            user.getFirstName() + " " + user.getLastName(), // Asumiendo getFirstName y getLastName
-            user.getEmail(),
-            totalBalance
-        );
+        // Crear el DTO con la informacion resumida del dashboard usando el Builder.
+        DashboardUserDTO userDTO = DashboardUserDTO.builder()
+            .id(user.getId()) // Asegurate de incluir el ID
+            .fullName(user.getFirstName() + " " + user.getLastName())
+            .email(user.getEmail())
+            .totalBalance(totalBalance)
+            .accounts(user.getAccounts().stream() // Mapea tambien las cuentas
+                         .map(account -> {
+                             AccountDTO dto = new AccountDTO();
+                             dto.setId(account.getId());
+                             dto.setAccountNumber(account.getAccountNumber());
+                             dto.setAccountType(account.getAccountType());
+                             dto.setBalance(account.getBalance());
+                             dto.setStatus(account.getStatus());
+                             dto.setCreationDate(account.getCreationDate());
+                             if (account.getUser() != null) {
+                                 dto.setUserId(account.getUser().getId());
+                                 dto.setUserName(account.getUser().getFirstName() + " " + account.getUser().getLastName());
+                             } else {
+                                 dto.setUserId(null);
+                                 dto.setUserName("N/A");
+                             }
+                             return dto;
+                         })
+                         .collect(Collectors.toList()))
+            .build();
 
         // Devolver una respuesta exitosa con el DTO.
         return ResponseEntity.ok(userDTO);
@@ -106,7 +123,7 @@ public class DashboardRestController {
      * @return ResponseEntity con una lista de AccountDTOs si se encuentran cuentas,
      * o ResponseEntity.notFound() si el usuario no existe.
      */
-    @GetMapping("/accounts") // Nombre de ruta actualizado
+    @GetMapping("/accounts")
     public ResponseEntity<?> getUserAccounts() {
         // Obtener el objeto de autenticacion y el email del usuario.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
