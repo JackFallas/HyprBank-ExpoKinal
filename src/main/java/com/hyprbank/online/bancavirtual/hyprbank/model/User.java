@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder; // Asegurate de que esta importacion este presente
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,26 +12,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.ArrayList; // Asegurate de que esta importacion este presente para ArrayList
 
-/*
- * Clase de entidad para representar un Usuario en el sistema bancario.
- *
- * Esta clase mapea a la tabla 'users' en la base de datos y
- * implementa la interfaz UserDetails de Spring Security para integrarse
- * con el sistema de autenticacion.
- *
- * @Entity indica que esta clase es una entidad JPA.
- * @Table especifica el nombre de la tabla en la base de datos.
- * @Data de Lombok genera getters, setters, toString, equals y hashCode.
- * @NoArgsConstructor y @AllArgsConstructor de Lombok generan constructores.
- */
 @Entity
 @Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // ¡Añade esta anotacion para habilitar el patron Builder!
+@Builder
 public class User implements UserDetails {
 
     @Id
@@ -50,8 +38,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    // Relación OneToMany con Account: Un usuario puede tener muchas cuentas
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Account> accounts = new ArrayList<>();
+    private List<Account> accounts = new ArrayList<>(); // Inicializar para evitar NullPointerException
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -61,11 +50,29 @@ public class User implements UserDetails {
     )
     private Collection<Role> roles;
 
+    // --- Métodos de utilidad para la relación bidireccional (tomado de la copia, adaptado a nombres) ---
+    public void addAccount(Account account) {
+        if (this.accounts == null) {
+            this.accounts = new ArrayList<>();
+        }
+        this.accounts.add(account);
+        account.setUser(this); // Asegura que la cuenta también sepa a qué usuario pertenece
+    }
+
+    public void removeAccount(Account account) {
+        if (this.accounts != null) {
+            this.accounts.remove(account);
+            account.setUser(null); // Desvincula la cuenta del usuario
+        }
+    }
+    // --- FIN Métodos de utilidad ---
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.roles != null && !this.roles.isEmpty()) {
             return this.roles;
         }
+        // Si no hay roles específicos, asignar un rol por defecto
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
@@ -76,26 +83,26 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return email; // El email es el nombre de usuario para Spring Security
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return true; // Lógica por defecto, se puede cambiar para gestionar la expiración de la cuenta
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return true; // Lógica por defecto, se puede cambiar para gestionar el bloqueo de la cuenta
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return true; // Lógica por defecto, se puede cambiar para gestionar la expiración de credenciales
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return true; // Lógica por defecto, se puede cambiar para habilitar/deshabilitar usuarios
     }
 }

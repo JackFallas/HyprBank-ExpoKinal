@@ -1,10 +1,6 @@
 package com.hyprbank.online.bancavirtual.hyprbank.config;
 
-// Importaciones de Servicios
-// import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; // ¡Eliminar esta importacion si no se usa directamente en el constructor!
-
 // Importaciones de Spring Security
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,7 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.core.userdetails.UserDetailsService; // Importar UserDetailsService
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 // Importaciones para CORS
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,24 +18,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 /*
- * Clase de configuracion principal para Spring Security.
+ * Clase de configuración principal para Spring Security.
  *
- * Define las reglas de autenticacion y autorizacion, la configuracion de la pagina de login,
- * el manejo de logout, la configuracion de CORS y la codificacion de contrasenas.
+ * Define las reglas de autenticación y autorización, la configuración de la página de login,
+ * el manejo de logout, la configuración de CORS y la codificación de contraseñas.
  *
  * @Configuration indica que esta clase contiene definiciones de beans de Spring.
- * @EnableWebSecurity habilita la integracion de Spring Security en la aplicacion web.
+ * @EnableWebSecurity habilita la integración de Spring Security en la aplicación web.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    // No inyectamos UserService directamente en el constructor aqui para evitar el ciclo.
-    // Spring Security encontrara el UserDetailsService a traves del contexto.
-
     /**
-     * Define el bean para el codificador de contrasenas.
-     * Se recomienda BCryptPasswordEncoder para encriptar contrasenas de forma segura.
+     * Define el bean para el codificador de contraseñas.
+     * Se recomienda BCryptPasswordEncoder para encriptar contraseñas de forma segura.
      *
      * @return Una instancia de {@link BCryptPasswordEncoder}.
      */
@@ -49,110 +42,97 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Configura el proveedor de autenticacion DAO (Data Access Object).
+     * Configura el proveedor de autenticación DAO (Data Access Object).
      * Este proveedor utiliza el {@link UserDetailsService} (que tu UserService implementa)
-     * para cargar los detalles del usuario y el {@link BCryptPasswordEncoder} para verificar la contrasena.
+     * para cargar los detalles del usuario y el {@link BCryptPasswordEncoder} para verificar la contraseña.
      *
-     * @param userDetailsService Spring inyectara automaticamente tu implementacion de UserDetailsService.
+     * @param userDetailsService Spring inyectará automáticamente tu implementación de UserDetailsService.
      * @return Una instancia de {@link DaoAuthenticationProvider}.
      */
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) { // Inyectar UserDetailsService aqui
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
-        auth.setUserDetailsService(userDetailsService); // Usa la instancia inyectada
-        auth.setPasswordEncoder(passwordEncoder()); // Usa el codificador de contrasenas definido
+        auth.setUserDetailsService(userDetailsService);
+        auth.setPasswordEncoder(passwordEncoder());
         return auth;
     }
 
     /**
      * Define la cadena de filtros de seguridad HTTP.
-     * En esta configuracion se establecen las reglas de autorizacion para las diferentes URLs,
-     * la configuracion del formulario de login y el manejo del logout.
+     * En esta configuración se establecen las reglas de autorización para las diferentes URLs,
+     * la configuración del formulario de login y el manejo del logout.
      *
      * @param http El objeto HttpSecurity para configurar la seguridad.
      * @return Una instancia de {@link SecurityFilterChain}.
-     * @throws Exception Si ocurre un error durante la configuracion.
+     * @throws Exception Si ocurre un error durante la configuración.
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Deshabilita CSRF. Para formularios Thymeleaf, Spring Security lo maneja por defecto.
-            // Si no estas usando tokens CSRF en tus formularios, es necesario deshabilitarlo.
-            // Para este proyecto con Thymeleaf, podrias intentar habilitarlo y ver si funciona.
-            // Por ahora lo dejaremos deshabilitado para simplificar la depuracion.
-            .csrf(csrf -> csrf.disable())
-            // Habilita y configura CORS (Cross-Origin Resource Sharing)
+            .csrf(csrf -> csrf.disable()) // Deshabilita CSRF (considera habilitarlo en producción con formularios)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Define las reglas de autorizacion para las solicitudes HTTP
             .authorizeHttpRequests(authorize -> authorize
-                // Rutas publicas: accesibles sin autenticacion
+                // 1. **Rutas públicas (permitAll()):**
+                // Estas rutas son accesibles sin autenticación.
+                // Hemos ELIMINADO "/" de aquí para que sea una ruta protegida.
                 .requestMatchers(
-                    "/",           // Pagina principal de bienvenida (si existe)
-                    "/login",      // Tu pagina de login personalizada
-                    "/register**", // Tu pagina de registro y sus parametros (ej. /register?success)
-                    "/css/**",     // Recursos CSS estaticos
-                    "/js/**",      // Recursos JavaScript estaticos
-                    "/img/**",     // Recursos de imagenes estaticos
-                    "/webjars/**"  // Si usas WebJars para librerias frontend
-                ).permitAll() // Permite el acceso a estas rutas sin autenticacion
-                // Rutas protegidas: requieren autenticacion.
-                // Asumo que 'Usuario.html' es tu dashboard principal.
-                .requestMatchers(
-                    "/dashboard",
-                    "/user-dashboard.html",
-                    "/api/dashboard/**",
-                    "/api/movements/**",
-                    "/api/transactions/**",
-                    "/api/reports/**"
-                ).authenticated() // Estas rutas requieren que el usuario este autenticado
-                // Cualquier otra solicitud no especificada requiere autenticacion
+                    "/login",                // La URL de tu página de login (GET)
+                    "/login**",              // Captura /login?error, /login?logout, etc.
+                    "/register",             // Tu página de registro (GET)
+                    "/register**",           // Captura /register?success, etc.
+                    "/css/**",               // Recursos estáticos
+                    "/js/**",
+                    "/img/**",
+                    "/webjars/**"
+                ).permitAll()                // Permite acceso sin autenticación a estas rutas
+
+                // 2. **Rutas protegidas (authenticated()):**
+                // CUALQUIER OTRA SOLICITUD requiere autenticación.
+                // Esto incluye la raíz "/", lo que forzará la redirección al login.
                 .anyRequest().authenticated()
             )
-            // Configuracion del formulario de login
+            // Configuración del formulario de login
             .formLogin(form -> form
-                .loginPage("/login") // Especifica la URL de tu pagina de login personalizada
-                .loginProcessingUrl("/login") // URL a la que se enviaran las credenciales del formulario
-                .defaultSuccessUrl("/dashboard", true) // Redirige a /dashboard despues de un login exitoso
-                .failureUrl("/login?error") // Redirige a /login?error si el login falla
-                .permitAll() // Permite acceso a la pagina de login y al proceso de autenticacion
+                .loginPage("/login")             // Especifica la URL de tu página de login
+                .loginProcessingUrl("/login")    // URL a la que se envían las credenciales del formulario
+                .defaultSuccessUrl("/dashboard", true) // Redirige a /dashboard después de un login exitoso
+                .failureUrl("/login?error")      // Redirige a /login?error si el login falla
+                .permitAll()                     // Permite acceso a la página de login y al proceso de autenticación
             )
-            // Configuracion del logout
+            // Configuración del logout
             .logout(logout -> logout
-                .invalidateHttpSession(true) // Invalida la sesion HTTP al cerrar sesion
-                .clearAuthentication(true) // Limpia la autenticacion de Spring Security
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // URL para cerrar sesion
-                .logoutSuccessUrl("/login?logout") // Redirige a /login?logout despues de cerrar sesion
-                .permitAll() // Permite el acceso al proceso de logout
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login?logout") // Redirige a /login?logout después de cerrar sesión
+                .permitAll()
             );
-            // Ya no necesitas .authenticationProvider(authenticationProvider()); aqui,
-            // Spring Security lo encontrara automaticamente si es un bean.
 
         return http.build();
     }
 
     /**
-     * Define la configuracion de CORS (Cross-Origin Resource Sharing).
-     * Permite especificar que origenes, metodos y cabeceras estan permitidos para solicitudes de origen cruzado.
+     * Define la configuración de CORS (Cross-Origin Resource Sharing).
+     * Permite especificar qué orígenes, métodos y cabeceras están permitidos para solicitudes de origen cruzado.
      *
      * @return Una instancia de {@link CorsConfigurationSource}.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Configura los origenes permitidos para las solicitudes de frontend
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://127.0.0.1:5500", // Comunes para Live Server
-            "http://localhost:5500", // Comunes para Live Server
-            "http://localhost:8080", // Si el frontend corre en el mismo puerto del backend o si es un cliente web simple
-            "http://localhost:8081" // Si tu frontend esta en este puerto
+            "http://127.0.0.1:5500",
+            "http://localhost:5500",
+            "http://localhost:8080",
+            "http://localhost:8081"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Metodos HTTP permitidos
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Cabeceras permitidas
-        configuration.setAllowCredentials(true); // Permite el envio de cookies de autenticacion
-        configuration.setMaxAge(3600L); // Tiempo maximo de cache para resultados de preflight (en segundos)
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Aplica esta configuracion CORS a todas las rutas
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }

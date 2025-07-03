@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Administrador | kinalBAnk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-900 text-white font-sans">
+    <div class="flex min-h-screen">
+      <button
+        id="btnToggleSidebar"
+        aria-label="Mostrar menú lateral"
+        class="fixed top-4 left-4 z-50 bg-emerald-600 p-3 rounded-md shadow-md hover:bg-emerald-700 transition focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      >
+        ☰
+      </button>
+      <div
+        id="overlay"
+        class="fixed inset-0 bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-40"
+      ></div>
+
+      <!-- Barra lateral -->
+      <aside
+        id="sidebar"
+        class="fixed top-0 left-0 z-50 w-64 h-screen bg-gray-800 flex flex-col p-6 space-y-6 transform -translate-x-full transition-transform duration-300 ease-in-out"
+      >
+        <div>
+          <div
+            class="flex items-center space-x-3 text-2xl font-bold text-white mb-6 select-none"
+          >
+            <span>🛠️</span><span>Admin kinalBAnk</span>
+          </div>
+          <nav class="flex flex-col space-y-3">
+            <a
+              href="#"
+              data-id="dashboard"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Dashboard</a
+            >
+            <a
+              href="#"
+              data-id="clientes"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Clientes</a
+            >
+            <a
+              href="#"
+              data-id="transacciones"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Transacciones</a
+            >
+            <a
+              href="#"
+              data-id="reportes"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Reportes</a
+            >
+            <a
+              href="#"
+              data-id="gestionCuentas"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Gestión de cuentas</a
+            >
+            <a
+              href="#"
+              data-id="citas"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Citas</a
+            >
+            <a
+              href="#"
+              data-id="cuentas"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Cuentas</a
+            >
+            <a
+              href="#"
+              data-id="configuracion"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Configuración</a
+            >
+
+            <div class="mt-auto">
+                <a href="/logout" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                    </svg>
+                    Cerrar sesión
+                </a>
+            </div>
+          </nav>
+        </div>
+      </aside>
+<!-- Modal para editar cliente -->
+<div id="modalEditarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
+    <h2 class="text-2xl font-bold mb-4 text-emerald-400">✏️ Editar Cliente</h2>
+    <form id="formEditarCliente" class="space-y-4">
+      <div>
+        <label class="block mb-1 text-sm">Nombre</label>
+        <input type="text" id="editarNombre" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Email</label>
+        <input type="email" id="editarEmail" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Estado</label>
+        <select id="editarEstado" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="bloqueado">Bloqueado</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" id="btnCancelarEditar" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+      <!-- Contenedor principal para contenido dinámico -->
+      <main
+        id="contenido"
+        class="flex-1 p-8 bg-gray-900 overflow-auto min-h-screen"
+      ></main>
+    </div>
+
+    <script>
+      const sidebarLinks = document.querySelectorAll(".sidebar-link");
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          cambiarPestania(link.dataset.id); // mantiene funcionalidad actual
+          ocultarSidebar(); // <-- esta es la clave: oculta el menú
+        });
+      });
+      const contenido = document.getElementById("contenido");
+
+      // Datos ficticios para mostrar (puedes reemplazar con API real)
+      const datos = {
+        totalClientes: 1520,
+        saldoGlobal: 98765432.15,
+        cuentasActivas: 1340,
+        cuentasInactivas: 180,
+        cuentasBloqueadas: 15,
+        citasSinConfirmar: 4,
+        nuevosClientesSemana: [5, 8, 10, 15, 12, 20, 18], // últimos 7 días
+        volumenTransaccionesMes: [120000, 95000, 110000, 130000, 90000, 150000], // últimos 6 meses
+        clientes: [
+          {
+            id: "C001",
+            nombre: "Juan Pérez",
+            email: "juan@example.com",
+            estado: "Activo",
+          },
+          {
+            id: "C002",
+            nombre: "Ana Gómez",
+            email: "ana@example.com",
+            estado: "Bloqueado",
+          },
+          {
+            id: "C003",
+            nombre: "Luis Martínez",
+            email: "luis@example.com",
+            estado: "Inactivo",
+          },
+        ],
+        transacciones: [
+          {
+            fecha: "2025-06-10",
+            descripcion: "Depósito efectivo",
+            tipo: "Depósito",
+            monto: 1500,
+          },
+          {
+            fecha: "2025-06-12",
+            descripcion: "Retiro cajero",
+            tipo: "Retiro",
+            monto: 500,
+          },
+          {
+            fecha: "2025-06-14",
+            descripcion: "Transferencia a C002",
+            tipo: "Transferencia",
+            monto: 700,
+          },
+        ],
+        cuentas: [
+          {
+            id: "A001",
+            titular: "Juan Pérez",
+            tipo: "Ahorro",
+            saldo: 12000,
+            estado: "Activo",
+          },
+          {
+            id: "A002",
+            titular: "Ana Gómez",
+            tipo: "Corriente",
+            saldo: 5000,
+            estado: "Bloqueada",
+          },
+          {
+            id: "A003",
+            titular: "Luis Martínez",
+            tipo: "Ahorro",
+            saldo: 0,
+            estado: "Inactiva",
+          },
+        ],
+      };
+
+      // Función para formatear números a moneda
+      function formatoMoneda(num) {
+        return num.toLocaleString("es-GT", {
+          style: "currency",
+          currency: "GTQ",
+          minimumFractionDigits: 2,
+        });
+      }
+
+      // Función para crear gráfico (Chart.js)
+      function crearGrafico(ctx, labels, data, label, color) {
+        return new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label,
+                data,
+                borderColor: color,
+                backgroundColor: color + "44",
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      // Contenido dinámico para cada pestaña
+      const secciones = {
+        dashboard: `
+      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+        <h1 class="text-4xl font-bold mb-8 text-emerald-400 text-center">Dashboard</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+            <h2 class="text-xl font-semibold mb-2">Clientes Registrados</h2>
+            <p class="text-5xl font-mono text-emerald-400">${
+              datos.totalClientes
+            }</p>
+            <button
+              data-id="clientes"
+              class="mt-3 bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+            >Ver más</button>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+            <h2 class="text-xl font-semibold mb-2">Saldo Global del Banco</h2>
+            <p class="text-4xl font-mono text-emerald-400">${formatoMoneda(
+              datos.saldoGlobal
+            )}</p>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+            <h2 class="text-xl font-semibold mb-2">Cuentas Activas / Inactivas</h2>
+            <p class="text-3xl font-mono text-emerald-400">${
+              datos.cuentasActivas
+            } / ${datos.cuentasInactivas}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold mb-4 text-emerald-400">Nuevos Clientes por Semana</h3>
+            <canvas id="graficoClientes"></canvas>
+          </div>
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold mb-4 text-emerald-400">Volumen de Transacciones por Mes (GTQ)</h3>
+            <canvas id="graficoTransacciones"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-xl mx-auto text-center">
+          <h3 class="text-xl font-semibold mb-4 text-yellow-400">Indicadores de alerta</h3>
+          <p>Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong></p>
+          <p>Citas sin confirmar: <strong>${
+            datos.citasSinConfirmar
+          }</strong></p>
+        </div>
+      </section>
+    `,
+
+        clientes: `
+      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
+          <button
+            id="btnAgregarCliente"
+            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+          >Agregar Cliente</button>
+        </div>
+        <input
+          type="text"
+          id="buscadorClientes"
+          placeholder="Buscar por nombre, email o ID..."
+          class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+          <thead class="bg-gray-700 text-gray-300">
+            <tr>
+              <th class="py-3 px-4 text-left">ID</th>
+              <th class="py-3 px-4 text-left">Nombre</th>
+              <th class="py-3 px-4 text-left">Email</th>
+              <th class="py-3 px-4 text-left">Estado</th>
+              <th class="py-3 px-4 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaClientes" class="text-gray-100">
+            <!-- Aquí se cargan los clientes dinámicamente -->
+          </tbody>
+        </table>
+      </section>
+    `,
+
+        transacciones: `
+      <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transacciones</h1>
+
+        <div class="flex flex-wrap gap-4 mb-6">
+          <input
+            type="date"
+            id="filtroFechaInicio"
+            class="px-3 py-2 rounded-md bg-gray-700 text-white"
+            placeholder="Fecha inicio"
+          />
+          <input
+            type="date"
+            id="filtroFechaFin"
+            class="px-3 py-2 rounded-md bg-gray-700 text-white"
+            placeholder="Fecha fin"
+          />
+          <select
+            id="filtroTipo"
+            class="px-3 py-2 rounded-md bg-gray-700 text-white"
+          >
+            <option value="">Tipo de transacción</option>
+            <option value="Depósito">Depósito</option>
+            <option value="Retiro">Retiro</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+          <input
+            type="text"
+            id="buscadorTransacciones"
+            placeholder="Buscar por ID o descripción"
+            class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px]"
+          />
+          <button
+            id="btnExportarTransacciones"
+            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+          >
+            Exportar PDF/Excel
+          </button>
+        </div>
+
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+          <thead class="bg-gray-700 text-gray-300">
+            <tr>
+              <th class="py-3 px-4 text-left cursor-pointer" data-orden="fecha">Fecha ↑↓</th>
+              <th class="py-3 px-4 text-left">Descripción</th>
+              <th class="py-3 px-4 text-left">Tipo</th>
+              <th class="py-3 px-4 text-left cursor-pointer" data-orden="monto">Monto ↑↓</th>
+            </tr>
+          </thead>
+          <tbody id="tablaTransacciones" class="text-gray-100">
+            <!-- Aquí se cargan las transacciones -->
+          </tbody>
+        </table>
+      </section>
+    `,
+
+        reportes: `
+      <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white flex flex-col items-center justify-center">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Reportes</h1>
+
+        <div class="w-full max-w-md mb-6">
+          <label class="block mb-2 font-semibold" for="rangoFechasReporte">Rango de fechas:</label>
+          <input type="date" id="rangoInicioReporte" class="w-full mb-2 px-3 py-2 rounded-md bg-gray-700 text-white" />
+          <input type="date" id="rangoFinReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white" />
+        </div>
+
+        <div class="w-full max-w-md mb-6">
+          <label class="block mb-2 font-semibold" for="tipoReporte">Tipo de reporte:</label>
+          <select id="tipoReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white">
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+            <option value="porCliente">Por Cliente</option>
+            <option value="porCuenta">Por Cuenta</option>
+          </select>
+        </div>
+
+        <button
+          id="btnGenerarReporte"
+          class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
+        >
+          Generar Reporte
+        </button>
+
+        <div id="vistaPreviaReporte" class="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-3xl text-center text-gray-300 hidden">
+          Aquí aparecerá la vista previa del reporte generado.
+        </div>
+
+        <button
+          id="btnEnviarCorreoReporte"
+          class="mt-4 bg-blue-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition hidden"
+        >
+          Enviar por correo
+        </button>
+      </section>
+    `,
+
+        gestionCuentas: `
+      <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-emerald-400">Gestión de Cuentas</h1>
+          <button
+            id="btnAgregarCuenta"
+            class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+          >Agregar Nueva Cuenta</button>
+        </div>
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg mb-6">
+          <thead class="bg-gray-700 text-gray-300">
+            <tr>
+              <th class="py-3 px-4 text-left">ID Cuenta</th>
+              <th class="py-3 px-4 text-left">Titular</th>
+              <th class="py-3 px-4 text-left">Tipo</th>
+              <th class="py-3 px-4 text-left">Saldo</th>
+              <th class="py-3 px-4 text-left">Estado</th>
+              <th class="py-3 px-4 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuentasGestion" class="text-gray-100">
+            <!-- Aquí se cargan las cuentas -->
+          </tbody>
+        </table>
+      </section>
+    `,
+
+        citas: `
+      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Gestión de Citas</h1>
+        <button
+          id="btnNuevaCita"
+          class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition mb-6"
+        >Nueva Cita</button>
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+          <thead class="bg-gray-700 text-gray-300">
+            <tr>
+              <th class="py-3 px-4 text-left">Fecha</th>
+              <th class="py-3 px-4 text-left">Cliente</th>
+              <th class="py-3 px-4 text-left">Estado</th>
+              <th class="py-3 px-4 text-left">Empleado Asignado</th>
+              <th class="py-3 px-4 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCitas" class="text-gray-100">
+            <tr><td colspan="5" class="text-center py-6 text-gray-500">No hay citas programadas en este momento.</td></tr>
+          </tbody>
+        </table>
+      </section>
+    `,
+
+        cuentas: `
+      <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Información de Cuentas</h1>
+        <input
+          type="text"
+          id="buscadorCuentas"
+          placeholder="Buscar por número o titular..."
+          class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+          <thead class="bg-gray-700 text-gray-300">
+            <tr>
+              <th class="py-3 px-4 text-left">Número de Cuenta</th>
+              <th class="py-3 px-4 text-left">Titular</th>
+              <th class="py-3 px-4 text-left">Tipo</th>
+              <th class="py-3 px-4 text-left">Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuentas" class="text-gray-100">
+            <!-- Aquí se cargan las cuentas -->
+          </tbody>
+        </table>
+        <button
+          id="btnDescargarCuentas"
+          class="mt-6 bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
+        >
+          Descargar lista en Excel
+        </button>
+      </section>
+    `,
+
+        configuracion: `
+      <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-400">Configuración</h1>
+
+        <form id="formConfiguracion" class="space-y-6">
+          <div>
+            <label for="nombreAdmin" class="block mb-2 font-semibold">Nombre administrador:</label>
+            <input
+              type="text"
+              id="nombreAdmin"
+              name="nombreAdmin"
+              value="Admin KinalBank"
+              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+            />
+          </div>
+
+          <div>
+            <label for="claveAdmin" class="block mb-2 font-semibold">Cambiar clave:</label>
+            <input
+              type="password"
+              id="claveAdmin"
+              name="claveAdmin"
+              placeholder="Nueva clave"
+              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+            />
+          </div>
+
+          <div>
+            <label for="tema" class="block mb-2 font-semibold">Tema:</label>
+            <select
+              id="tema"
+              name="tema"
+              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+            >
+              <option value="oscuro" selected>Oscuro</option>
+              <option value="claro">Claro</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="idioma" class="block mb-2 font-semibold">Idioma:</label>
+            <select
+              id="idioma"
+              name="idioma"
+              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+            >
+              <option value="es" selected>Español</option>
+              <option value="en">Inglés</option>
+              <option value="fr">Francés</option>
+            </select>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="notificaciones"
+              name="notificaciones"
+              checked
+            />
+            <label for="notificaciones" class="font-semibold"
+              >Notificaciones activadas</label
+            >
+          </div>
+
+          <div>
+            <label for="permisos" class="block mb-2 font-semibold"
+              >Permisos de usuarios:</label
+            >
+            <select
+              id="permisos"
+              name="permisos"
+              class="w-full px-4 py-2 rounded-md bg-gray-700 text-white"
+            >
+              <option value="admin" selected>Administrador</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="usuario">Usuario</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
+          >
+            Guardar Cambios
+          </button>
+        </form>
+
+        <button
+          id="btnCerrarSesion"
+          class="mt-6 bg-red-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-red-700 transition"
+        >
+          Cerrar Sesión
+        </button>
+      </section>
+    `,
+      };
+
+      // Renderiza la lista de clientes con filtro y acciones
+      function renderClientes() {
+        const tbody = document.getElementById("tablaClientes");
+        const filtro = document
+          .getElementById("buscadorClientes")
+          .value.toLowerCase();
+        let html = "";
+        const filtrados = datos.clientes.filter(
+          (c) =>
+            c.id.toLowerCase().includes(filtro) ||
+            c.nombre.toLowerCase().includes(filtro) ||
+            c.email.toLowerCase().includes(filtro)
+        );
+        if (filtrados.length === 0) {
+          html = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
+        } else {
+          filtrados.forEach((c) => {
+            html += `
+              <tr>
+                <td class="py-3 px-4">${c.id}</td>
+                <td class="py-3 px-4">${c.nombre}</td>
+                <td class="py-3 px-4">${c.email}</td>
+                <td class="py-3 px-4">${c.estado}</td>
+                <td class="py-3 px-4 space-x-2">
+                  <button class="text-emerald-400 hover:underline btnVerCliente" data-id="${c.id}">Ver</button>
+                  <button class="text-yellow-400 hover:underline btnEditarCliente" data-id="${c.id}">Editar</button>
+                  <button class="text-red-500 hover:underline btnEliminarCliente" data-id="${c.id}">Eliminar</button>
+                </td>
+              </tr>
+            `;
+          });
+        }
+        tbody.innerHTML = html;
+
+        // Aquí puedes agregar eventos para los botones (Ver, Editar, Eliminar)
+      }
+
+      // Renderiza la tabla de transacciones
+      function renderTransacciones() {
+        const tbody = document.getElementById("tablaTransacciones");
+        // Para simplicidad, no aplicamos filtros aún
+        let html = "";
+        if (datos.transacciones.length === 0) {
+          html = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay transacciones registradas.</td></tr>`;
+        } else {
+          datos.transacciones.forEach((t) => {
+            html += `
+              <tr>
+                <td class="py-3 px-4">${t.fecha}</td>
+                <td class="py-3 px-4">${t.descripcion}</td>
+                <td class="py-3 px-4">${t.tipo}</td>
+                <td class="py-3 px-4">${formatoMoneda(t.monto)}</td>
+              </tr>
+            `;
+          });
+        }
+        tbody.innerHTML = html;
+      }
+
+      // Renderiza la tabla de gestión de cuentas
+      function renderGestionCuentas() {
+        const tbody = document.getElementById("tablaCuentasGestion");
+        let html = "";
+        if (datos.cuentas.length === 0) {
+          html = `<tr><td colspan="6" class="text-center py-6 text-gray-500">No hay cuentas registradas.</td></tr>`;
+        } else {
+          datos.cuentas.forEach((c) => {
+            html += `
+              <tr>
+                <td class="py-3 px-4">${c.id}</td>
+                <td class="py-3 px-4">${c.titular}</td>
+                <td class="py-3 px-4">${c.tipo}</td>
+                <td class="py-3 px-4">${formatoMoneda(c.saldo)}</td>
+                <td class="py-3 px-4">${c.estado}</td>
+                <td class="py-3 px-4 space-x-2">
+                  <button class="text-emerald-400 hover:underline btnEditarCuenta" data-id="${
+                    c.id
+                  }">Editar</button>
+                  <button class="text-red-500 hover:underline btnEliminarCuenta" data-id="${
+                    c.id
+                  }">Eliminar</button>
+                </td>
+              </tr>
+            `;
+          });
+        }
+        tbody.innerHTML = html;
+      }
+
+      // Renderiza tabla cuentas solo vista general
+      function renderCuentas() {
+        const tbody = document.getElementById("tablaCuentas");
+        const filtro =
+          document.getElementById("buscadorCuentas")?.value.toLowerCase() || "";
+        let filtradas = datos.cuentas;
+        if (filtro) {
+          filtradas = datos.cuentas.filter(
+            (c) =>
+              c.id.toLowerCase().includes(filtro) ||
+              c.titular.toLowerCase().includes(filtro)
+          );
+        }
+
+        let html = "";
+        if (filtradas.length === 0) {
+          html = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No se encontraron cuentas.</td></tr>`;
+        } else {
+          filtradas.forEach((c) => {
+            html += `
+              <tr>
+                <td class="py-3 px-4">${c.id}</td>
+                <td class="py-3 px-4">${c.titular}</td>
+                <td class="py-3 px-4">${c.tipo}</td>
+                <td class="py-3 px-4">${formatoMoneda(c.saldo)}</td>
+              </tr>
+            `;
+          });
+        }
+        tbody.innerHTML = html;
+      }
+
+      // Función para cargar sección y activar enlaces
+      function cambiarPestania(id) {
+        // Quitar clase active de todos
+        sidebarLinks.forEach((link) =>
+          link.classList.remove("bg-emerald-600", "text-white")
+        );
+        // Agregar active al clickeado
+        const linkActivo = Array.from(sidebarLinks).find(
+          (link) => link.dataset.id === id
+        );
+        if (linkActivo) {
+          linkActivo.classList.add("bg-emerald-600", "text-white");
+        }
+        // Cambiar contenido
+        contenido.innerHTML =
+          secciones[id] ||
+          '<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>';
+
+        // Al cargar cada sección, ejecutar funciones específicas
+        if (id === "dashboard") {
+          // Crear gráficos
+          setTimeout(() => {
+            const ctxClientes = document.getElementById("graficoClientes");
+            const ctxTransacciones = document.getElementById(
+              "graficoTransacciones"
+            );
+            if (ctxClientes) {
+              crearGrafico(
+                ctxClientes,
+                ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+                datos.nuevosClientesSemana,
+                "Nuevos clientes",
+                "rgba(34,197,94,1)"
+              );
+            }
+            if (ctxTransacciones) {
+              crearGrafico(
+                ctxTransacciones,
+                ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+                datos.volumenTransaccionesMes,
+                "Transacciones (GTQ)",
+                "rgba(34,197,94,1)"
+              );
+            }
+          }, 100);
+        } else if (id === "clientes") {
+          setTimeout(() => {
+            renderClientes();
+
+            // Buscador clientes
+            document
+              .getElementById("buscadorClientes")
+              .addEventListener("input", renderClientes);
+
+            // Botón agregar cliente (aquí solo alerta)
+            document
+              .getElementById("btnAgregarCliente")
+              .addEventListener("click", () => {
+                alert(
+                  "Funcionalidad para agregar cliente aún no implementada."
+                );
+              });
+
+            // Aquí se podrían agregar eventos para botones Ver, Editar, Eliminar
+          }, 50);
+        } else if (id === "transacciones") {
+          setTimeout(() => {
+            renderTransacciones();
+
+            // Botón exportar
+            document
+              .getElementById("btnExportarTransacciones")
+              .addEventListener("click", () => {
+                alert(
+                  "Funcionalidad para exportar PDF/Excel aún no implementada."
+                );
+              });
+
+            // Aquí podrían implementarse filtros y ordenamientos
+          }, 50);
+        } else if (id === "reportes") {
+          setTimeout(() => {
+            // Botones de reportes
+            document
+              .getElementById("btnGenerarReporte")
+              .addEventListener("click", () => {
+                const vista = document.getElementById("vistaPreviaReporte");
+                const btnCorreo = document.getElementById(
+                  "btnEnviarCorreoReporte"
+                );
+                vista.innerHTML = `<p>Reporte generado: tipo <strong>${
+                  document.getElementById("tipoReporte").value
+                }</strong>, fechas <strong>${
+                  document.getElementById("rangoInicioReporte").value
+                } a ${
+                  document.getElementById("rangoFinReporte").value
+                }</strong>.</p>`;
+                vista.classList.remove("hidden");
+                btnCorreo.classList.remove("hidden");
+              });
+
+            document
+              .getElementById("btnEnviarCorreoReporte")
+              .addEventListener("click", () => {
+                alert("Reporte enviado por correo (simulado).");
+              });
+          }, 50);
+        } else if (id === "gestionCuentas") {
+          setTimeout(() => {
+            renderGestionCuentas();
+
+            document
+              .getElementById("btnAgregarCuenta")
+              .addEventListener("click", () => {
+                alert(
+                  "Funcionalidad para agregar nueva cuenta aún no implementada."
+                );
+              });
+          }, 50);
+        } else if (id === "citas") {
+          setTimeout(() => {
+            document
+              .getElementById("btnNuevaCita")
+              .addEventListener("click", () => {
+                alert(
+                  "Funcionalidad para crear nueva cita aún no implementada."
+                );
+              });
+          }, 50);
+        } else if (id === "cuentas") {
+          setTimeout(() => {
+            renderCuentas();
+
+            const inputBuscarCuentas =
+              document.getElementById("buscadorCuentas");
+            if (inputBuscarCuentas) {
+              inputBuscarCuentas.addEventListener("input", renderCuentas);
+            }
+
+            document
+              .getElementById("btnDescargarCuentas")
+              .addEventListener("click", () => {
+                alert(
+                  "Funcionalidad para descargar lista en Excel aún no implementada."
+                );
+              });
+          }, 50);
+        } else if (id === "configuracion") {
+          setTimeout(() => {
+            // Cambio tema
+            document.getElementById("tema").addEventListener("change", (e) => {
+              if (e.target.value === "claro") {
+                document.documentElement.classList.remove("dark");
+              } else {
+                document.documentElement.classList.add("dark");
+              }
+            });
+
+            document
+              .getElementById("formConfiguracion")
+              .addEventListener("submit", (e) => {
+                e.preventDefault();
+                alert("Cambios guardados (simulado).");
+              });
+
+            document
+              .getElementById("btnCerrarSesion")
+              .addEventListener("click", () => {
+                alert("Sesión cerrada (simulado).");
+              });
+          }, 50);
+        }
+      }
+
+      // Función para formatear moneda local GTQ
+      function formatoMoneda(valor) {
+        return new Intl.NumberFormat("es-GT", {
+          style: "currency",
+          currency: "GTQ",
+        }).format(valor);
+      }
+
+      // Función para crear gráfico con Chart.js
+      function crearGrafico(ctx, etiquetas, datosGrafico, etiqueta, color) {
+        if (!ctx) return;
+        // Destruir gráfico previo si existe
+        if (ctx.chart) {
+          ctx.chart.destroy();
+        }
+        ctx.chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: etiquetas,
+            datasets: [
+              {
+                label: etiqueta,
+                data: datosGrafico,
+                borderColor: color,
+                backgroundColor: "rgba(34,197,94,0.3)",
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#d1d5db",
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#9ca3af",
+                },
+                grid: {
+                  color: "#374151",
+                },
+              },
+              y: {
+                ticks: {
+                  color: "#9ca3af",
+                },
+                grid: {
+                  color: "#374151",
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Evento click en links sidebar
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const id = link.dataset.id;
+          cambiarPestania(id);
+        });
+      });
+
+      const sidebar = document.getElementById("sidebar");
+      const btnToggleSidebar = document.getElementById("btnToggleSidebar");
+      const overlay = document.getElementById("overlay");
+
+      let sidebarVisible = false;
+
+      function mostrarSidebar() {
+        sidebar.classList.remove("-translate-x-full");
+        overlay.classList.remove("opacity-0", "pointer-events-none");
+        overlay.classList.add("opacity-100", "pointer-events-auto");
+        sidebarVisible = true;
+      }
+
+      function ocultarSidebar() {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("opacity-0", "pointer-events-none");
+        overlay.classList.remove("opacity-100", "pointer-events-auto");
+        sidebarVisible = false;
+      }
+
+      btnToggleSidebar.addEventListener("click", () => {
+        if (sidebarVisible) {
+          ocultarSidebar();
+        } else {
+          mostrarSidebar();
+        }
+      });
+
+      overlay.addEventListener("click", () => {
+        ocultarSidebar();
+      });
+// Referencias a modal y botones
+const modalEditar = document.getElementById("modalEditarCliente");
+const btnCancelarEditar = document.getElementById("btnCancelarEditar");
+const formEditar = document.getElementById("formEditarCliente");
+
+// Abrir modal al hacer clic en cualquier botón editar
+document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("btnEditarCliente")) {
+    // Aquí podrías llenar los campos con datos reales
+    document.getElementById("editarNombre").value = "Juan Pérez";
+    document.getElementById("editarEmail").value = "juan@example.com";
+    document.getElementById("editarEstado").value = "activo";
+
+    modalEditar.classList.remove("hidden");
+  }
+});
+
+// Cerrar modal al hacer clic en cancelar
+btnCancelarEditar.addEventListener("click", () => {
+  modalEditar.classList.add("hidden");
+});
+
+// Simular guardar cambios
+formEditar.addEventListener("submit", function (e) {
+  e.preventDefault();
+  alert("Cliente actualizado (simulado).");
+  modalEditar.classList.add("hidden");
+});
+
+      // Mostrar dashboard por defecto
+      cambiarPestania("dashboard");
+    </script>
+  </body>
+</html>
