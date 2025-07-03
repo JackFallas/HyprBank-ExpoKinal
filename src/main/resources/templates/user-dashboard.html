@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuario | HyprBank</title>
+    <!-- Enlace al archivo output.css local de tu proyecto -->
+    <!-- Asegúrate de que el proceso de compilación de Tailwind CLI esté ejecutándose para generar este archivo -->
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        /* Base styles for sidebar and content */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 40;
+            height: 100vh;
+            background-color: #1f2937; /* bg-gray-800 */
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem; /* p-6 */
+            transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
+            overflow-x: hidden; /* Hide horizontal overflow */
+            white-space: nowrap; /* Prevent text wrapping */
+            width: 5rem; /* Collapsed width: w-20 */
+        }
+
+        #contenido {
+            flex: 1;
+            padding: 2rem; /* p-8 */
+            background-color: #111827; /* bg-gray-900 */
+            overflow: auto;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            margin-left: 5rem; /* Default margin for collapsed sidebar */
+        }
+
+        /* Styles for text labels within sidebar links */
+        #sidebar .text-label {
+            opacity: 0;
+            max-width: 0; /* Control width for smooth transition */
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+            margin-left: 0; /* Default no margin */
+        }
+
+        /* Styles for icons within sidebar links */
+        #sidebar .sidebar-link svg,
+        #sidebar .submenu-item svg,
+        #sidebar #sidebar-logo img { /* Apply to logo image as well */
+            flex-shrink: 0; /* Prevent icons/logo from shrinking */
+            margin-right: 0; /* Default no margin */
+            transition: margin-right 0.3s ease-in-out;
+        }
+
+        /* Sidebar header (logo and title) */
+        #sidebar-logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem; /* mb-6 */
+            transition: margin-bottom 0.3s ease-in-out;
+        }
+        #sidebar-logo img {
+            width: 2rem; /* h-8 w-8 */
+            height: 2rem;
+            object-fit: contain;
+        }
+        #sidebar-logo .text-label {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: bold; /* font-bold */
+            color: white;
+            margin-left: 0.75rem; /* ml-3 */
+        }
+
+        /* Desktop Styles (>= 1024px) */
+        @media (min-width: 1024px) {
+            #sidebar:hover {
+                width: 16rem; /* Expanded width: w-64 */
+            }
+
+            #sidebar:hover .text-label {
+                opacity: 1;
+                max-width: 100%; /* Allow text to take natural width */
+                margin-left: 0.75rem; /* ml-3 */
+            }
+
+            #sidebar:hover .sidebar-link svg,
+            #sidebar:hover .submenu-item svg,
+            #sidebar:hover #sidebar-logo img {
+                margin-right: 0.75rem; /* mr-3 */
+            }
+
+            #sidebar:hover #sidebar-logo {
+                margin-bottom: 1.5rem; /* Ensure margin is applied when expanded */
+            }
+
+            #sidebar:hover + #contenido {
+                margin-left: 16rem; /* Margin for expanded sidebar */
+            }
+
+            /* Active state when sidebar is expanded by hover */
+            #sidebar:hover .sidebar-link.active,
+            #sidebar:hover .submenu-item.active {
+                background-color: #047857; /* Emerald-700 */
+                color: white;
+            }
+
+            /* Ensure menu button is hidden on desktop, as sidebar is always present */
+            #btnToggleSidebar {
+                display: none;
+            }
+
+            /* Specific styling for submenu items to ensure text visibility */
+            .submenu-item {
+                padding-left: 1.5rem; /* Adjusted indentation for submenu items */
+                font-size: 0.85rem; /* Slightly smaller for sub-items */
+                color: #a0aec0; /* Lighter gray */
+            }
+            #sidebar:hover .submenu-item {
+                padding-left: 3.5rem; /* Indentation when expanded */
+            }
+            .submenu-item:hover {
+                background-color: #047857; /* Emerald-700 */
+                color: white;
+            }
+
+            /* Active state for collapsed sidebar (only icon has background) */
+            .sidebar-link.active {
+                background-color: transparent; /* No background when collapsed */
+                color: white;
+            }
+            .sidebar-link.active svg {
+                background-color: #047857; /* Emerald-700 for icon background */
+                padding: 0.5rem; /* Adjust padding for the icon background */
+                border-radius: 9999px; /* rounded-full */
+            }
+            /* Exception for logout link, always show icon */
+            [data-id="cerrarSesion"] svg {
+                background-color: transparent !important; /* No background for logout icon */
+                padding: 0 !important;
+            }
+        }
+
+        /* Mobile Styles (< 1024px) */
+        @media (max-width: 1023px) {
+            #sidebar {
+                width: 16rem; /* Full width when active on mobile */
+                transform: translateX(-100%); /* Hidden by default on mobile */
+            }
+            #sidebar.visible-on-mobile { /* Class added by JS when sidebar is open */
+                transform: translateX(0);
+            }
+
+            #sidebar .text-label { /* Text always visible on mobile when sidebar is open */
+                opacity: 1;
+                max-width: 100%;
+                margin-left: 0.75rem;
+            }
+            #sidebar .sidebar-link svg,
+            #sidebar .submenu-item svg,
+            #sidebar #sidebar-logo img {
+                margin-right: 0.75rem;
+            }
+
+            #sidebar #sidebar-logo { /* Show header on mobile when sidebar is open */
+                margin-bottom: 1.5rem;
+            }
+
+            #contenido {
+                margin-left: 0; /* No default margin for mobile */
+            }
+            #contenido.con-sidebar-visible { /* Class added by JS when sidebar is open */
+                margin-left: 16rem;
+            }
+
+            /* Active state when sidebar is expanded on mobile */
+            #sidebar.visible-on-mobile .sidebar-link.active,
+            #sidebar.visible-on-mobile .submenu-item.active {
+                background-color: #047857; /* Emerald-700 */
+                color: white;
+            }
+            /* Remove specific icon background for mobile active state */
+            #sidebar.visible-on-mobile .sidebar-link.active svg {
+                background-color: transparent;
+                padding: 0;
+                border-radius: 0;
+            }
+
+            /* Menu button always visible on mobile */
+            #btnToggleSidebar {
+                display: block;
+                position: absolute; /* Relative to sidebar */
+                top: 1.5rem; /* Align with sidebar padding */
+                left: 1.5rem; /* Align with sidebar padding */
+                z-index: 50; /* Above sidebar content */
+                background-color: transparent; /* No background */
+                color: #a0aec0; /* Gray text color */
+                font-size: 1.5rem; /* Make it visible */
+                padding: 0; /* No padding */
+                border: none; /* No border */
+                cursor: pointer;
+                transition: color 0.3s ease;
+            }
+            #sidebar.visible-on-mobile #btnToggleSidebar {
+                color: white; /* Change color when sidebar is open */
+            }
+
+            /* Specific styling for submenu items on mobile */
+            .submenu-item {
+                padding-left: 3.5rem; /* Indentation when expanded */
+                font-size: 0.85rem; /* Slightly smaller for sub-items */
+                color: #a0aec0; /* Lighter gray */
+            }
+            .submenu-item:hover {
+                background-color: #047857; /* Emerald-700 */
+                color: white;
+            }
+        }
+
+        /* General active state for sidebar links (only icon background when collapsed) */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem; /* py-3 px-4 */
+            border-radius: 9999px; /* rounded-full */
+            color: #a0aec0; /* text-gray-300 */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease-in-out;
+            margin-bottom: 0.5rem; /* space between links */
+        }
+        .sidebar-link:hover {
+            background-color: #047857; /* Emerald-700 */
+            color: white;
+            transform: scale(1.05); /* hover:scale-105 */
+        }
+        .sidebar-link.active {
+            color: white;
+        }
+        /* Active state for submenu items */
+        .submenu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            border-radius: 9999px; /* rounded-full */
+            color: #a0aec0; /* text-gray-300 */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease-in-out;
+        }
+        .submenu-item:hover {
+            background-color: #047857; /* Emerald-700 */
+            color: white;
+            transform: scale(1.05); /* hover:scale-105 */
+        }
+        .submenu-item.active {
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+    <div class="flex min-h-screen">
+
+        <!-- Sidebar - Barra lateral de navegación -->
+        <aside id="sidebar" class="fixed top-0 left-0 z-40 h-screen bg-gray-800 flex flex-col p-6 transition-transform duration-300">
+            <!-- Botón para alternar la visibilidad del sidebar en móviles/tablets -->
+            <!-- Este botón es el único elemento visible en la parte superior cuando la sidebar está colapsada -->
+            <button id="btnToggleSidebar" class="mb-4 text-gray-300 hover:text-white transition">
+                <span id="menuIcon">☰</span>
+            </button>
+
+            <!-- Encabezado del Sidebar con Logo y Título -->
+            <div id="sidebar-logo" class="flex items-center space-x-3 text-2xl font-bold text-white select-none">
+                <img src="../resources/static/img/hyprland-logo.svg" alt="HyprBank Logo" class="h-8 w-8 object-contain">
+                <span class="text-label">HyprBank</span>
+            </div>
+
+            <!-- Contenedor para los enlaces de navegación principales -->
+            <nav id="navLinks" class="flex flex-col space-y-3 flex-grow overflow-y-auto">
+                <!-- Enlaces principales del Sidebar -->
+                <a href="#" data-id="inicio" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" />
+                    </svg>
+                    <span class="text-label">Inicio</span>
+                </a>
+                
+                <a href="#" data-id="miCuenta" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 1117.803 5.12M12 12v.01" />
+                    </svg>
+                    <span class="text-label">Mi cuenta</span>
+                </a>
+                
+                <!-- Enlace de Transferencia Interna (ahora de primer nivel) -->
+                <a href="#" data-id="transferenciasInternas" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span class="text-label">Transferencia Interna</span>
+                </a>
+
+                <!-- Enlace de Transferencia Externa (ahora de primer nivel) -->
+                <a href="#" data-id="transferenciasExternas" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-2m-4-12H7a2 2 0 00-2 2v6a2 2 0 002 2h6" />
+                    </svg>
+                    <span class="text-label">Transferencia Externa</span>
+                </a>
+
+                <a href="#" data-id="historial" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17l4 4m0 0l4-4m-4 4V3" />
+                    </svg>
+                    <span class="text-label">Historial</span>
+                </a>
+
+                <!-- Enlace de Servicios con Submenú Desplegable -->
+                <a href="#" id="toggleServiciosSidebar" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h3" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V7a4 4 0 014-4h3" />
+                    </svg>
+                    <span class="text-label">Servicios</span>
+                    <svg id="arrowIcon" class="ml-auto h-4 w-4 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </a>
+                <div id="submenuServicios" class="hidden flex flex-col space-y-2 mt-2">
+                    <!-- Los ítems del submenú de servicios se generarán dinámicamente aquí -->
+                </div>
+            </nav>
+
+            <!-- Enlace de Cerrar Sesión -->
+            <div class="mt-auto pt-4"> <!-- Add some padding top to separate from nav links -->
+                <a th:href="@{/logout}" data-id="cerrarSesion" class="sidebar-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="text-label">Cerrar sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main id="contenido" class="flex-1 p-8 bg-gray-900 overflow-auto min-h-screen"></main>
+    </div>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    const menuIcon = document.getElementById('menuIcon'); // Span for the menu icon
+    const sidebarLogo = document.getElementById('sidebar-logo'); // Logo and title container
+    const navLinks = document.getElementById('navLinks'); // Container for main nav links
+    const contenido = document.getElementById('contenido');
+
+    const toggleServiciosSidebar = document.getElementById('toggleServiciosSidebar');
+    const submenuServicios = document.getElementById('submenuServicios');
+    const arrowIcon = document.getElementById('arrowIcon');
+
+    // Transacciones ya no tienen un toggle padre, son enlaces de primer nivel
+    // const toggleTransaccionesSidebar = document.getElementById('toggleTransaccionesSidebar');
+    // const submenuTransacciones = document.getElementById('submenuTransacciones');
+    // const arrowIconTransacciones = document.getElementById('arrowIconTransacciones');
+
+    // Datos de servicios con iconos SVG (sin monto predefinido)
+    const serviciosData = {
+        luz: {
+            nombre: "Luz Eléctrica",
+            codigo: "0102839", 
+            icono: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>`
+        },
+        agua: {
+            nombre: "Agua Potable",
+            codigo: "0204911",
+            icono: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5c-4.418 0-8-3.582-8-8 0-6 8-15 8-15s8 9 8 15c0 4.418-3.582 8-8 8zM12 18a4 4 0 100-8 4 4 0 000 8z" /></svg>`
+        },
+        internet: {
+            nombre: "Internet Hogar",
+            codigo: "0334588",
+            icono: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>`
+        },
+        telefono: {
+            nombre: "Teléfono Móvil",
+            codigo: "0443022",
+            icono: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4h4a2 2 0 002-2V8a2 2 0 00-2-2h-4a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>`
+        }
+    };
+
+    // Función para formatear a moneda de Guatemala
+    function formatoMoneda(valor) {
+        return new Intl.NumberFormat("es-GT", {
+            style: "currency",
+            currency: "GTQ",
+            minimumFractionDigits: 2,
+        }).format(valor);
+    }
+
+    // Datos de prueba para cuentas y movimientos (MOCK DATA)
+    let userAccounts = [
+        { numeroCuenta: "1234567890", tipoCuenta: "Ahorro", saldo: 1500.75, estado: "ACTIVA" },
+        { numeroCuenta: "0987654321", tipoCuenta: "Monetaria", saldo: 25000.00, estado: "ACTIVA" },
+        { numeroCuenta: "1122334455", tipoCuenta: "Crédito", saldo: -500.00, estado: "ACTIVA" }
+    ];
+
+    const mockMovimientos = [
+        { fecha: "2025-07-01", descripcion: "Compra en Supermercado", numeroCuenta: "1234567890", tipo: "EGRESO", monto: -150.25 },
+        { fecha: "2025-06-30", descripcion: "Depósito de Salario", numeroCuenta: "0987654321", tipo: "INGRESO", monto: 5000.00 },
+        { fecha: "2025-06-29", descripcion: "Pago de Luz Eléctrica", numeroCuenta: "1234567890", tipo: "EGRESO", monto: -300.00 },
+        { fecha: "2025-06-28", descripcion: "Transferencia Recibida", numeroCuenta: "1234567890", tipo: "INGRESO", monto: 200.00 },
+        { fecha: "2025-06-27", descripcion: "Retiro de Cajero", numeroCuenta: "0987654321", tipo: "EGRESO", monto: -400.00 },
+        { fecha: "2025-06-26", descripcion: "Pago de Internet", numeroCuenta: "1234567890", tipo: "EGRESO", monto: -100.00 }
+    ];
+
+    // Definición de las secciones del contenido principal
+    const secciones = {
+        inicio: `
+            <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+                <h1 class="text-4xl font-bold mb-6 text-emerald-400 text-center">Bienvenido/a <span id="dashboardTitulo" class="text-white">a HyprBank</span></h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                        <h2 class="text-xl font-semibold text-white mb-2">Saldo principal</h2>
+                        <p id="dashboardSaldoDisponible" class="text-4xl font-mono text-emerald-400">${formatoMoneda(0.00)}</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                        <h2 class="text-xl font-semibold text-white mb-2">Última actividad</h2>
+                        <p class="text-sm text-gray-400" id="dashboardUltimaActividad">Cargando...</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-emerald-400 mb-4">Últimos 5 Movimientos</h2>
+                    <table class="w-full text-left">
+                        <thead class="text-gray-300 border-b border-gray-700">
+                            <tr>
+                                <th class="py-2 px-3">Fecha</th>
+                                <th class="py-2 px-3">Descripción</th>
+                                <th class="py-2 px-3">Tipo</th>
+                                <th class="py-2 px-3">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ultimosMovimientosTableBody" class="text-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        `,
+
+        miCuenta: `
+            <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+                <h1 class="text-4xl font-bold mb-6 text-emerald-400">Mis Cuentas</h1>
+                <div id="cuentasContainer" class="grid md:grid-cols-2 gap-6">
+                    <p class="text-gray-400 text-center col-span-2">Cargando cuentas...</p>
+                </div>
+            </section>
+        `,
+        // Sección para Transferencia Interna
+        transferenciasInternas: `
+            <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                        Transferencia Interna
+                    </h2>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero entre tus propias cuentas.</p>
+                    
+                    <form id="formTransferenciaInterna" class="space-y-4">
+                        <div>
+                            <label for="cuentaOrigenInterna" class="block font-semibold mb-1">Cuenta de origen:</label>
+                            <select id="cuentaOrigenInterna" name="cuentaOrigenInterna" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona una cuenta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cuentaDestinoInterna" class="block font-semibold mb-1">Cuenta destino:</label>
+                            <select id="cuentaDestinoInterna" name="cuentaDestinoInterna" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona una cuenta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="montoTransferenciaInterna" class="block font-semibold mb-1">Monto a transferir (GTQ):</label>
+                            <input type="number" id="montoTransferenciaInterna" name="montoTransferenciaInterna" min="0.01" step="0.01" placeholder="Ej. 150.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                            Realizar Transferencia
+                        </button>
+                        <p id="mensajeTransferenciaInterna" class="mt-4 text-center"></p>
+                    </form>
+                </div>
+            </section>
+        `,
+        // Sección para Transferencia Externa
+        transferenciasExternas: `
+            <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+                <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transferencias Externas</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form id="formTransferenciaExterna" class="bg-gray-800 rounded-xl p-6 shadow-lg space-y-4">
+                        <div>
+                            <label for="cuentaOrigenExterna" class="block font-semibold mb-1">Cuenta de origen:</label>
+                            <select id="cuentaOrigenExterna" name="cuentaOrigenExterna" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona tu cuenta de origen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="nombreDestino" class="block font-semibold mb-1">Nombre de cuenta destino</label>
+                            <input type="text" id="nombreDestino" name="nombreDestino" placeholder="Nombre del titular" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="bancoDestino" class="block font-semibold mb-1">Banco destino</label>
+                            <select id="bancoDestino" name="bancoDestino" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona un banco</option>
+                                <option>Banco Industrial</option>
+                                <option>Banrural</option>
+                                <option>G&T Continental</option>
+                                <option>Banco de Guatemala</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cuentaDestinoExterna" class="block font-semibold mb-1">Cuenta destino</label>
+                            <input type="text" id="cuentaDestinoExterna" name="cuentaDestinoExterna" placeholder="1234 5678 9012 3456" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="montoTransferenciaExterna" class="block font-semibold mb-1">Monto</label>
+                            <input type="number" id="montoTransferenciaExterna" name="montoTransferenciaExterna" min="1" placeholder="Ej. 100.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                            Transferir
+                        </button>
+                        <p id="mensajeTransferenciaExterna" class="mt-4 text-center"></p>
+                    </form>
+                    <div class="bg-gray-800 rounded-xl p-6 shadow-lg flex flex-col justify-center items-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-emerald-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-gray-300 mb-2">Ingresa los datos para realizar una transferencia bancaria externa.</p>
+                    </div>
+                </div>
+            </section>
+        `,
+
+        historial: `
+            <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+                <h1 class="text-3xl font-bold mb-6 text-emerald-400">Historial de Movimientos</h1>
+                <div class="flex flex-wrap gap-4 mb-6 items-end">
+                    <div>
+                        <label for="fechaInicio" class="block text-gray-300 text-sm mb-1">Fecha Inicio:</label>
+                        <input type="date" id="fechaInicio" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    </div>
+                    <div>
+                        <label for="fechaFin" class="block text-gray-300 text-sm mb-1">Fecha Fin:</label>
+                        <input type="date" id="fechaFin" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    </div>
+                    <div>
+                        <label for="tipoMovimiento" class="block text-gray-300 text-sm mb-1">Tipo:</label>
+                        <select id="tipoMovimiento" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="todos">Todos</option>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="egreso">Egreso</option>
+                        </select>
+                    </div>
+                    <button id="btnFiltrar" class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition self-end focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        Filtrar
+                    </button>
+                    <button id="btnReportesHistorial" class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition self-end focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        Reportería
+                    </button>
+                </div>
+                <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                    <thead class="bg-gray-700 text-gray-300">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Fecha</th>
+                            <th class="py-3 px-4 text-left">Descripción</th>
+                            <th class="py-3 px-4 text-left">Cuenta</th> <th class="py-3 px-4 text-left">Tipo</th>
+                            <th class="py-3 px-4 text-left">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaMovimientos" class="text-gray-100">
+                    </tbody>
+                </table>
+            </section>
+        `,
+
+        // Nueva estructura para servicioDetalle con formulario
+        servicioDetalle: (serviceId) => {
+            const service = serviciosData[serviceId];
+            if (!service) return `<p class="text-center text-red-400">Servicio no encontrado.</p>`;
+            return `
+                <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                        <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                            ${service.icono.replace('h-5 w-5', 'h-10 w-10')} <span class="ml-3">Pago de ${service.nombre}</span>
+                        </h2>
+                        <p class="text-lg text-gray-300 mb-6 text-center">Ingresa los detalles del pago para ${service.nombre}.</p>
+                        
+                        <form id="formPagoServicio" class="space-y-4">
+                            <div>
+                                <label for="codigoServicio" class="block font-semibold mb-1">Código del Servicio:</label>
+                                <input type="text" id="codigoServicio" name="codigoServicio" value="${service.codigo}" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" readonly />
+                            </div>
+                            <div>
+                                <label for="montoPagar" class="block font-semibold mb-1">Monto a pagar (GTQ):</label>
+                                <input type="number" id="montoPagar" name="montoPagar" min="0.01" step="0.01" placeholder="Ej. 150.75" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <div>
+                                <label for="cuentaOrigenServicio" class="block font-semibold mb-1">Cuenta de origen:</label>
+                                <select id="cuentaOrigenServicio" name="cuentaOrigenServicio" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <option value="" disabled selected>Selecciona una cuenta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="descripcionPago" class="block font-semibold mb-1">Descripción (opcional):</label>
+                                <input type="text" id="descripcionPago" name="descripcionPago" placeholder="Mes de [Mes], Factura [Número]" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-6">
+                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-full text-white font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                    Realizar Pago
+                                </button>
+                                <button type="button" id="btnVolverServicios" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-full text-white font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                    Volver a Servicios
+                                </button>
+                            </div>
+                            <p id="mensajePagoServicio" class="mt-4 text-center"></p>
+                        </form>
+                    </div>
+                </section>
+            `;
+        },
+
+        cerrarSesion: `
+            <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white text-center flex flex-col items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <h1 class="text-3xl font-bold mb-4 text-emerald-400">¿Seguro que deseas cerrar sesión?</h1>
+                <button id="confirmLogoutButton" class="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-full shadow-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-red-400">Cerrar sesión</button>
+            </section>
+        `
+    };
+
+    /**
+     * Muestra la sección de contenido principal y actualiza la UI de la barra lateral.
+     * @param {string} id - El ID de la sección principal a mostrar (ej. 'inicio', 'historial').
+     * @param {string} [subId=null] - El ID del sub-servicio si la sección es 'servicioDetalle'.
+     */
+    function mostrarSeccion(id, subId = null) {
+        // Carga el contenido de la sección
+        if (id === 'servicioDetalle' && subId) {
+            contenido.innerHTML = secciones.servicioDetalle(subId);
+            inicializarServicioDetalle(subId);
+        } else {
+            contenido.innerHTML = secciones[id] || `<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>`;
+            // Inicializa funciones específicas de cada sección
+            if (id === 'historial') inicializarHistorial();
+            if (id === 'transferenciasExternas') inicializarTransferenciasExternas();
+            if (id === 'transferenciasInternas') inicializarTransferenciasInternas();
+            if (id === 'inicio') inicializarInicio();
+            if (id === 'miCuenta') inicializarMiCuenta();
+            if (id === 'cerrarSesion') inicializarCerrarSesion(); // Nueva inicialización para cerrar sesión
+        }
+        
+        // Desactivar todos los links de la sidebar y del submenú
+        document.querySelectorAll(".sidebar-link").forEach(l => {
+            l.classList.remove("active");
+            // Remove inline styles for background and padding applied by JS for active state
+            l.style.backgroundColor = '';
+            l.querySelector('svg').style.backgroundColor = '';
+            l.querySelector('svg').style.padding = '';
+            l.querySelector('svg').style.borderRadius = '';
+        });
+        document.querySelectorAll(".submenu-item").forEach(l => {
+            l.classList.remove("active");
+            l.style.backgroundColor = '';
+        });
+
+        // Activar el link correspondiente
+        let currentLink = null;
+        if (!subId) { // Es un enlace de nivel superior (Inicio, Mi Cuenta, etc.)
+            currentLink = document.querySelector(`.sidebar-link[data-id="${id}"]`);
+            
+            // Asegurarse de que los submenús se colapsen si se selecciona otra sección principal
+            submenuServicios.classList.add('hidden');
+            arrowIcon.classList.remove('rotate-180');
+        } else { // Es un sub-item (un servicio específico)
+            // Activar la pestaña padre "Servicios"
+            toggleServiciosSidebar.classList.add("active"); 
+            // Activar el sub-item de servicio específico usando data-service-id
+            currentLink = document.querySelector(`.submenu-item[data-service-id="${subId}"]`);
+            if (submenuServicios.classList.contains('hidden')) {
+                submenuServicios.classList.remove('hidden');
+                arrowIcon.classList.add('rotate-180');
+            }
+        }
+
+        if (currentLink) {
+            currentLink.classList.add("active");
+            // Apply active background based on sidebar state
+            const isSidebarExpanded = sidebar.classList.contains('visible-on-mobile') || window.innerWidth >= 1024 && sidebar.matches(':hover');
+            if (isSidebarExpanded) {
+                currentLink.style.backgroundColor = '#047857';
+                if (currentLink.querySelector('svg')) {
+                    currentLink.querySelector('svg').style.backgroundColor = 'transparent'; // No icon background when expanded
+                    currentLink.querySelector('svg').style.padding = '0';
+                    currentLink.querySelector('svg').style.borderRadius = '0';
+                }
+            } else {
+                currentLink.style.backgroundColor = 'transparent';
+                if (currentLink.querySelector('svg')) {
+                    currentLink.querySelector('svg').style.backgroundColor = '#047857'; // Icon background when collapsed
+                    currentLink.querySelector('svg').style.padding = '0.5rem';
+                    currentLink.querySelector('svg').style.borderRadius = '9999px';
+                }
+            }
+            // Ensure logout icon never has a background
+            if (id === 'cerrarSesion' && currentLink.querySelector('svg')) {
+                currentLink.querySelector('svg').style.backgroundColor = 'transparent';
+                currentLink.querySelector('svg').style.padding = '0';
+                currentLink.querySelector('svg').style.borderRadius = '0';
+            }
+        }
+
+        // Close sidebar on mobile after selection
+        if (window.innerWidth < 1024) {
+            sidebar.classList.remove('visible-on-mobile');
+            contenido.classList.remove('con-sidebar-visible');
+            menuIcon.textContent = '☰'; // Reset icon
+        }
+    }
+
+    /**
+     * Rellena una tabla HTML con los datos de movimientos.
+     * @param {Array<Object>} datos - Array de objetos de movimiento.
+     * @param {string} targetId - ID del tbody donde se insertarán las filas.
+     */
+    function pintarTablaMovimientos(datos, targetId = 'tablaMovimientos') {
+        const tabla = document.getElementById(targetId);
+        if (!tabla) return;
+        tabla.innerHTML = ''; // Limpiar contenido previo
+
+        if (datos.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-400">No hay movimientos para mostrar.</td></tr>';
+            return;
+        }
+
+        datos.forEach(mov => {
+            const capitalizeFirstLetter = (string) => {
+                if (!string) return '';
+                return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+            };
+
+            const tipoDisplay = capitalizeFirstLetter(mov.tipo); // Mostrar "Ingreso" o "Egreso"
+
+            tabla.innerHTML += `
+                <tr class="border-t border-gray-700 hover:bg-gray-700 transition">
+                    <td class="py-3 px-4">${mov.fecha}</td>
+                    <td class="py-3 px-4">${mov.descripcion}</td>
+                    <td class="py-3 px-4">${mov.numeroCuenta || 'N/A'}</td> <td class="py-3 px-4">${tipoDisplay}</td>
+                    <td class="py-3 px-4 ${mov.tipo === 'INGRESO' ? 'text-green-400' : 'text-red-400'}">
+                        ${mov.monto >= 0 ? '+' : ''}${formatoMoneda(Math.abs(mov.monto))}
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    /**
+     * Rellena un select de HTML con las cuentas del usuario.
+     * @param {string} selectId - ID del select a rellenar.
+     * @param {boolean} includeDefaultOption - Si se debe incluir la opción por defecto "Selecciona una cuenta".
+     * @param {string|null} excludeAccount - Número de cuenta a excluir (para transferencias internas).
+     */
+    function populateAccountSelect(selectId, includeDefaultOption = true, excludeAccount = null) {
+        const selectElement = document.getElementById(selectId);
+        if (!selectElement) return;
+
+        selectElement.innerHTML = ''; // Limpiar opciones previas
+        if (includeDefaultOption) {
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Selecciona una cuenta';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            selectElement.appendChild(defaultOption);
+        }
+
+        if (userAccounts.length === 0) {
+            const noAccountsOption = document.createElement('option');
+            noAccountsOption.value = '';
+            noAccountsOption.textContent = 'No hay cuentas disponibles';
+            noAccountsOption.disabled = true;
+            selectElement.appendChild(noAccountsOption);
+            return;
+        }
+
+        userAccounts.forEach(account => {
+            if (excludeAccount && account.numeroCuenta === excludeAccount) {
+                return; // Saltar la cuenta si debe ser excluida
+            }
+            const option = document.createElement('option');
+            option.value = account.numeroCuenta;
+            option.textContent = `${account.tipoCuenta} (${account.numeroCuenta}) - ${formatoMoneda(account.saldo)}`;
+            selectElement.appendChild(option);
+        });
+    }
+
+    /**
+     * Carga las cuentas del usuario (simuladas).
+     * @returns {Promise<Array>} Una promesa que resuelve con el array de cuentas.
+     */
+    async function cargarCuentasUsuario() {
+        // Simula una carga asíncrona
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(userAccounts);
+            }, 500); // Retardo para simular carga
+        });
+    }
+
+
+    /**
+     * Inicializa la sección de inicio, mostrando los datos del user y los últimos 5 movimientos (simulados).
+     */
+    async function inicializarInicio() {
+        // Datos de usuario simulados
+        const mockUserData = {
+            nombreCompleto: "Usuario de Prueba",
+            saldoPrincipal: 23450.75 // Saldo total de todas las cuentas
+        };
+
+        const dashboardTitulo = document.getElementById('dashboardTitulo');
+        if (dashboardTitulo) {
+            dashboardTitulo.textContent = mockUserData.nombreCompleto;
+        }
+        const saldoPrincipalElem = document.getElementById('dashboardSaldoDisponible');
+        if (saldoPrincipalElem) {
+            saldoPrincipalElem.textContent = formatoMoneda(mockUserData.saldoPrincipal);
+        }
+
+        // Cargar movimientos recientes simulados
+        const ultimosMovimientos = mockMovimientos.slice(0, 5); // Tomar los primeros 5
+        pintarTablaMovimientos(ultimosMovimientos, 'ultimosMovimientosTableBody');
+        
+        const ultimaActividadElem = document.getElementById('dashboardUltimaActividad');
+        if (ultimaActividadElem) {
+            if (ultimosMovimientos.length > 0) {
+                const ultimoMov = ultimosMovimientos[0];
+                ultimaActividadElem.textContent = `${ultimoMov.fecha} - ${ultimoMov.descripcion}`;
+            } else {
+                ultimaActividadElem.textContent = 'No hay actividad reciente.';
+            }
+        }
+    }
+
+    /**
+     * Inicializa la sección "Mi cuenta", cargando las cuentas del user (simuladas).
+     */
+    async function inicializarMiCuenta() {
+        const cuentasContainer = document.getElementById('cuentasContainer');
+        if (!cuentasContainer) return;
+
+        cuentasContainer.innerHTML = `<p class="text-gray-400 text-center col-span-2">Cargando cuentas...</p>`; // Mensaje de carga
+
+        try {
+            const cuentas = await cargarCuentasUsuario(); // Utiliza la función compartida
+
+            cuentasContainer.innerHTML = ''; // Limpiar el mensaje de carga
+
+            if (cuentas.length === 0) {
+                cuentasContainer.innerHTML = `<p class="text-gray-400 text-center col-span-2">No tienes cuentas asociadas.</p>`;
+                return;
+            }
+
+            cuentas.forEach(cuenta => {
+                const cuentaCard = `
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                        <h2 class="text-lg text-gray-300 mb-2">Cuenta ${cuenta.tipoCuenta.toLowerCase()}</h2>
+                        <p class="text-emerald-400 text-3xl font-mono">${formatoMoneda(cuenta.saldo)}</p>
+                        <p class="text-gray-400 mt-1">No. ${cuenta.numeroCuenta}</p>
+                        <span class="text-xs ${cuenta.estado === 'ACTIVA' ? 'text-green-500' : 'text-red-500'} uppercase">${cuenta.estado}</span>
+                    </div>
+                `;
+                cuentasContainer.innerHTML += cuentaCard;
+            });
+        } catch (error) {
+            console.error('Error al cargar las cuentas:', error);
+            cuentasContainer.innerHTML = `<p class="text-red-400 text-center col-span-2">Error al cargar las cuentas.</p>`;
+        }
+    }
+
+    /**
+     * Inicializa la sección de Transferencia Interna (simulada).
+     */
+    async function inicializarTransferenciasInternas() {
+        const form = document.getElementById('formTransferenciaInterna');
+        const mensaje = document.getElementById('mensajeTransferenciaInterna');
+        const cuentaOrigenSelect = document.getElementById('cuentaOrigenInterna');
+        const cuentaDestinoSelect = document.getElementById('cuentaDestinoInterna');
+
+        if (!form) return;
+
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaOrigenInterna');
+        populateAccountSelect('cuentaDestinoInterna'); // Se poblará inicialmente con todas las cuentas
+
+        // Lógica para que la cuenta destino no pueda ser la misma que la de origen
+        cuentaOrigenSelect.addEventListener('change', () => {
+            populateAccountSelect('cuentaDestinoInterna', true, cuentaOrigenSelect.value);
+        });
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const cuentaOrigen = cuentaOrigenSelect.value;
+            const cuentaDestino = cuentaDestinoSelect.value;
+            const monto = parseFloat(form.montoTransferenciaInterna.value);
+
+            if (!cuentaOrigen || !cuentaDestino || isNaN(monto) || monto <= 0) {
+                mensaje.textContent = 'Por favor complete todos los campos correctamente.';
+                mensaje.className = 'text-red-500 mt-4 text-center';
+                return;
+            }
+
+            if (cuentaOrigen === cuentaDestino) {
+                mensaje.textContent = 'La cuenta de origen y la de destino no pueden ser la misma.';
+                mensaje.className = 'text-red-500 mt-4 text-center';
+                return;
+            }
+
+            mensaje.textContent = `Funcionalidad de Transferencia Interna: Se intentaría transferir ${formatoMoneda(monto)} de ${cuentaOrigen} a ${cuentaDestino}. Requiere backend.`;
+            mensaje.className = 'text-yellow-400 mt-4 text-center';
+            form.reset();
+        };
+    }
+
+    /**
+     * Inicializa la sección de transferencias externas (simulada).
+     */
+    async function inicializarTransferenciasExternas() {
+        const form = document.getElementById('formTransferenciaExterna');
+        const mensaje = document.getElementById('mensajeTransferenciaExterna');
+        const cuentaOrigenSelect = document.getElementById('cuentaOrigenExterna');
+
+        if (!form) return;
+
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaOrigenExterna');
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const cuentaOrigen = cuentaOrigenSelect.value;
+            const nombreDestino = form.nombreDestino.value.trim();
+            const bancoDestino = form.bancoDestino.value;
+            const cuentaDestino = form.cuentaDestinoExterna.value.trim();
+            const monto = parseFloat(form.montoTransferenciaExterna.value);
+
+            if (!cuentaOrigen || !nombreDestino || !bancoDestino || !cuentaDestino || isNaN(monto) || monto <= 0) {
+                mensaje.textContent = 'Por favor complete todos los campos correctamente.';
+                mensaje.className = 'text-red-500 mt-4 text-center';
+                return;
+            }
+
+            mensaje.textContent = `Funcionalidad de Transferencia Externa: Se intentaría transferir ${formatoMoneda(monto)} a la cuenta de ${nombreDestino} (${cuentaDestino}) en ${bancoDestino}. Requiere backend.`;
+            mensaje.className = 'text-yellow-400 mt-4 text-center';
+            form.reset();
+        };
+    }
+
+
+    /**
+     * Inicializa la sección de historial, incluyendo la lógica de filtrado y reportería (con datos simulados).
+     */
+    function inicializarHistorial() {
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
+        const tipoMovimientoSelect = document.getElementById('tipoMovimiento');
+        const btnFiltrar = document.getElementById('btnFiltrar');
+        const btnReportesHistorial = document.getElementById('btnReportesHistorial');
+
+        // Función para cargar y mostrar movimientos (simulados)
+        const cargarMovimientos = () => {
+            let movimientosFiltrados = [...mockMovimientos]; // Copia para no modificar el original
+
+            // Filtrar por fecha
+            if (fechaInicioInput.value) {
+                const fechaInicio = new Date(fechaInicioInput.value);
+                movimientosFiltrados = movimientosFiltrados.filter(mov => new Date(mov.fecha) >= fechaInicio);
+            }
+            if (fechaFinInput.value) {
+                const fechaFin = new Date(fechaFinInput.value);
+                movimientosFiltrados = movimientosFiltrados.filter(mov => new Date(mov.fecha) <= fechaFin);
+            }
+
+            // Filtrar por tipo
+            if (tipoMovimientoSelect.value !== 'todos') {
+                movimientosFiltrados = movimientosFiltrados.filter(mov => mov.tipo.toLowerCase() === tipoMovimientoSelect.value);
+            }
+
+            pintarTablaMovimientos(movimientosFiltrados);
+        };
+
+        // Cargar movimientos la primera vez que se inicializa la sección del historial
+        cargarMovimientos();
+
+        // Asignar el evento click al botón de filtrar para recargar movimientos
+        if (btnFiltrar) {
+            btnFiltrar.onclick = cargarMovimientos;
+        }
+
+        // Evento para el botón de reportes (funcionalidad no implementada en backend aún)
+        if (btnReportesHistorial) {
+            btnReportesHistorial.addEventListener('click', () => {
+                // Usar un modal en lugar de alert
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]';
+                modal.innerHTML = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-xl text-white max-w-sm mx-auto">
+                        <h3 class="text-xl font-bold mb-4 text-emerald-400">Generar Reporte</h3>
+                        <p class="mb-6">Esta funcionalidad requiere una implementación en el backend para generar reportes reales.</p>
+                        <button id="closeModal" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-md font-semibold">Entendido</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+            });
+        }
+    }
+
+    /**
+     * Inicializa la sección de detalle de servicio para pagos (simulada).
+     * @param {string} serviceId - El ID del servicio a detallar (ej. 'luz').
+     */
+    async function inicializarServicioDetalle(serviceId) {
+        const formPagoServicio = document.getElementById('formPagoServicio');
+        const btnVolverServicios = document.getElementById('btnVolverServicios');
+        const mensajePago = document.getElementById('mensajePagoServicio');
+        const cuentaOrigenServicioSelect = document.getElementById('cuentaOrigenServicio');
+        const servicio = serviciosData[serviceId];
+
+        if (!formPagoServicio) return;
+
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaOrigenServicio');
+
+        formPagoServicio.onsubmit = async e => {
+            e.preventDefault();
+            const monto = parseFloat(formPagoServicio.montoPagar.value);
+            const descripcion = formPagoServicio.descripcionPago.value.trim();
+            const numeroCuentaOrigen = cuentaOrigenServicioSelect.value;
+
+            if (isNaN(monto) || monto <= 0 || !numeroCuentaOrigen) {
+                mensajePago.textContent = 'Por favor, introduce un monto válido y selecciona una cuenta.';
+                mensajePago.className = 'text-red-500 mt-4 text-center';
+                return;
+            }
+
+            const nuevaDescripcion = descripcion ? `Pago ${servicio.nombre}: ${descripcion}` : `Pago ${servicio.nombre}`;
+            
+            mensajePago.textContent = `Funcionalidad de Pago de Servicio: Se intentaría pagar ${formatoMoneda(monto)} de ${servicio.nombre} desde la cuenta ${numeroCuentaOrigen}. Requiere backend.`;
+            mensajePago.className = 'text-yellow-400 mt-4 text-center';
+            formPagoServicio.reset();
+        };
+
+        if (btnVolverServicios) {
+            btnVolverServicios.addEventListener('click', () => {
+                mostrarSeccion('servicios', null); // Volver a la lista de servicios
+            });
+        }
+    }
+
+    /**
+     * Inicializa la sección de cerrar sesión.
+     */
+    function inicializarCerrarSesion() {
+        const confirmLogoutButton = document.getElementById('confirmLogoutButton');
+        if (confirmLogoutButton) {
+            confirmLogoutButton.addEventListener('click', () => {
+                // Usar un modal en lugar de alert
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]';
+                modal.innerHTML = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-xl text-white max-w-sm mx-auto">
+                        <h3 class="text-xl font-bold mb-4 text-emerald-400">Sesión Cerrada</h3>
+                        <p class="mb-6">Tu sesión ha sido cerrada exitosamente (simulado). Redirigiendo...</p>
+                        <button id="closeLogoutModal" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-md font-semibold">Aceptar</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('closeLogoutModal').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    // Aquí podrías redirigir a una página de login o inicio si existiera
+                    // window.location.href = '/login.html'; 
+                });
+            });
+        }
+    }
+
+
+    /**
+     * Genera dinámicamente los elementos del submenú de servicios.
+     */
+    function generarSubmenuServicios() {
+        submenuServicios.innerHTML = ''; // Limpiar cualquier contenido previo
+        for (const key in serviciosData) {
+            if (serviciosData.hasOwnProperty(key)) {
+                const service = serviciosData[key];
+                const link = document.createElement('a');
+                link.href = '#';
+                link.className = 'submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105';
+                // Usamos data-service-id para identificar el servicio específico
+                link.setAttribute('data-service-id', key); 
+                link.setAttribute('data-id', 'servicioDetalle'); // Para que mostrarSeccion lo maneje
+                link.innerHTML = `${service.icono}<span class="text-label">${service.nombre}</span>`;
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    mostrarSeccion('servicioDetalle', key);
+                });
+                submenuServicios.appendChild(link);
+            }
+        }
+    }
+
+    // Evento para alternar el submenú de servicios
+    toggleServiciosSidebar.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isHidden = submenuServicios.classList.contains('hidden');
+        if (isHidden) {
+            submenuServicios.classList.remove('hidden');
+            arrowIcon.classList.add('rotate-180');
+        } else {
+            submenuServicios.classList.add('hidden');
+            arrowIcon.classList.remove('rotate-180');
+        }
+
+        // Desactivar todos los otros links de la sidebar
+        document.querySelectorAll(".sidebar-link").forEach(l => {
+            if (l.id !== 'toggleServiciosSidebar') {
+                l.classList.remove("active");
+                l.style.backgroundColor = '';
+                l.querySelector('svg').style.backgroundColor = '';
+                l.querySelector('svg').style.padding = '';
+                l.querySelector('svg').style.borderRadius = '';
+            }
+        });
+        document.querySelectorAll(".submenu-item").forEach(l => {
+            l.classList.remove("active");
+            l.style.backgroundColor = '';
+        });
+        
+        // Activar siempre la pestaña "Servicios" al hacerle clic
+        e.currentTarget.classList.add("active");
+
+        // Apply active background based on sidebar state
+        const isSidebarExpanded = sidebar.classList.contains('visible-on-mobile') || window.innerWidth >= 1024 && sidebar.matches(':hover');
+        if (isSidebarExpanded) {
+            e.currentTarget.style.backgroundColor = '#047857';
+            if (e.currentTarget.querySelector('svg')) {
+                e.currentTarget.querySelector('svg').style.backgroundColor = 'transparent';
+                e.currentTarget.querySelector('svg').style.padding = '0';
+                e.currentTarget.querySelector('svg').style.borderRadius = '0';
+            }
+        } else {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            if (e.currentTarget.querySelector('svg')) {
+                e.currentTarget.querySelector('svg').style.backgroundColor = '#047857';
+                e.currentTarget.querySelector('svg').style.padding = '0.5rem';
+                e.currentTarget.querySelector('svg').style.borderRadius = '9999px';
+            }
+        }
+    });
+
+    // Evento para alternar la barra lateral principal (para el botón de hamburguesa)
+    btnToggleSidebar.addEventListener('click', () => {
+        const isMobile = window.innerWidth < 1024;
+        if (isMobile) {
+            const sidebarVisible = sidebar.classList.contains('visible-on-mobile');
+            if (sidebarVisible) {
+                sidebar.classList.remove('visible-on-mobile');
+                contenido.classList.remove('con-sidebar-visible');
+                menuIcon.textContent = '☰'; // Cambia a hamburguesa
+            } else {
+                sidebar.classList.add('visible-on-mobile');
+                contenido.classList.add('con-sidebar-visible');
+                menuIcon.textContent = '✕'; // Cambia a X
+            }
+            // Re-apply active state styles after toggle
+            const currentActiveLink = document.querySelector('.sidebar-link.active, .submenu-item.active');
+            if (currentActiveLink) {
+                mostrarSeccion(currentActiveLink.getAttribute('data-id'), currentActiveLink.getAttribute('data-service-id'));
+            }
+        }
+    });
+
+    // Cambiar sección al hacer clic en enlaces de la sidebar (excluyendo los toggles)
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        if (link.id !== 'toggleServiciosSidebar') {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const id = link.getAttribute('data-id');
+                mostrarSeccion(id);
+            });
+        }
+    });
+
+    // Lógica para el estado inicial y al redimensionar la ventana
+    function adjustInitialLayout() {
+        // En desktop (lg: 1024px y más)
+        if (window.innerWidth >= 1024) { 
+            sidebar.classList.remove('visible-on-mobile'); // Asegura que no tenga la clase móvil
+            btnToggleSidebar.style.display = 'none'; // Ocultar el botón de hamburguesa en desktop
+            
+            // Ocultar texto de logo y enlaces, y resetear márgenes de iconos
+            sidebarLogo.querySelector('.text-label').style.opacity = '0';
+            sidebarLogo.querySelector('.text-label').style.maxWidth = '0';
+            sidebarLogo.querySelector('img').style.marginRight = '0';
+
+            document.querySelectorAll('#navLinks .text-label, [data-id="cerrarSesion"] .text-label').forEach(el => {
+                el.style.opacity = '0';
+                el.style.maxWidth = '0';
+                el.style.marginLeft = '0';
+            });
+            document.querySelectorAll('#navLinks svg, [data-id="cerrarSesion"] svg').forEach(el => {
+                el.style.marginRight = '0';
+            });
+
+            // Re-apply active state styles for collapsed desktop view
+            const currentActiveLink = document.querySelector('.sidebar-link.active, .submenu-item.active');
+            if (currentActiveLink) {
+                currentActiveLink.style.backgroundColor = 'transparent';
+                if (currentActiveLink.querySelector('svg')) {
+                    currentActiveLink.querySelector('svg').style.backgroundColor = '#047857';
+                    currentActiveLink.querySelector('svg').style.padding = '0.5rem';
+                    currentActiveLink.querySelector('svg').style.borderRadius = '9999px';
+                }
+            }
+            // Ensure logout icon never has a background
+            const logoutLink = document.querySelector('[data-id="cerrarSesion"]');
+            if (logoutLink && logoutLink.querySelector('svg')) {
+                logoutLink.querySelector('svg').style.backgroundColor = 'transparent';
+                logoutLink.querySelector('svg').style.padding = '0';
+                logoutLink.querySelector('svg').style.borderRadius = '0';
+            }
+
+        } else {
+            // En móvil, el sidebar inicia oculto y el botón visible
+            sidebar.classList.remove('visible-on-mobile'); // Asegura que inicie oculto
+            contenido.classList.remove('con-sidebar-visible'); // Asegura que el contenido no tenga margen
+            btnToggleSidebar.style.display = 'block'; // Mostrar el botón de hamburguesa en móvil
+            menuIcon.textContent = '☰'; // Asegura que el icono sea hamburguesa
+
+            // Ocultar texto de logo y enlaces en móvil cuando sidebar está colapsado
+            sidebarLogo.querySelector('.text-label').style.opacity = '0';
+            sidebarLogo.querySelector('.text-label').style.maxWidth = '0';
+            sidebarLogo.querySelector('img').style.marginRight = '0';
+
+            document.querySelectorAll('#navLinks .text-label, [data-id="cerrarSesion"] .text-label').forEach(el => {
+                el.style.opacity = '0';
+                el.style.maxWidth = '0';
+                el.style.marginLeft = '0';
+            });
+            document.querySelectorAll('#navLinks svg, [data-id="cerrarSesion"] svg').forEach(el => {
+                el.style.marginRight = '0';
+            });
+
+            // Remove active state styles when sidebar is collapsed on mobile
+            document.querySelectorAll('.sidebar-link.active, .submenu-item.active').forEach(link => {
+                link.style.backgroundColor = 'transparent';
+                if (link.querySelector('svg')) {
+                    link.querySelector('svg').style.backgroundColor = 'transparent';
+                    link.querySelector('svg').style.padding = '0';
+                    link.querySelector('svg').style.borderRadius = '0';
+                }
+            });
+        }
+        // Always set initial active section to 'inicio' and apply its style
+        mostrarSeccion('inicio');
+    }
+
+    // Inicializar la vista al cargar la página
+    generarSubmenuServicios();
+    
+    // Ajustar el layout al cargar la página y al redimensionar
+    adjustInitialLayout();
+    window.addEventListener('resize', adjustInitialLayout);
+
+    // Add event listener for sidebar hover to show/hide text-labels and header on desktop
+    if (window.innerWidth >= 1024) {
+        sidebar.addEventListener('mouseenter', () => {
+            // Show logo text and adjust image margin
+            sidebarLogo.querySelector('.text-label').style.opacity = '1';
+            sidebarLogo.querySelector('.text-label').style.maxWidth = '100%';
+            sidebarLogo.querySelector('img').style.marginRight = '0.75rem';
+
+            // Show text labels for all links and adjust icon margins
+            document.querySelectorAll('#navLinks .text-label, [data-id="cerrarSesion"] .text-label').forEach(el => {
+                el.style.opacity = '1';
+                el.style.maxWidth = '100%';
+                el.style.marginLeft = '0.75rem';
+            });
+            document.querySelectorAll('#navLinks svg, [data-id="cerrarSesion"] svg').forEach(el => {
+                el.style.marginRight = '0.75rem';
+            });
+
+            // Apply active background to the whole link when hovered
+            document.querySelectorAll('.sidebar-link.active, .submenu-item.active').forEach(link => {
+                link.style.backgroundColor = '#047857';
+                if (link.querySelector('svg')) {
+                    link.querySelector('svg').style.backgroundColor = 'transparent';
+                    link.querySelector('svg').style.padding = '0';
+                    link.querySelector('svg').style.borderRadius = '0';
+                }
+            });
+        });
+
+        sidebar.addEventListener('mouseleave', () => {
+            // Hide logo text and reset image margin
+            sidebarLogo.querySelector('.text-label').style.opacity = '0';
+            sidebarLogo.querySelector('.text-label').style.maxWidth = '0';
+            sidebarLogo.querySelector('img').style.marginRight = '0';
+
+            // Hide text labels for all links and reset icon margins
+            document.querySelectorAll('#navLinks .text-label, [data-id="cerrarSesion"] .text-label').forEach(el => {
+                el.style.opacity = '0';
+                el.style.maxWidth = '0';
+                el.style.marginLeft = '0';
+            });
+            document.querySelectorAll('#navLinks svg, [data-id="cerrarSesion"] svg').forEach(el => {
+                el.style.marginRight = '0';
+            });
+
+            // Remove active background from the whole link and apply to icon only
+            document.querySelectorAll('.sidebar-link.active, .submenu-item.active').forEach(link => {
+                link.style.backgroundColor = 'transparent';
+                if (link.querySelector('svg')) {
+                    link.querySelector('svg').style.backgroundColor = '#047857';
+                    link.querySelector('svg').style.padding = '0.5rem';
+                    link.querySelector('svg').style.borderRadius = '9999px';
+                }
+            });
+            // Ensure logout icon never has a background
+            const logoutLink = document.querySelector('[data-id="cerrarSesion"]');
+            if (logoutLink && logoutLink.querySelector('svg')) {
+                logoutLink.querySelector('svg').style.backgroundColor = 'transparent';
+                logoutLink.querySelector('svg').style.padding = '0';
+                logoutLink.querySelector('svg').style.borderRadius = '0';
+            }
+        });
+    }
+
+    // Add a MutationObserver to watch for changes in sidebar's classList
+    // This is to correctly handle the active state background on mobile
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const isSidebarVisibleOnMobile = sidebar.classList.contains('visible-on-mobile');
+                document.querySelectorAll('.sidebar-link.active, .submenu-item.active').forEach(link => {
+                    if (isSidebarVisibleOnMobile) {
+                        link.style.backgroundColor = '#047857'; // Apply background when sidebar is open on mobile
+                        if (link.querySelector('svg')) {
+                            link.querySelector('svg').style.backgroundColor = 'transparent';
+                            link.querySelector('svg').style.padding = '0';
+                            link.querySelector('svg').style.borderRadius = '0';
+                        }
+                    } else {
+                        link.style.backgroundColor = 'transparent'; // Remove background when sidebar is closed on mobile
+                        if (link.querySelector('svg')) {
+                            link.querySelector('svg').style.backgroundColor = '#047857'; // Icon background when collapsed
+                            link.querySelector('svg').style.padding = '0.5rem';
+                            link.querySelector('svg').style.borderRadius = '9999px';
+                        }
+                    }
+                    // Ensure logout icon never has a background
+                    if (link.getAttribute('data-id') === 'cerrarSesion' && link.querySelector('svg')) {
+                        link.querySelector('svg').style.backgroundColor = 'transparent';
+                        link.querySelector('svg').style.padding = '0';
+                        link.querySelector('svg').style.borderRadius = '0';
+                    }
+                });
+            }
+        }
+    });
+
+    // Start observing the sidebar for class changes
+    observer.observe(sidebar, { attributes: true });
+
+</script>
+
+</body>
+</html>

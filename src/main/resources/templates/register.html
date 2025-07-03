@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyprBank - Registro de Cliente</title>
+    <!-- Enlace a tu archivo CSS de Tailwind compilado localmente -->
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-gray-900 text-gray-300 font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-gray-800 p-4 shadow-md w-full">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-white text-lg font-bold flex items-center">
+                <!-- Logo de HyprBank -->
+                <img src="/img/hyprbank-logo.svg" alt="HyprBank Logo" class="h-8 w-8 mr-2">
+                <a th:href="@{/}" class="hover:text-emerald-300 transition-colors duration-200">HyprBank</a>
+            </div>
+            <!-- El botón de iniciar sesión aquí es para que el admin regrese al login si lo desea -->
+            <a th:href="@{/login}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded transition duration-200">Iniciar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="flex-grow flex items-center justify-center py-8 px-4">
+        <div class="max-w-xl w-full bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700/30">
+
+            <h1 class="text-3xl font-bold text-center text-emerald-500 mb-6">Registro de Cliente</h1>
+
+            <!-- Mensajes de éxito y error -->
+            <div th:if="${param.success}" class="bg-green-800 text-green-200 px-4 py-3 rounded-md mb-4" role="alert">
+                <span th:text="${registrationSuccess}"></span>
+            </div>
+            <div th:if="${registrationError}" class="bg-red-800 text-red-200 px-4 py-3 rounded-md mb-4" role="alert">
+                <span th:text="${registrationError}"></span>
+            </div>
+
+            <!-- Bloque para mostrar email y contraseña generada -->
+            <div th:if="${param.success and registeredEmail and generatedPassword}" class="bg-gray-700 text-gray-100 px-6 py-4 rounded-md mb-6 border border-emerald-600">
+                <h3 class="text-xl font-semibold mb-3 text-emerald-300">Datos de Acceso del Cliente:</h3>
+                <p class="mb-2"><strong>Email:</strong> <span th:text="${registeredEmail}" class="font-medium text-white"></span></p>
+                <p><strong>Contraseña Generada:</strong> <span th:text="${generatedPassword}" class="font-medium text-white"></span></p>
+                <p class="text-sm text-gray-400 mt-3">Por favor, guarda esta contraseña de forma segura. El cliente podrá cambiarla después.</p>
+            </div>
+
+
+            <form th:action="@{/register}" th:object="${user}" method="post">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="firstName">Nombre:</label>
+                        <input id="firstName" type="text" th:field="*{firstName}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                            required autofocus>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="lastName">Apellido:</label>
+                        <input id="lastName" type="text" th:field="*{lastName}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                            required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="email">Email:</label>
+                    <input id="email" type="email" th:field="*{email}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        name="email" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="dpi">DPI:</label>
+                        <input id="dpi" type="text" th:field="*{dpi}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                            required maxlength="13">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="nit">NIT:</label>
+                        <input id="nit" type="text" th:field="*{nit}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                            required maxlength="20">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="phoneNumber">Teléfono:</label>
+                        <input id="phoneNumber" type="text" th:field="*{phoneNumber}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                            required maxlength="9" placeholder="Ej: 1234-5678">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 text-sm font-semibold mb-2" for="birthDate">Fecha de Nacimiento:</label>
+                        <input id="birthDate" type="date" th:field="*{birthDate}"
+                            class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
+                            required>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="address">Dirección:</label>
+                    <textarea id="address" th:field="*{address}" rows="3"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required minlength="10"></textarea>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline cursor-pointer w-full transition duration-200">
+                        Registrar Cliente
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        // Script para formatear el número de teléfono a XXXX-XXXX
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneNumberInput = document.getElementById('phoneNumber');
+
+            phoneNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Elimina todo lo que no sea dígito
+                let formattedValue = '';
+
+                if (value.length > 4) {
+                    formattedValue = value.substring(0, 4) + '-' + value.substring(4, 8);
+                } else {
+                    formattedValue = value;
+                }
+                e.target.value = formattedValue;
+            });
+
+            // Asegurar que solo se puedan ingresar números en DPI
+            const dpiInput = document.getElementById('dpi');
+            dpiInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+
+            // Para NIT, si quieres permitir letras y guiones, no uses /\D/g
+            // const nitInput = document.getElementById('nit');
+            // nitInput.addEventListener('input', function(e) {
+            //     e.target.value = e.target.value.replace(/[^a-zA-Z0-9-]/g, ''); // Permite letras, numeros y guiones
+            // });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,9 +1,10 @@
-package com.hyprbank.online.bancavirtual.hyprbank.controller; 
+package com.hyprbank.online.bancavirtual.hyprbank.controller;
 
 // Importaciones de DTOs
-import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationRequest; 
+import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationRequest;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationResponse; // Importar el nuevo DTO de respuesta
 // Importaciones de Servicios
-import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; 
+import com.hyprbank.online.bancavirtual.hyprbank.service.UserService;
 
 // Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /*
- * Controlador de Spring MVC para la gestion de autenticacion y registro de usuarios.
+ * Controlador de Spring MVC para la gestion de autenticacion y registro de clientes.
  *
  * Esta clase maneja las solicitudes relacionadas con la visualizacion de los formularios
- * de login y registro, y el procesamiento de las operaciones de registro.
+ * de login y el procesamiento de las operaciones de registro de NUEVOS CLIENTES
+ * (asumiendo que esta funcionalidad es accedida por un administrador).
  *
  * @Controller indica que esta clase es un componente de controlador de Spring MVC,
  * que principalmente devuelve nombres de vistas (plantillas HTML).
@@ -27,20 +29,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * como /login o /register.
  */
 @Controller
-@RequestMapping // No se especifica un prefijo base para el controlador, los mappings son absolutos
+@RequestMapping
 public class AuthController {
 
     @Autowired
-    private UserService userService; // Nombre de campo actualizado
+    private UserService userService;
 
     /**
-     * Prepara un nuevo objeto {@link RegistrationRequest} para el formulario de registro.
+     * Prepara un nuevo objeto {@link RegistrationRequest} para el formulario de registro de clientes.
      * Este objeto se vinculara al atributo "user" en la vista.
      *
      * @return Una nueva instancia de {@link RegistrationRequest}.
      */
-    @ModelAttribute("user") // Nombre de atributo actualizado
-    public RegistrationRequest returnNewUserRegistrationDTO() { // Nombre de metodo actualizado
+    @ModelAttribute("user")
+    public RegistrationRequest returnNewUserRegistrationDTO() {
         return new RegistrationRequest();
     }
 
@@ -58,39 +60,49 @@ public class AuthController {
 
     /**
      * Maneja las solicitudes GET a la ruta "/register".
-     * Muestra el formulario de registro de usuario.
+     * Muestra el formulario de registro de un nuevo cliente (accesible por administrador).
      *
      * @param model El objeto Model de Spring MVC para pasar datos a la vista.
      * @return El nombre de la vista "register" (register.html).
      */
-    @GetMapping("/register") // Nombre de ruta actualizado
-    public String showRegistrationForm(Model model) { // Nombre de metodo actualizado
+    @GetMapping("/register")
+    public String showRegistrationForm(Model model) {
         // El @ModelAttribute("user") ya se encarga de anadir un nuevo RegistrationRequest al modelo
         return "register"; // Devuelve el nombre de la plantilla Thymeleaf: src/main/resources/templates/register.html
     }
 
     /**
-     * Maneja las solicitudes POST enviadas al formulario de registro.
+     * Maneja las solicitudes POST enviadas al formulario de registro de clientes.
      * Recibe los datos del formulario en un {@link RegistrationRequest} y guarda el nuevo usuario.
-     * Despues de un registro exitoso, redirige a la pagina de login con un mensaje de exito.
+     * La contraseña se generara automaticamente en el servicio.
+     * Despues de un registro exitoso, redirige a la pagina de registro con los datos de login generados.
      * Si hay un error, redirige de nuevo al formulario de registro con un mensaje de error.
      *
      * @param registrationDTO El {@link RegistrationRequest} que contiene los datos enviados desde el formulario.
      * @param redirectAttributes Utilizado para anadir atributos flash para redirecciones.
      * @return Una cadena de redireccion.
      */
-    @PostMapping("/register") // Nombre de ruta actualizado
-    public String registerUser(@ModelAttribute("user") RegistrationRequest registrationDTO, RedirectAttributes redirectAttributes) { // Nombres de parametros y variables actualizados
+    @PostMapping("/register")
+    public String registerUser(@ModelAttribute("user") RegistrationRequest registrationDTO, RedirectAttributes redirectAttributes) {
         try {
-            userService.save(registrationDTO); // Nombre de metodo actualizado
-            // Anade un atributo flash para mostrar un mensaje de exito despues de la redireccion
-            redirectAttributes.addFlashAttribute("registrationSuccess", "¡Te has registrado exitosamente! Ahora puedes iniciar sesión."); // Nombre de atributo actualizado
-            return "redirect:/login"; // Redirige a la pagina de login
-        } catch (RuntimeException e) {
+            RegistrationResponse response = userService.save(registrationDTO); // Captura el DTO de respuesta
+            
+            // Anade atributos flash para mostrar el email y la contraseña generada
+            redirectAttributes.addFlashAttribute("registrationSuccess", "¡Cliente registrado exitosamente!");
+            redirectAttributes.addFlashAttribute("registeredEmail", response.getEmail());
+            redirectAttributes.addFlashAttribute("generatedPassword", response.getGeneratedPassword());
+            
+            return "redirect:/register?success"; // Redirige de vuelta al formulario de registro con un mensaje de exito
+        } catch (IllegalArgumentException e) { // Captura la excepcion especifica de tu servicio
             // Anade un atributo flash para mostrar un mensaje de error y el DTO para repoblar el formulario
-            redirectAttributes.addFlashAttribute("registrationError", e.getMessage()); // Nombre de atributo actualizado
-            redirectAttributes.addFlashAttribute("user", registrationDTO); // Mantiene los datos del formulario - Nombre de atributo actualizado
-            return "redirect:/register"; // Redirige de vuelta al formulario de registro - Nombre de ruta actualizado
+            redirectAttributes.addFlashAttribute("registrationError", e.getMessage());
+            redirectAttributes.addFlashAttribute("user", registrationDTO); // Mantiene los datos del formulario
+            return "redirect:/register"; // Redirige de vuelta al formulario de registro
+        } catch (RuntimeException e) {
+            // Captura cualquier otra RuntimeException inesperada
+            redirectAttributes.addFlashAttribute("registrationError", "Ocurrió un error inesperado al registrar al cliente: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("user", registrationDTO);
+            return "redirect:/register";
         }
     }
 }

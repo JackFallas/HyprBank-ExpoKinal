@@ -29,4 +29,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      *
      */
     Optional<User> findByEmail(String email);
+
+    /*
+     * Este metodo busca a un usuario por su numero de DPI.
+     *
+     * @param dpi El numero de DPI del usuario a buscar.
+     * @return Un Optional que devuelve el usuario si lo encuentra, si no devuelve un Optional vacio.
+     */
+    Optional<User> findByDpi(String dpi);
 }

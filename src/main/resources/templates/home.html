@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyprBank - Inicio</title>
+    <!-- Enlace a tu archivo CSS de Tailwind compilado localmente -->
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-gray-800 p-4 shadow-md w-full">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-white text-lg font-bold">
+                <a href="/" class="hover:text-emerald-300 transition-colors duration-200">HyprBank</a>
+            </div>
+            <ul class="flex space-x-4">
+                <!-- Mostrar solo si el usuario no esta autenticado -->
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded transition duration-200">Iniciar Sesión</a>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/register}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded transition duration-200">Registrarse</a>
+                </li>
+                <!-- Mostrar solo si el usuario esta autenticado -->
+                <li sec:authorize="isAuthenticated()">
+                    <a th:href="@{/logout}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition duration-200">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="flex-grow flex items-center justify-center py-12 px-4 text-center">
+        <div class="max-w-3xl mx-auto bg-gray-800 p-10 rounded-lg shadow-xl border border-gray-700/30">
+            <h1 class="text-5xl font-extrabold text-emerald-400 mb-6 leading-tight">
+                Bienvenido a <span class="text-white">HyprBank</span>
+            </h1>
+            <p class="text-xl text-gray-300 mb-8">
+                Tu plataforma bancaria virtual segura y eficiente.
+            </p>
+
+            <div sec:authorize="isAuthenticated()">
+                <p class="text-2xl text-gray-200 mb-4">
+                    ¡Hola, <span sec:authentication="principal.username" class="font-semibold text-emerald-300"></span>!
+                </p>
+                <a th:href="@{/dashboard}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                    Ir a tu Dashboard
+                </a>
+            </div>
+
+            <div sec:authorize="!isAuthenticated()">
+                <p class="text-lg text-gray-300 mb-6">
+                    Por favor, inicia sesión o regístrate para acceder a nuestros servicios.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a th:href="@{/login}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                        Iniciar Sesión
+                    </a>
+                    <a th:href="@{/register}" class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                        Registrarse
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

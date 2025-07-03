@@ -43,7 +43,7 @@ public class HomeController {
      * @return El nombre de la vista "index" (src/main/resources/templates/index.html).
      */
     @GetMapping("/")
-    public String viewHomePage(Model model) {
+    public String viewHomePage(Model model) { // Nombre de metodo actualizado
         // Puedes anadir logica aqui si necesitas datos para la pagina de inicio
         // Por ejemplo, si quieres mostrar algo diferente si el usuario esta autenticado
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -84,6 +84,6 @@ public class HomeController {
             model.addAttribute("error", "No se pudo cargar la informacion del usuario.");
         }
 
-        return "user-dashboard"; // Devuelve el nombre de la plantilla Thymeleaf: src/main/resources/templates/user-dashboard.html
+        return "user-dashboard"; // ¡CAMBIADO! Ahora devuelve el nombre correcto del archivo HTML
     }
 }

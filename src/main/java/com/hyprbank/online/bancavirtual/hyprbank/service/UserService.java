@@ -1,6 +1,7 @@
 package com.hyprbank.online.bancavirtual.hyprbank.service;
 
 import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationRequest;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.RegistrationResponse; // Importar el nuevo DTO de respuesta
 import com.hyprbank.online.bancavirtual.hyprbank.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,12 +21,13 @@ public interface UserService extends UserDetailsService {
 
     /**
      * Guarda un nuevo usuario en el sistema a partir de un DTO de registro.
-     * Esta operacion puede incluir la encriptacion de la contrasena y la asignacion de roles por defecto.
+     * Esta operacion incluye la encriptacion de la contrasena generada y la asignacion de roles por defecto.
      *
      * @param registrationDTO El DTO que contiene los datos del usuario a registrar.
-     * @return La entidad {@link User} guardada con sus datos completos (incluyendo ID generado).
+     * @return Un {@link RegistrationResponse} que contiene el email del usuario y la contraseña generada (sin encriptar).
+     * @throws IllegalArgumentException Si ya existe un usuario con el email o DPI proporcionado.
      */
-    User save(RegistrationRequest registrationDTO);
+    RegistrationResponse save(RegistrationRequest registrationDTO); // El metodo ahora devuelve RegistrationResponse
 
     /**
      * Lista todos los usuarios registrados en el sistema.

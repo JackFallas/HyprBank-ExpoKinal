@@ -1,10 +1,7 @@
-package com.hyprbank.online.bancavirtual.hyprbank.config;
-
-// Importaciones de Servicios
-// import com.hyprbank.online.bancavirtual.hyprbank.service.UserService; // ¡Eliminar esta importacion si no se usa directamente en el constructor!
+package com.hyprbank.online.bancavirtual.hyprbank.config; // ¡Paquete corregido!
 
 // Importaciones de Spring Security
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired; // Todavía necesario si usas @Autowired en otros lugares
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -34,8 +31,8 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    // No inyectamos UserService directamente en el constructor aqui para evitar el ciclo.
-    // Spring Security encontrara el UserDetailsService a traves del contexto.
+    // No inyectamos UserService directamente en el constructor aquí para evitar el ciclo.
+    // Spring Security encontrará el UserDetailsService a través del contexto.
 
     /**
      * Define el bean para el codificador de contrasenas.
@@ -57,7 +54,7 @@ public class SecurityConfiguration {
      * @return Una instancia de {@link DaoAuthenticationProvider}.
      */
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) { // Inyectar UserDetailsService aqui
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) { // Inyectar UserDetailsService aquí
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
         auth.setUserDetailsService(userDetailsService); // Usa la instancia inyectada
         auth.setPasswordEncoder(passwordEncoder()); // Usa el codificador de contrasenas definido
@@ -96,7 +93,7 @@ public class SecurityConfiguration {
                     "/webjars/**"  // Si usas WebJars para librerias frontend
                 ).permitAll() // Permite el acceso a estas rutas sin autenticacion
                 // Rutas protegidas: requieren autenticacion.
-                // Asumo que 'Usuario.html' es tu dashboard principal.
+                // Asumo que 'user-dashboard.html' es tu dashboard principal.
                 .requestMatchers(
                     "/dashboard",
                     "/user-dashboard.html",
@@ -124,8 +121,8 @@ public class SecurityConfiguration {
                 .logoutSuccessUrl("/login?logout") // Redirige a /login?logout despues de cerrar sesion
                 .permitAll() // Permite el acceso al proceso de logout
             );
-            // Ya no necesitas .authenticationProvider(authenticationProvider()); aqui,
-            // Spring Security lo encontrara automaticamente si es un bean.
+            // Ya no necesitas .authenticationProvider(authenticationProvider()); aquí,
+            // Spring Security lo encontrará automáticamente si es un bean.
 
         return http.build();
     }
