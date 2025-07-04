@@ -2,8 +2,9 @@
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8" />
-    <title>Usuario | kinalBAnk</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Usuario | HyprBank</title>
+    <!-- Enlace a tu archivo local de Tailwind CSS -->
+    <link rel="stylesheet" href="/css/output.css">
     <style>
         /* Transición para el contenido principal cuando cambia su margen */
         #contenido {
@@ -48,7 +49,7 @@
         <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-gray-800 flex flex-col p-6 space-y-6 -translate-x-full transition-transform duration-300">
             <div>
                 <div class="flex items-center space-x-3 text-2xl font-bold text-white mb-6 select-none">
-                    <span>🏦</span><span>kinalBAnk</span>
+                    <span>🏦</span><span>HyprBank</span>
                 </div>
                 <nav class="flex flex-col space-y-3">
                     <a href="#" data-id="inicio" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
@@ -65,6 +66,7 @@
                         Mi cuenta
                     </a>
                     
+                    <!-- Transacciones (padre) -->
                     <a href="#" id="toggleTransaccionesSidebar" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9l-7 7-7-7" />
@@ -75,20 +77,20 @@
                         </svg>
                     </a>
                     <div id="submenuTransacciones" class="hidden flex flex-col space-y-2 mt-2">
-                        <!-- Retiro ELIMINADO -->
+                        <!-- Submenú: Internas -->
                         <a href="#" data-id="transferenciasInternas" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
-                            Transferencia entre mis cuentas
+                            Internas
                         </a>
+                        <!-- Submenú: Externas -->
                         <a href="#" data-id="transferenciasOtrosUsuarios" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            Transferencia a otro usuario
+                            Externas
                         </a>
-                        <!-- Transferencia Externa ELIMINADO -->
                     </div>
 
                     <a href="#" data-id="historial" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
@@ -234,7 +236,7 @@
     const secciones = {
         inicio: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
-                <h1 class="text-4xl font-bold mb-6 text-emerald-400 text-center">Bienvenido/a <span id="dashboardTitulo" class="text-white">a kinalBAnk</span></h1>
+                <h1 class="text-4xl font-bold mb-6 text-emerald-400 text-center">Bienvenido/a <span id="dashboardTitulo" class="text-white">a HyprBank</span></h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
                         <h2 class="text-xl font-semibold text-white mb-2">Saldo principal</h2>
@@ -323,7 +325,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                         Transferencia a otro usuario
                     </h2>
-                    <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero a cuentas de otros usuarios en kinalBAnk.</p>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero a cuentas de otros usuarios en HyprBank.</p>
                     
                     <form id="formTransferenciaOtroUsuario" class="space-y-4">
                         <div>
@@ -376,8 +378,9 @@
                     <button id="btnFiltrar" class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition self-end focus:outline-none focus:ring-2 focus:ring-emerald-400">
                         Filtrar
                     </button>
+                    <!-- Botón de Reportería con texto actualizado -->
                     <button id="btnReportesHistorial" class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition self-end focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        Reportería
+                        Generar Reporte
                     </button>
                 </div>
                 <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
@@ -585,7 +588,16 @@
                 return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
             };
 
-            const tipoDisplay = capitalizeFirstLetter(mov.type); 
+            // Corrección de nombres para el tipo de movimiento en el historial
+            let tipoDisplay = '';
+            if (mov.type === 'INCOME') {
+                tipoDisplay = 'Ingreso';
+            } else if (mov.type === 'EXPENSE') {
+                tipoDisplay = 'Egreso';
+            } else {
+                tipoDisplay = capitalizeFirstLetter(mov.type); // En caso de que haya otros tipos
+            }
+            
             const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
             const amountSign = mov.type === 'INCOME' ? '+' : '-'; 
 
@@ -708,7 +720,16 @@
             const dashboardUltimaActividad = document.getElementById('dashboardUltimaActividad');
             if (dashboardUltimaActividad && movimientos.length > 0) {
                 const ultimoMovimiento = movimientos[0]; // Ya está ordenado por fecha descendente
-                dashboardUltimaActividad.textContent = `${ultimoMovimiento.date}: ${ultimoMovimiento.description} (${formatoMoneda(Math.abs(ultimoMovimiento.amount))})`;
+                // Corrección de nombres para el tipo de movimiento en la descripción
+                let tipoDesc = '';
+                if (ultimoMovimiento.type === 'INCOME') {
+                    tipoDesc = 'Ingreso';
+                } else if (ultimoMovimiento.type === 'EXPENSE') {
+                    tipoDesc = 'Egreso';
+                } else {
+                    tipoDesc = capitalizeFirstLetter(ultimoMovimiento.type);
+                }
+                dashboardUltimaActividad.textContent = `${ultimoMovimiento.date}: ${ultimoMovimiento.description} (${tipoDesc} ${formatoMoneda(Math.abs(ultimoMovimiento.amount))})`;
             } else if (dashboardUltimaActividad) {
                 dashboardUltimaActividad.textContent = 'No hay actividad reciente.';
             }
@@ -1279,6 +1300,12 @@
             btnToggleSidebar.style.display = 'block'; // Mostrar el botón en móvil
             overlay.classList.add('hidden'); // Asegurarse de que el overlay esté oculto inicialmente en móvil
         }
+    }
+
+    // Función auxiliar para capitalizar la primera letra (usada en pintarTablaMovimientos y cargarUltimosMovimientos)
+    function capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
     }
 
     // Inicializar la vista al cargar la página

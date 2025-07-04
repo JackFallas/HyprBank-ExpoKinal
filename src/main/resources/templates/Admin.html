@@ -2,9 +2,9 @@
 <html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <head>
     <meta charset="UTF-8" />
-    <title>Administrador | kinalBAnk</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Administrador | HyprBank</title>
+    <!-- Enlace a tu archivo local de Tailwind CSS -->
+    <link rel="stylesheet" href="/css/output.css">
     <!-- Chart.js para gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -37,7 +37,7 @@
           <div
             class="flex items-center space-x-3 text-2xl font-bold text-white mb-6 select-none"
           >
-            <span>🛠️</span><span>Admin kinalBAnk</span>
+            <span>🛠️</span><span>Admin HyprBank</span>
           </div>
           <nav class="flex flex-col space-y-3">
             <a
@@ -52,12 +52,7 @@
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
               >Clientes</a
             >
-            <a
-              href="#"
-              data-id="transacciones"
-              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Transacciones</a
-            >
+            <!-- Se elimina el enlace "Transacciones" duplicado y se mantiene "Todos los Movimientos" -->
             <!-- NUEVO: Enlace para Depósito -->
             <a
               href="#"
@@ -67,7 +62,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                 Depósito
             </a>
-            <!-- NUEVO: Enlace para Todos los Movimientos -->
+            <!-- Se mantiene "Todos los Movimientos" y se le aplicará la lógica de filtros -->
             <a
               href="#"
               data-id="todosMovimientos"
@@ -84,15 +79,6 @@
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
               >Reportes</a
             >
-            <!-- ELIMINADO: Gestión de cuentas -->
-            <!-- <a href="#" data-id="gestionCuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Gestión de cuentas</a> -->
-            <!-- ELIMINADO: Citas -->
-            <!-- <a href="#" data-id="citas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Citas</a> -->
-            <!-- ELIMINADO: Cuentas (ya no es una sección separada, se gestiona en Depósito o Clientes) -->
-            <!-- <a href="#" data-id="cuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Cuentas</a> -->
-            <!-- ELIMINADO: Configuración -->
-            <!-- <a href="#" data-id="configuracion" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Configuración</a> -->
-
             <div class="mt-auto">
                 <a href="/logout" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,32 +195,6 @@
         citasSinConfirmar: 4,
         nuevosClientesSemana: [5, 8, 10, 15, 12, 20, 18], // últimos 7 días
         volumenTransaccionesMes: [120000, 95000, 110000, 130000, 90000, 150000], // últimos 6 meses
-        // transacciones y cuentas se mantienen ficticias si no las pasas desde el backend
-        transacciones: [
-          {
-            date: "2025-06-10", // CAMBIO: 'date' en lugar de 'fecha'
-            description: "Depósito efectivo", // CAMBIO: 'description'
-            type: "INCOME", // CAMBIO: 'type' (enum)
-            amount: 1500,
-            accountNumber: "1000000001" // Añadido para simulación
-          },
-          {
-            date: "2025-06-12",
-            description: "Retiro cajero",
-            type: "EXPENSE",
-            amount: 500,
-            accountNumber: "1000000002"
-          },
-          {
-            date: "2025-06-14",
-            description: "Transferencia a C002",
-            type: "EXPENSE",
-            amount: 700,
-            accountNumber: "1000000001"
-          },
-        ],
-        // Las cuentas se cargarán desde el backend para el depósito
-        // cuentas: [ ... ]
       };
 
       // Variable para almacenar todas las cuentas del sistema (para el admin)
@@ -247,6 +207,12 @@
           currency: "GTQ",
           minimumFractionDigits: 2,
         });
+      }
+
+      // Función para capitalizar la primera letra (útil para tipos de movimiento)
+      function capitalizeFirstLetter(string) {
+          if (!string) return '';
+          return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
       }
 
       // Función para crear gráfico (Chart.js)
@@ -364,63 +330,8 @@
           </table>
         </section>
         `,
-
-        transacciones: `
-        <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
-          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transacciones</h1>
-
-          <div class="flex flex-wrap gap-4 mb-6">
-            <input
-              type="date"
-              id="filtroFechaInicio"
-              class="px-3 py-2 rounded-md bg-gray-700 text-white"
-              placeholder="Fecha inicio"
-            />
-            <input
-              type="date"
-              id="filtroFechaFin"
-              class="px-3 py-2 rounded-md bg-gray-700 text-white"
-              placeholder="Fecha fin"
-            />
-            <select
-              id="filtroTipo"
-              class="px-3 py-2 rounded-md bg-gray-700 text-white"
-            >
-              <option value="">Tipo de transacción</option>
-              <option value="INCOME">Depósito</option>
-              <option value="EXPENSE">Retiro/Transferencia</option>
-            </select>
-            <input
-              type="text"
-              id="buscadorTransacciones"
-              placeholder="Buscar por ID o descripción"
-              class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px]"
-            />
-            <button
-              id="btnExportarTransacciones"
-              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-            >
-              Exportar PDF/Excel
-            </button>
-          </div>
-
-          <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-            <thead class="bg-gray-700 text-gray-300">
-              <tr>
-                <th class="py-3 px-4 text-left cursor-pointer" data-orden="date">Fecha ↑↓</th>
-                <th class="py-3 px-4 text-left">Descripción</th>
-                <th class="py-3 px-4 text-left">Tipo</th>
-                <th class="py-3 px-4 text-left">Monto</th>
-                <th class="py-3 px-4 text-left">Cuenta</th> <!-- Nueva columna para cuenta -->
-              </tr>
-            </thead>
-            <tbody id="tablaTransacciones" class="text-gray-100">
-              <!-- Aquí se cargan las transacciones -->
-            </tbody>
-          </table>
-        </section>
-        `,
-        // NUEVA SECCIÓN: Depósito para Administradores
+        // Se elimina la sección 'transacciones' ya que 'todosMovimientos' la reemplazará
+        // deposito: Se mantiene igual
         deposito: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
@@ -479,27 +390,64 @@
                 </div>
             </section>
         `,
-        // NUEVA SECCIÓN: Todos los Movimientos del Banco
+        // Se modifica la sección 'todosMovimientos' para incluir los filtros y la tabla de transacciones
         todosMovimientos: `
             <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Todos los Movimientos del Banco</h1>
-                <div class="bg-gray-800 rounded-xl shadow-lg p-6">
-                    <table class="w-full text-left">
-                        <thead class="text-gray-300 border-b border-gray-700">
-                            <tr>
-                                <th class="py-2 px-3">Fecha</th>
-                                <th class="py-2 px-3">Descripción</th>
-                                <th class="py-2 px-3">Cuenta Origen/Destino</th>
-                                <th class="py-2 px-3">Tipo</th>
-                                <th class="py-2 px-3">Monto</th>
-                                <th class="py-2 px-3">Usuario</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaTodosMovimientos" class="text-gray-100">
-                            <tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <div>
+                        <label for="filtroFechaInicioMov" class="block text-gray-300 text-sm mb-1">Fecha Inicio:</label>
+                        <input type="date" id="filtroFechaInicioMov" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    </div>
+                    <div>
+                        <label for="filtroFechaFinMov" class="block text-gray-300 text-sm mb-1">Fecha Fin:</label>
+                        <input type="date" id="filtroFechaFinMov" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    </div>
+                    <div>
+                        <label for="filtroTipoMov" class="block text-gray-300 text-sm mb-1">Tipo:</label>
+                        <select id="filtroTipoMov" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Todos</option>
+                            <option value="INCOME">Depósito</option>
+                            <option value="EXPENSE">Retiro/Transferencia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="buscadorMovimientos" class="block text-gray-300 text-sm mb-1">Buscar (ID/Descripción/Cuenta):</label>
+                        <input
+                            type="text"
+                            id="buscadorMovimientos"
+                            placeholder="Buscar..."
+                            class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                    <button
+                        id="btnFiltrarMovimientos"
+                        class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition self-end focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    >
+                        Filtrar
+                    </button>
+                    <button
+                        id="btnExportarMovimientos"
+                        class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition self-end focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                        Exportar PDF/Excel
+                    </button>
                 </div>
+                <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                    <thead class="bg-gray-700 text-gray-300">
+                        <tr>
+                            <th class="py-3 px-4 text-left cursor-pointer" data-orden="date">Fecha ↑↓</th>
+                            <th class="py-3 px-4 text-left">Descripción</th>
+                            <th class="py-3 px-4 text-left">Cuenta Origen/Destino</th>
+                            <th class="py-3 px-4 text-left">Tipo</th>
+                            <th class="py-3 px-4 text-left">Monto</th>
+                            <th class="py-3 px-4 text-left">Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaTodosMovimientos" class="text-gray-100">
+                        <tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>
+                    </tbody>
+                </table>
             </section>
         `,
         reportes: `
@@ -541,10 +489,6 @@
           </button>
         </section>
         `,
-        // ELIMINADO: gestionCuentas
-        // ELIMINADO: citas
-        // ELIMINADO: cuentas
-        // ELIMINADO: configuracion
       };
 
       // Función para mostrar un modal de mensaje
@@ -730,76 +674,6 @@
               mostrarMensaje("Error", "No se pudo conectar con el servidor para eliminar el cliente.", true);
           }
       }
-
-
-    // Renderiza la tabla de transacciones
-    async function renderTransacciones() {
-        const tbody = document.getElementById("tablaTransacciones");
-        const filtroFechaInicio = document.getElementById("filtroFechaInicio");
-        const filtroFechaFin = document.getElementById("filtroFechaFin");
-        const filtroTipo = document.getElementById("filtroTipo");
-        const buscadorTransacciones = document.getElementById("buscadorTransacciones");
-
-        let url = `${window.location.origin}/api/movements/history?`; // Usar URL absoluta
-        const params = new URLSearchParams();
-
-        if (filtroFechaInicio && filtroFechaInicio.value) params.append('startDate', filtroFechaInicio.value);
-        if (filtroFechaFin && filtroFechaFin.value) params.append('endDate', filtroFechaFin.value);
-        if (filtroTipo && filtroTipo.value) params.append('type', filtroTipo.value); // Ya viene en MAYÚSCULAS (INCOME/EXPENSE)
-        // No hay un parámetro de búsqueda por descripción o ID en el backend actual para movimientos,
-        // así que el filtro del buscador se aplicará en el frontend si es necesario.
-
-        url += params.toString();
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                // Loguear el estado y el mensaje de error del servidor
-                console.error(`Error de respuesta para /api/movements/history: Estado ${response.status}, Mensaje: ${response.statusText}`);
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = `${window.location.origin}/login`; // Usar URL absoluta
-                    throw new Error('No autenticado');
-                }
-                throw new Error('Error al obtener las transacciones.');
-            }
-            const transaccionesData = await response.json();
-
-            let html = "";
-            let filteredTransactions = transaccionesData;
-
-            // Filtrado por buscador en el frontend (si el backend no lo soporta)
-            if (buscadorTransacciones && buscadorTransacciones.value) {
-                const searchTerm = buscadorTransacciones.value.toLowerCase();
-                filteredTransactions = transaccionesData.filter(t =>
-                    (t.description && t.description.toLowerCase().includes(searchTerm)) ||
-                    (t.accountNumber && t.accountNumber.includes(searchTerm))
-                );
-            }
-
-            if (filteredTransactions.length === 0) {
-                html = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No se encontraron transacciones.</td></tr>`;
-            } else {
-                filteredTransactions.forEach((t) => {
-                    const tipoDisplay = t.type === 'INCOME' ? 'Depósito' :
-                                         (t.type === 'EXPENSE' ? 'Retiro/Transferencia' : t.type);
-                    html += `
-                        <tr class="border-b border-gray-700 last:border-b-0">
-                            <td class="py-3 px-4">${t.date}</td>
-                            <td class="py-3 px-4">${t.description}</td>
-                            <td class="py-3 px-4">${tipoDisplay}</td>
-                            <td class="py-3 px-4 ${t.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">${formatoMoneda(t.amount)}</td>
-                            <td class="py-3 px-4">${t.accountNumber || 'N/A'}</td>
-                        </tr>
-                    `;
-                });
-            }
-            tbody.innerHTML = html;
-        } catch (error) {
-            console.error('Error cargando transacciones:', error);
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-400">Error al cargar transacciones.</td></tr>`;
-        }
-    }
-
 
     // Función para cargar todas las cuentas del sistema para el admin
     async function cargarTodasLasCuentas() {
@@ -987,7 +861,7 @@ async function inicializarDepositoAdmin() {
                 camposDepositoDiv.classList.add('hidden'); // Ocultar campos de depósito
                 currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
                 // Opcional: Recargar transacciones si quieres que el historial se actualice inmediatamente
-                // renderTransacciones();
+                // renderTodosMovimientos(); // Se cambió a renderTodosMovimientos
             } catch (error) {
                 console.error('Error al realizar el depósito:', error);
                 mostrarMensaje("Error", `No se pudo conectar con el servidor para realizar el depósito: ${error.message}`, true);
@@ -1009,6 +883,8 @@ function inicializarDashboardAdmin() {
     const citasSinConfirmarElem = document.getElementById('dashboardCitasSinConfirmar');
 
     // Usar los datos ficticios que ya tienes en el objeto `datos`
+    // NOTA: Los elementos con estos IDs no existen en el HTML del dashboard actual,
+    // pero se mantendrán los logs por si se añaden en el futuro.
     if (totalClientesElem) totalClientesElem.textContent = datos.totalClientes;
     if (saldoGlobalElem) saldoGlobalElem.textContent = formatoMoneda(datos.saldoGlobal);
     if (cuentasActivasInactivasElem) cuentasActivasInactivasElem.textContent = `${datos.cuentasActivas} / ${datos.cuentasInactivas}`;
@@ -1054,83 +930,133 @@ function inicializarDashboardAdmin() {
 }
 
 /**
- * Inicializa la sección "Todos los Movimientos", cargando y mostrando todas las transacciones.
+ * Inicializa la sección "Todos los Movimientos", cargando y mostrando todas las transacciones
+ * con filtros y opciones de búsqueda.
  */
 async function inicializarTodosMovimientos() {
     console.log("Inicializando sección Todos los Movimientos...");
     const tablaTodosMovimientos = document.getElementById('tablaTodosMovimientos');
+    const filtroFechaInicioMov = document.getElementById('filtroFechaInicioMov');
+    const filtroFechaFinMov = document.getElementById('filtroFechaFinMov');
+    const filtroTipoMov = document.getElementById('filtroTipoMov');
+    const buscadorMovimientos = document.getElementById('buscadorMovimientos');
+    const btnFiltrarMovimientos = document.getElementById('btnFiltrarMovimientos');
+    const btnExportarMovimientos = document.getElementById('btnExportarMovimientos');
+
     if (!tablaTodosMovimientos) return;
 
-    tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>';
+    // Función para cargar y mostrar movimientos desde el backend
+    const cargarTodosMovimientos = async () => {
+        tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>';
 
-    try {
-        const cacheBuster = new Date().getTime();
-        // ASUMIMOS ESTE ENDPOINT EN TU BACKEND DE SPRING BOOT
-        // Este endpoint debe devolver una lista de objetos JSON con campos como:
-        // { id, date, description, accountNumber, type, amount, userName }
-        const response = await fetch(`${window.location.origin}/api/admin/movements/all?_=${cacheBuster}`, { cache: 'no-store' });
-        if (!response.ok) {
-            // Loguear el estado y el mensaje de error del servidor
-            console.error(`Error de respuesta para /api/admin/movements/all: Estado ${response.status}, Mensaje: ${response.statusText}`);
-            if (response.status === 401 || response.status === 403) {
-                window.location.href = `${window.location.origin}/login`;
-                throw new Error('No autenticado para ver todos los movimientos.');
+        try {
+            const cacheBuster = new Date().getTime();
+            let url = `${window.location.origin}/api/admin/movements/all?_=${cacheBuster}`;
+            const params = new URLSearchParams();
+
+            if (filtroFechaInicioMov && filtroFechaInicioMov.value) {
+                params.append('startDate', filtroFechaInicioMov.value);
             }
-            throw new Error('Error al obtener todos los movimientos.');
-        }
-        const movimientos = await response.json();
-        console.log("Todos los movimientos recibidos para admin:", movimientos);
-
-        // Limpiar la tabla antes de cargar nuevos datos
-        tablaTodosMovimientos.innerHTML = ''; 
-
-        if (movimientos.length === 0) {
-            const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = '<td colspan="6" class="p-3 text-center text-gray-400">No hay movimientos registrados.</td>';
-            tablaTodosMovimientos.appendChild(noDataRow);
-            return;
-        }
-
-        // Ordenar los datos por fecha descendente (más reciente primero)
-        movimientos.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (dateB.getTime() !== dateA.getTime()) {
-                return dateB.getTime() - dateA.getTime();
+            if (filtroFechaFinMov && filtroFechaFinMov.value) {
+                params.append('endDate', filtroFechaFinMov.value);
             }
-            // Si las fechas son iguales, ordenar por ID descendente (asumiendo que mayor ID es más reciente)
-            return b.id - a.id; 
+            if (filtroTipoMov && filtroTipoMov.value) {
+                params.append('type', filtroTipoMov.value.toUpperCase());
+            }
+
+            url += params.toString();
+            console.log("URL de fetch para todos los movimientos (con anti-caché):", url);
+
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) {
+                console.error(`Error de respuesta para /api/admin/movements/all: Estado ${response.status}, Mensaje: ${response.statusText}`);
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = `${window.location.origin}/login`;
+                    throw new Error('No autenticado para ver todos los movimientos.');
+                }
+                throw new Error('Error al obtener todos los movimientos.');
+            }
+            const movimientos = await response.json();
+            console.log("Todos los movimientos recibidos para admin:", movimientos);
+
+            let filteredMovs = movimientos;
+
+            // Filtrado por buscador en el frontend
+            if (buscadorMovimientos && buscadorMovimientos.value) {
+                const searchTerm = buscadorMovimientos.value.toLowerCase();
+                filteredMovs = movimientos.filter(mov =>
+                    (mov.description && mov.description.toLowerCase().includes(searchTerm)) ||
+                    (mov.accountNumber && mov.accountNumber.includes(searchTerm)) ||
+                    (mov.userName && mov.userName.toLowerCase().includes(searchTerm)) ||
+                    (mov.id && mov.id.toString().includes(searchTerm))
+                );
+            }
+
+            // Limpiar la tabla antes de cargar nuevos datos
+            tablaTodosMovimientos.innerHTML = ''; 
+
+            if (filteredMovs.length === 0) {
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = '<td colspan="6" class="p-3 text-center text-gray-400">No hay movimientos registrados que coincidan con los filtros.</td>';
+                tablaTodosMovimientos.appendChild(noDataRow);
+                return;
+            }
+
+            // Ordenar los datos por fecha descendente (más reciente primero)
+            filteredMovs.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (dateB.getTime() !== dateA.getTime()) {
+                    return dateB.getTime() - dateA.getTime();
+                }
+                return b.id - a.id; 
+            });
+
+            filteredMovs.forEach(mov => {
+                const tipoDisplay = mov.type === 'INCOME' ? 'Depósito' :
+                                    (mov.type === 'EXPENSE' ? 'Retiro/Transferencia' : capitalizeFirstLetter(mov.type));
+                const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
+                const amountSign = mov.type === 'INCOME' ? '+' : '-'; 
+
+                const row = document.createElement('tr');
+                row.className = 'border-t border-gray-700 hover:bg-gray-700 transition';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${mov.date}</td>
+                    <td class="py-3 px-4">${mov.description || 'N/A'}</td>
+                    <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
+                    <td class="py-3 px-4">${tipoDisplay}</td>
+                    <td class="py-3 px-4 ${amountClass}">
+                        ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
+                    </td>
+                    <td class="py-3 px-4">${mov.userName || 'Desconocido'}</td>
+                `;
+                tablaTodosMovimientos.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error al cargar todos los movimientos:', error);
+            tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-red-400">Error al cargar todos los movimientos.</td></tr>';
+            mostrarMensaje("Error", `No se pudieron cargar todos los movimientos: ${error.message}`, true);
+        }
+    };
+
+    // Cargar movimientos la primera vez que se inicializa la sección
+    cargarTodosMovimientos();
+
+    // Adjuntar listeners para filtros y buscador
+    if (btnFiltrarMovimientos) {
+        btnFiltrarMovimientos.onclick = cargarTodosMovimientos;
+    }
+    if (filtroFechaInicioMov) filtroFechaInicioMov.addEventListener("change", cargarTodosMovimientos);
+    if (filtroFechaFinMov) filtroFechaFinMov.addEventListener("change", cargarTodosMovimientos);
+    if (filtroTipoMov) filtroTipoMov.addEventListener("change", cargarTodosMovimientos);
+    if (buscadorMovimientos) buscadorMovimientos.addEventListener("input", cargarTodosMovimientos);
+
+    // Botón exportar
+    if (btnExportarMovimientos) {
+        btnExportarMovimientos.addEventListener("click", () => {
+            mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel de todos los movimientos aún no implementada.");
         });
-
-        movimientos.forEach(mov => {
-            const capitalizeFirstLetter = (string) => {
-                if (!string) return '';
-                return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-            };
-
-            const tipoDisplay = capitalizeFirstLetter(mov.type); 
-            const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
-            const amountSign = mov.type === 'INCOME' ? '+' : '-'; 
-
-            const row = document.createElement('tr');
-            row.className = 'border-t border-gray-700 hover:bg-gray-700 transition';
-            row.innerHTML = `
-                <td class="py-3 px-4">${mov.date}</td>
-                <td class="py-3 px-4">${mov.description || 'N/A'}</td>
-                <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
-                <td class="py-3 px-4">${tipoDisplay}</td>
-                <td class="py-3 px-4 ${amountClass}">
-                    ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
-                </td>
-                <td class="py-3 px-4">${mov.userName || 'Desconocido'}</td>
-            `;
-            tablaTodosMovimientos.appendChild(row);
-        });
-
-    } catch (error) {
-        console.error('Error al cargar todos los movimientos:', error);
-        tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-red-400">Error al cargar todos los movimientos.</td></tr>';
-        mostrarMensaje("Error", `No se pudieron cargar todos los movimientos: ${error.message}`, true);
     }
 }
 
@@ -1191,36 +1117,13 @@ async function inicializarTodosMovimientos() {
                 buscadorClientesElem.addEventListener("input", renderClientes);
             }
           }, 50);
-        } else if (id === "transacciones") {
-          setTimeout(() => {
-            renderTransacciones(); // Ahora llama a la función actualizada
-
-            // Adjuntar listeners para filtros y buscador
-            const filtroFechaInicioElem = document.getElementById("filtroFechaInicio");
-            const filtroFechaFinElem = document.getElementById("filtroFechaFin");
-            const filtroTipoElem = document.getElementById("filtroTipo");
-            const buscadorTransaccionesElem = document.getElementById("buscadorTransacciones");
-            const btnExportarTransaccionesElem = document.getElementById("btnExportarTransacciones");
-
-            if (filtroFechaInicioElem) filtroFechaInicioElem.addEventListener("change", renderTransacciones);
-            if (filtroFechaFinElem) filtroFechaFinElem.addEventListener("change", renderTransacciones);
-            if (filtroTipoElem) filtroTipoElem.addEventListener("change", renderTransacciones);
-            if (buscadorTransaccionesElem) buscadorTransaccionesElem.addEventListener("input", renderTransacciones);
-
-            // Botón exportar
-            if (btnExportarTransaccionesElem) {
-                btnExportarTransaccionesElem.addEventListener("click", () => {
-                    mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel aún no implementada.");
-                });
-            }
-          }, 50);
         } else if (id === "deposito") { // NUEVO: Inicializa la sección de depósito
             setTimeout(() => {
                 inicializarDepositoAdmin();
             }, 50);
         } else if (id === "todosMovimientos") { // NUEVO: Inicializa la sección de todos los movimientos
             setTimeout(() => {
-                inicializarTodosMovimientos();
+                inicializarTodosMovimientos(); // Ahora llama a la función actualizada con filtros
             }, 50);
         } else if (id === "reportes") {
           setTimeout(() => {
@@ -1257,7 +1160,6 @@ async function inicializarTodosMovimientos() {
             }
           }, 50);
         }
-        // ELIMINADAS: gestionCuentas, citas, cuentas, configuracion
       }
 
       // Evento click en links sidebar (ya existe, se mantiene)
