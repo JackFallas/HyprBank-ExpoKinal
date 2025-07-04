@@ -12,14 +12,14 @@ import lombok.AllArgsConstructor;
  * DTO (Data Transfer Object) para la entidad Cuenta.
  *
  * Utilizado para transferir informacion de la cuenta entre las capas de la aplicacion
- * de forma segura y controlada, evita exponer la entidad del modelo
+ * de forma segura y controlada, evita exponer la entidad del modelo.
  *
- * Contiene campos relevantes para la vista y la logica
+ * Contiene campos relevantes para la vista y la logica.
  *
- * Utilizaremos Lombok para generar automaticamente getters, setters, toString(), equals() y hashCode() para todos los campos
-*/
+ * Utilizaremos Lombok para generar automaticamente getters, setters, toString(), equals() y hashCode() para todos los campos.
+ */
 
-@Data // Anotacion lombok que genera automaticamente lo anterior mencionado
+@Data // Anotacion lombok que genera automaticamente getters, setters, toString(), equals() y hashCode()
 @NoArgsConstructor // Anotacion lombok que genera constructor sin argumentos
 @AllArgsConstructor // Anotacion lombok que genera un constructor con todos los argumentos
 
@@ -33,5 +33,6 @@ public class AccountDTO {
 
     // Informacion del usuario asociada a la cuenta
     private Long userId;
-    private String userName;
+    private String userName;     // Nombre del titular de la cuenta
+    private String userLastName; // Apellido del titular de la cuenta (campo añadido)
 }

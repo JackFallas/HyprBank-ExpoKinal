@@ -33,4 +33,5 @@ public class MovementDTO {
     private String description;
     private MovementType type; // Nombre de enum actualizado
     private BigDecimal amount; // Nombre de campo actualizado
+    private BigDecimal balance;
 }

@@ -11,10 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -67,6 +69,28 @@ public class AccountController {
     }
 
     /**
+     * NUEVO ENDPOINT: Busca una cuenta por su número de cuenta.
+     * Este endpoint es para uso del administrador en la funcionalidad de depósito.
+     *
+     * @param accountNumber El número de cuenta a buscar.
+     * @return ResponseEntity con el AccountDTO de la cuenta encontrada, o 404 Not Found si no existe.
+     */
+    @GetMapping("/number/{accountNumber}") // Nuevo endpoint para buscar por número de cuenta
+    public ResponseEntity<AccountDTO> getAccountByNumber(@PathVariable String accountNumber) {
+        Optional<Account> accountOptional = accountRepository.findByAccountNumber(accountNumber);
+
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            // Mapear la entidad Account a un AccountDTO para la respuesta
+            AccountDTO accountDTO = convertToDto(account);
+            return ResponseEntity.ok(accountDTO);
+        } else {
+            // Si la cuenta no se encuentra, devuelve un 404 Not Found
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
      * Método auxiliar para convertir una entidad Account a un AccountDTO.
      *
      * @param account La entidad Account a convertir.
@@ -82,7 +106,9 @@ public class AccountController {
         dto.setCreationDate(account.getCreationDate());
         if (account.getUser() != null) {
             dto.setUserId(account.getUser().getId());
-            dto.setUserName(account.getUser().getFirstName() + " " + account.getUser().getLastName());
+            // MODIFICADO: Asignar firstName a userName y lastName a userLastName por separado
+            dto.setUserName(account.getUser().getFirstName());
+            dto.setUserLastName(account.getUser().getLastName());
         }
         return dto;
     }

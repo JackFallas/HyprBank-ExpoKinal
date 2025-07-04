@@ -417,25 +417,51 @@
                         Realizar Depósito
                     </h2>
                     <p class="text-lg text-gray-300 mb-6 text-center">Realiza un depósito a cualquier cuenta del sistema.</p>
-                    
+
                     <form id="formDepositoAdmin" class="space-y-4">
-                        <div>
-                            <label for="cuentaDepositoAdmin" class="block font-semibold mb-1">Seleccionar Cuenta:</label>
-                            <select id="cuentaDepositoAdmin" name="cuentaDepositoAdmin" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
-                                <option value="" disabled selected>Cargando cuentas...</option>
-                            </select>
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-grow">
+                                <label for="numeroCuentaBusqueda" class="block font-semibold mb-1">Número de Cuenta:</label>
+                                <input type="text" id="numeroCuentaBusqueda" name="numeroCuentaBusqueda" placeholder="Ej. 1000000001" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <button type="button" id="btnBuscarCuenta" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-md font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-400 h-full">
+                                Buscar
+                            </button>
                         </div>
-                        <div>
-                            <label for="montoDepositoAdmin" class="block font-semibold mb-1">Monto a depositar (GTQ):</label>
-                            <input type="number" id="montoDepositoAdmin" name="montoDepositoAdmin" min="0.01" step="0.01" placeholder="Ej. 500.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+
+                        <div id="datosCuenta" class="space-y-3 bg-gray-700 p-4 rounded-md hidden">
+                            <h3 class="text-xl font-semibold text-emerald-300">Detalles de la Cuenta:</h3>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Nombre del Titular:</label>
+                                <input type="text" id="nombreTitular" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Apellido del Titular:</label>
+                                <input type="text" id="apellidoTitular" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Tipo de Cuenta:</label>
+                                <input type="text" id="tipoCuenta" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Saldo Actual:</label>
+                                <input type="text" id="saldoActual" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
                         </div>
-                        <div>
-                            <label for="descripcionDepositoAdmin" class="block font-semibold mb-1">Descripción (opcional):</label>
-                            <input type="text" id="descripcionDepositoAdmin" name="descripcionDepositoAdmin" placeholder="Ej. Depósito en ventanilla" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+
+                        <div id="camposDeposito" class="space-y-4 hidden">
+                            <div>
+                                <label for="montoDepositoAdmin" class="block font-semibold mb-1">Monto a depositar (GTQ):</label>
+                                <input type="number" id="montoDepositoAdmin" name="montoDepositoAdmin" min="0.01" step="0.01" placeholder="Ej. 500.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <div>
+                                <label for="descripcionDepositoAdmin" class="block font-semibold mb-1">Descripción (opcional):</label>
+                                <input type="text" id="descripcionDepositoAdmin" name="descripcionDepositoAdmin" placeholder="Ej. Depósito en ventanilla" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            </div>
+                            <button type="submit" id="btnConfirmarDeposito" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                Confirmar Depósito
+                            </button>
                         </div>
-                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                            Confirmar Depósito
-                        </button>
                         <p id="mensajeDepositoAdmin" class="mt-4 text-center"></p>
                     </form>
                 </div>
@@ -787,60 +813,143 @@
         });
     }
 
-    // NUEVA FUNCIÓN: Inicializa la sección de Depósito para Administradores
-    async function inicializarDepositoAdmin() {
-        const form = document.getElementById('formDepositoAdmin');
-        const mensaje = document.getElementById('mensajeDepositoAdmin');
-        const cuentaSelect = document.getElementById('cuentaDepositoAdmin');
+    let currentAccountForDeposit = null;
 
-        if (!form) return;
+   async function buscarCuentaPorNumero(accountNumber) {
+    try {
+        const response = await fetch(`/api/accounts/number/${accountNumber}`); // Asume este nuevo endpoint en tu backend
+        if (!response.ok) {
+            if (response.status === 404) {
+                mostrarMensaje("Error", `Cuenta con número ${accountNumber} no encontrada.`, true);
+            } else if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login';
+                throw new Error('No autenticado');
+            } else {
+                throw new Error('Error al buscar la cuenta. Intente de nuevo.');
+            }
+        }
+        const accountData = await response.json();
+        return accountData;
+    } catch (error) {
+        console.error('Error al buscar cuenta:', error);
+        mostrarMensaje("Error", `No se pudo buscar la cuenta: ${error.message}`, true);
+        return null;
+    }
+}
 
-        // Cargar y poblar las cuentas
-        await cargarTodasLasCuentas();
-        populateAllAccountsSelect('cuentaDepositoAdmin');
+// NUEVA FUNCIÓN: Inicializa la sección de Depósito para Administradores
+async function inicializarDepositoAdmin() {
+    const form = document.getElementById('formDepositoAdmin');
+    const mensaje = document.getElementById('mensajeDepositoAdmin');
+    const numeroCuentaBusquedaInput = document.getElementById('numeroCuentaBusqueda');
+    const btnBuscarCuenta = document.getElementById('btnBuscarCuenta');
+    const datosCuentaDiv = document.getElementById('datosCuenta');
+    const camposDepositoDiv = document.getElementById('camposDeposito');
+    
+    // Campos para rellenar
+    const nombreTitularInput = document.getElementById('nombreTitular');
+    const apellidoTitularInput = document.getElementById('apellidoTitular');
+    const tipoCuentaInput = document.getElementById('tipoCuenta');
+    const saldoActualInput = document.getElementById('saldoActual');
+    const montoDepositoAdminInput = document.getElementById('montoDepositoAdmin');
+    const descripcionDepositoAdminInput = document.getElementById('descripcionDepositoAdmin');
 
-        form.onsubmit = async e => {
-            e.preventDefault();
-            const accountNumber = cuentaSelect.value;
-            const amount = parseFloat(form.montoDepositoAdmin.value);
-            const description = form.descripcionDepositoAdmin.value.trim();
+    // Ocultar campos de depósito y datos de cuenta al inicio
+    datosCuentaDiv.classList.add('hidden');
+    camposDepositoDiv.classList.add('hidden');
+    mensaje.textContent = ''; // Limpiar mensajes previos
 
-            if (!accountNumber || isNaN(amount) || amount <= 0) {
-                mostrarMensaje("Error", 'Por favor complete todos los campos correctamente.', true);
+    btnBuscarCuenta.onclick = async () => {
+        const accountNumber = numeroCuentaBusquedaInput.value.trim();
+        if (!accountNumber) {
+            mostrarMensaje("Advertencia", 'Por favor, ingrese un número de cuenta.', true);
+            return;
+        }
+
+        // Limpiar campos y ocultar si hay una búsqueda nueva
+        nombreTitularInput.value = '';
+        apellidoTitularInput.value = '';
+        tipoCuentaInput.value = '';
+        saldoActualInput.value = '';
+        datosCuentaDiv.classList.add('hidden');
+        camposDepositoDiv.classList.add('hidden');
+        mensaje.textContent = '';
+        currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
+
+        const account = await buscarCuentaPorNumero(accountNumber);
+
+        if (account) {
+            currentAccountForDeposit = account; // Almacena la cuenta encontrada
+            nombreTitularInput.value = account.userName; // Asume que 'userName' tiene el nombre del titular
+            apellidoTitularInput.value = account.userLastName; // Asume 'userLastName' para el apellido
+            tipoCuentaInput.value = account.accountType;
+            saldoActualInput.value = formatoMoneda(account.balance);
+            
+            datosCuentaDiv.classList.remove('hidden'); // Mostrar detalles de la cuenta
+            camposDepositoDiv.classList.remove('hidden'); // Mostrar campos de depósito
+            montoDepositoAdminInput.focus(); // Pone el foco en el monto para que el admin pueda empezar a escribir
+        } else {
+            // Si no se encontró la cuenta, asegurar que los campos estén ocultos
+            datosCuentaDiv.classList.add('hidden');
+            camposDepositoDiv.classList.add('hidden');
+        }
+    };
+
+    form.onsubmit = async e => {
+        e.preventDefault();
+        
+        if (!currentAccountForDeposit) {
+            mostrarMensaje("Error", 'Por favor, busque y seleccione una cuenta primero.', true);
+            return;
+        }
+
+        const accountNumber = currentAccountForDeposit.accountNumber; // Usar el número de la cuenta encontrada
+        const amount = parseFloat(montoDepositoAdminInput.value);
+        const description = descripcionDepositoAdminInput.value.trim();
+
+        if (isNaN(amount) || amount <= 0) {
+            mostrarMensaje("Error", 'Por favor, ingrese un monto válido mayor a cero.', true);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/transactions/deposit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    accountNumber: accountNumber,
+                    amount: amount,
+                    description: description,
+                    type: 'INCOME' // Siempre INCOME para depósitos
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Aquí es donde capturarías el mensaje de error del backend
+                mostrarMensaje("Error", data.message || 'Error al realizar el depósito. Verifique los datos e intente de nuevo.', true);
+                console.error("Detalles del error del backend:", data); // Para depuración
                 return;
             }
 
-            try {
-                const response = await fetch('/api/transactions/deposit', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        accountNumber: accountNumber,
-                        amount: amount,
-                        description: description,
-                        type: 'INCOME' // Siempre INCOME para depósitos
-                    })
-                });
+            mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`); // Asume que la respuesta tiene 'balance'
+            form.reset(); // Limpiar el formulario
+            numeroCuentaBusquedaInput.value = ''; // Limpiar el número de cuenta de búsqueda
+            datosCuentaDiv.classList.add('hidden'); // Ocultar datos de cuenta
+            camposDepositoDiv.classList.add('hidden'); // Ocultar campos de depósito
+            currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
+            // Opcional: Recargar transacciones si quieres que el historial se actualice inmediatamente
+            // renderTransacciones(); 
+        } catch (error) {
+            console.error('Error al realizar el depósito:', error);
+            mostrarMensaje("Error", `No se pudo conectar con el servidor para realizar el depósito: ${error.message}`, true);
+        }
+    };
+}
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    mostrarMensaje("Error", data.message || 'Error al realizar el depósito.', true);
-                    return;
-                }
-
-                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.movement.account.balance)}`);
-                form.reset(); // Limpiar el formulario
-                await cargarTodasLasCuentas(); // Recargar cuentas para actualizar saldos en el select
-                populateAllAccountsSelect('cuentaDepositoAdmin'); // Repopular select
-            } catch (error) {
-                console.error('Error al realizar el depósito:', error);
-                mostrarMensaje("Error", `Error: ${error.message}`, true);
-            }
-        };
-    }
 
 
       // Función para cargar sección y activar enlaces

@@ -75,11 +75,6 @@
                         </svg>
                     </a>
                     <div id="submenuTransacciones" class="hidden flex flex-col space-y-2 mt-2">
-                        <!-- Depósito se mueve al admin, lo quitamos de aquí -->
-                        <!-- <a href="#" data-id="deposito" class="submenu-item flex items-center px-4 py-2 rounded-full hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                            Depósito
-                        </a> -->
                         <a href="#" data-id="retiro" class="submenu-item flex items-center px-4 py-2 rounded-full hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
                             Retiro
@@ -88,7 +83,13 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
-                            Transferencia Interna
+                            Transferencia entre mis cuentas
+                        </a>
+                        <a href="#" data-id="transferenciasOtrosUsuarios" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            Transferencia a otro usuario
                         </a>
                         <a href="#" data-id="transferenciasExternas" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -243,6 +244,7 @@
                             </tr>
                         </thead>
                         <tbody id="ultimosMovimientosTableBody" class="text-gray-100">
+                            <tr><td colspan="5" class="p-3 text-center text-gray-400">Cargando últimos movimientos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -323,13 +325,13 @@
                 </div>
             </section>
         `,
-        // Nueva sección para Transferencia Interna
+        // Nueva sección para Transferencia Interna (entre mis cuentas)
         transferenciasInternas: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
                     <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                        Transferencia Interna
+                        Transferencia entre mis cuentas
                     </h2>
                     <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero entre tus propias cuentas.</p>
                     
@@ -362,7 +364,43 @@
                 </div>
             </section>
         `,
-        // La sección de transferencias existente, ahora renombrada
+        // NUEVA SECCIÓN: Transferencia a otros usuarios del banco
+        transferenciasOtrosUsuarios: `
+            <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        Transferencia a otro usuario
+                    </h2>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero a cuentas de otros usuarios en kinalBAnk.</p>
+                    
+                    <form id="formTransferenciaOtroUsuario" class="space-y-4">
+                        <div>
+                            <label for="cuentaOrigenOtroUsuario" class="block font-semibold mb-1">Cuenta de origen:</label>
+                            <select id="cuentaOrigenOtroUsuario" name="cuentaOrigenOtroUsuario" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona tu cuenta de origen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cuentaDestinoOtroUsuario" class="block font-semibold mb-1">Número de cuenta destino:</label>
+                            <input type="text" id="cuentaDestinoOtroUsuario" name="cuentaDestinoOtroUsuario" placeholder="Ej. 123456789012" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="montoTransferenciaOtroUsuario" class="block font-semibold mb-1">Monto a transferir (GTQ):</label>
+                            <input type="number" id="montoTransferenciaOtroUsuario" name="montoTransferenciaOtroUsuario" min="0.01" step="0.01" placeholder="Ej. 150.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="descripcionTransferenciaOtroUsuario" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionTransferenciaOtroUsuario" name="descripcionTransferenciaOtroUsuario" placeholder="Ej. Pago de factura" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                            Realizar Transferencia
+                        </button>
+                        <p id="mensajeTransferenciaOtroUsuario" class="mt-4 text-center"></p>
+                    </form>
+                </div>
+            </section>
+        `,
         transferenciasExternas: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transferencias Externas</h1>
@@ -407,14 +445,13 @@
                     </form>
                     <div class="bg-gray-800 rounded-xl p-6 shadow-lg flex flex-col justify-center items-center text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-emerald-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p class="text-gray-300 mb-2">Ingresa los datos para realizar una transferencia bancaria externa.</p>
                     </div>
                 </div>
             </section>
         `,
-
         historial: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Historial de Movimientos</h1>
@@ -533,6 +570,7 @@
             if (id === 'transferenciasExternas') inicializarTransferenciasExternas();
             if (id === 'retiro') inicializarRetiro();
             if (id === 'transferenciasInternas') inicializarTransferenciasInternas();
+            if (id === 'transferenciasOtrosUsuarios') inicializarTransferenciasOtrosUsuarios(); // NUEVO
             if (id === 'inicio') inicializarInicio();
             if (id === 'miCuenta') inicializarMiCuenta();
             // Depósito ya no está en el menú de usuario
@@ -618,17 +656,23 @@
                 return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
             };
 
-            // Ajuste para `mov.type` que viene como "INCOME" o "EXPENSE"
             const tipoDisplay = capitalizeFirstLetter(mov.type); 
+            const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
+            const amountSign = mov.type === 'INCOME' ? '+' : '-'; // Aseguramos el signo correcto
+
+            // Ajuste para la descripción de transferencias internas para mayor claridad
+            let descriptionDisplay = mov.description;
+            // La lógica de descripción ya viene del backend más clara, solo la mostramos.
+            // Si necesitas más ajustes aquí, se pueden añadir.
 
             tabla.innerHTML += `
                 <tr class="border-t border-gray-700 hover:bg-gray-700 transition">
                     <td class="py-3 px-4">${mov.date}</td>
-                    <td class="py-3 px-4">${mov.description}</td>
+                    <td class="py-3 px-4">${descriptionDisplay}</td>
                     <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
                     <td class="py-3 px-4">${tipoDisplay}</td>
-                    <td class="py-3 px-4 ${mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">
-                        ${mov.amount >= 0 ? '+' : ''}${formatoMoneda(Math.abs(mov.amount))}
+                    <td class="py-3 px-4 ${amountClass}">
+                        ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
                     </td>
                 </tr>
             `;
@@ -670,7 +714,7 @@
             }
             const option = document.createElement('option');
             option.value = account.accountNumber;
-            option.textContent = `${account.accountType} (${account.accountNumber}) - ${formatoMoneda(account.balance)}`;
+            option.textContent = `${account.accountType} (${account.accountNumber}) - Saldo: ${formatoMoneda(account.balance)}`;
             selectElement.appendChild(option);
         });
     }
@@ -681,7 +725,6 @@
      */
     async function cargarCuentasUsuario() {
         try {
-            // CAMBIO: Endpoint actualizado a /api/accounts/me
             const response = await fetch('/api/accounts/me');
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
@@ -699,6 +742,45 @@
         }
     }
 
+    /**
+     * Carga los últimos 5 movimientos del usuario para el dashboard.
+     */
+    async function cargarUltimosMovimientos() {
+        const ultimosMovimientosTableBody = document.getElementById('ultimosMovimientosTableBody');
+        if (!ultimosMovimientosTableBody) return;
+
+        ultimosMovimientosTableBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-400">Cargando últimos movimientos...</td></tr>';
+
+        try {
+            // Endpoint para obtener el historial de movimientos (posiblemente con un límite)
+            const response = await fetch('/api/movements/history?limit=5'); // Asume que tu backend soporta un parámetro 'limit'
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener los últimos movimientos.');
+            }
+            const movimientos = await response.json();
+            pintarTablaMovimientos(movimientos, 'ultimosMovimientosTableBody'); // Usar la misma función de pintar
+            
+            // Actualizar "Última actividad"
+            const dashboardUltimaActividad = document.getElementById('dashboardUltimaActividad');
+            if (dashboardUltimaActividad && movimientos.length > 0) {
+                const ultimoMovimiento = movimientos[0];
+                dashboardUltimaActividad.textContent = `${ultimoMovimiento.date}: ${ultimoMovimiento.description} (${formatoMoneda(ultimoMovimiento.amount)})`;
+            } else if (dashboardUltimaActividad) {
+                dashboardUltimaActividad.textContent = 'No hay actividad reciente.';
+            }
+
+        } catch (error) {
+            console.error('Error al cargar últimos movimientos:', error);
+            ultimosMovimientosTableBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-red-400">Error al cargar últimos movimientos.</td></tr>';
+            const dashboardUltimaActividad = document.getElementById('dashboardUltimaActividad');
+            if (dashboardUltimaActividad) dashboardUltimaActividad.textContent = 'Error al cargar actividad.';
+        }
+    }
+
 
     /**
      * Inicializa la sección de inicio, mostrando los datos del user y los últimos 5 movimientos.
@@ -706,7 +788,6 @@
     async function inicializarInicio() {
         // Cargar datos del user (nombre y saldo principal)
         try {
-            // CAMBIO: Endpoint actualizado a /api/dashboard/me
             const response = await fetch('/api/dashboard/me');
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
@@ -718,12 +799,10 @@
             const data = await response.json();
             const dashboardTitulo = document.getElementById('dashboardTitulo');
             if (dashboardTitulo) {
-                // CAMBIO: Usar data.fullName en lugar de data.nombreCompleto
                 dashboardTitulo.textContent = data.fullName;
             }
             const saldoPrincipalElem = document.getElementById('dashboardSaldoDisponible');
             if (saldoPrincipalElem) {
-                // CAMBIO: Usar data.totalBalance en lugar de data.saldoPrincipal
                 saldoPrincipalElem.textContent = formatoMoneda(data.totalBalance);
             }
         } catch (error) {
@@ -734,7 +813,8 @@
             if (saldoPrincipalElem) saldoPrincipalElem.textContent = formatoMoneda(0); // Fallback
         }
 
-        // ... el resto de la función inicializarInicio() permanece igual ...
+        // Llamar a la nueva función para cargar los últimos movimientos
+        cargarUltimosMovimientos();
     }
     /**
      * Inicializa la sección "Mi cuenta", cargando las cuentas del user desde el backend.
@@ -746,7 +826,6 @@
         cuentasContainer.innerHTML = `<p class="text-gray-400 text-center col-span-2">Cargando cuentas...</p>`; // Mensaje de carga
 
         try {
-            // CAMBIO: Endpoint actualizado a /api/dashboard/accounts
             const response = await fetch('/api/dashboard/accounts'); // Tu DashboardRestController ya tiene este endpoint
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
@@ -800,9 +879,9 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const accountNumber = cuentaSelect.value; // CAMBIO: Usamos accountNumber
+            const accountNumber = cuentaSelect.value;
             const amount = parseFloat(form.montoDeposito.value);
-            const description = form.descripcionDeposito.value.trim(); // Nuevo campo de descripción
+            const description = form.descripcionDeposito.value.trim();
 
             if (!accountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
@@ -811,17 +890,16 @@
             }
 
             try {
-                // CAMBIO: Endpoint actualizado a /api/transactions/deposit
                 const response = await fetch('/api/transactions/deposit', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        accountNumber: accountNumber, // Coincide con el DTO
-                        amount: amount, // Coincide con el DTO
-                        description: description, // Coincide con el DTO
-                        type: 'INCOME' // Coincide con MovementType.INCOME
+                        accountNumber: accountNumber,
+                        amount: amount,
+                        description: description,
+                        type: 'INCOME'
                     })
                 });
 
@@ -832,7 +910,7 @@
                     return;
                 }
 
-                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.movement.newOriginAccountBalance || data.movement.amount)}`); // Ajuste para mostrar saldo actual si viene
+                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`);
                 form.reset(); // Limpiar el formulario
                 await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos en selects
                 populateAccountSelect('cuentaDeposito'); // Repopular selects
@@ -858,9 +936,9 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const accountNumber = cuentaSelect.value; // CAMBIO: Usamos accountNumber
+            const accountNumber = cuentaSelect.value;
             const amount = parseFloat(form.montoRetiro.value);
-            const description = form.descripcionRetiro.value.trim(); // Nuevo campo de descripción
+            const description = form.descripcionRetiro.value.trim();
 
             if (!accountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
@@ -869,17 +947,16 @@
             }
 
             try {
-                // CAMBIO: Endpoint actualizado a /api/transactions/withdraw
                 const response = await fetch('/api/transactions/withdraw', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        accountNumber: accountNumber, // Coincide con el DTO
-                        amount: amount, // Coincide con el DTO
-                        description: description, // Coincide con el DTO
-                        type: 'EXPENSE' // Para un retiro, el tipo de movimiento es EXPENSE
+                        accountNumber: accountNumber,
+                        amount: amount,
+                        description: description,
+                        type: 'EXPENSE'
                     })
                 });
 
@@ -890,7 +967,7 @@
                     return;
                 }
 
-                mostrarMensaje("Éxito", `Retiro de ${formatoMoneda(amount)} de la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.movement.newOriginAccountBalance || data.movement.amount)}`); // Ajuste para mostrar saldo actual si viene
+                mostrarMensaje("Éxito", `Retiro de ${formatoMoneda(amount)} de la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`);
                 form.reset();
                 await cargarCuentasUsuario();
                 populateAccountSelect('cuentaRetiro');
@@ -902,7 +979,7 @@
     }
 
     /**
-     * Inicializa la sección de Transferencia Interna.
+     * Inicializa la sección de Transferencia Interna (entre cuentas del mismo usuario).
      */
     async function inicializarTransferenciasInternas() {
         const form = document.getElementById('formTransferenciaInterna');
@@ -923,10 +1000,10 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const originAccountNumber = cuentaOrigenSelect.value; // CAMBIO: Usamos originAccountNumber
-            const destinationAccountNumber = cuentaDestinoSelect.value; // CAMBIO: Usamos destinationAccountNumber
+            const originAccountNumber = cuentaOrigenSelect.value;
+            const destinationAccountNumber = cuentaDestinoSelect.value;
             const amount = parseFloat(form.montoTransferenciaInterna.value);
-            const description = form.descripcionTransferenciaInterna.value.trim(); // Nuevo campo de descripción
+            const description = form.descripcionTransferenciaInterna.value.trim();
 
             if (!originAccountNumber || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
@@ -941,17 +1018,16 @@
             }
 
             try {
-                // CAMBIO: Endpoint actualizado a /api/transactions/transfer
                 const response = await fetch('/api/transactions/transfer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        originAccountNumber: originAccountNumber, // Coincide con el DTO
-                        destinationAccountNumber: destinationAccountNumber, // Coincide con el DTO
-                        amount: amount, // Coincide con el DTO
-                        description: description // Coincide con el DTO
+                        originAccountNumber: originAccountNumber,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
                     })
                 });
 
@@ -962,13 +1038,95 @@
                     return;
                 }
 
-                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.`);
+                let newOriginBalance = null;
+                if (data.movements && data.movements.length > 0) {
+                    const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
+                    if (originMovement && originMovement.balance !== undefined) {
+                        newOriginBalance = originMovement.balance;
+                    }
+                }
+
+                const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
+                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
                 form.reset();
                 await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos
                 populateAccountSelect('cuentaOrigenInterna');
                 populateAccountSelect('cuentaDestinoInterna');
             } catch (error) {
                 console.error('Error al realizar la transferencia interna:', error);
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
+            }
+        };
+    }
+
+    /**
+     * NUEVA FUNCIÓN: Inicializa la sección de Transferencia a otros usuarios del banco.
+     */
+    async function inicializarTransferenciasOtrosUsuarios() {
+        const form = document.getElementById('formTransferenciaOtroUsuario');
+        const mensaje = document.getElementById('mensajeTransferenciaOtroUsuario');
+        const cuentaOrigenSelect = document.getElementById('cuentaOrigenOtroUsuario');
+        const cuentaDestinoInput = document.getElementById('cuentaDestinoOtroUsuario'); // Es un input, no un select
+
+        if (!form) return;
+
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaOrigenOtroUsuario'); // Solo se necesita poblar la cuenta de origen del usuario actual
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const originAccountNumber = cuentaOrigenSelect.value;
+            const destinationAccountNumber = cuentaDestinoInput.value.trim(); // Obtener el valor del input
+            const amount = parseFloat(form.montoTransferenciaOtroUsuario.value);
+            const description = form.descripcionTransferenciaOtroUsuario.value.trim();
+
+            if (!originAccountNumber || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
+                mostrarMensaje('Error', 'Por favor complete todos los campos correctamente.', true);
+                return;
+            }
+
+            if (originAccountNumber === destinationAccountNumber) {
+                mostrarMensaje('Error', 'La cuenta de origen y la de destino no pueden ser la misma.', true);
+                return;
+            }
+
+            try {
+                // Usar el nuevo endpoint para transferencias a otros usuarios
+                const response = await fetch('/api/transactions/transfer-to-other-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        originAccountNumber: originAccountNumber,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje("Error", data.message || 'Error al realizar la transferencia a otro usuario.', true);
+                    return;
+                }
+
+                let newOriginBalance = null;
+                if (data.movements && data.movements.length > 0) {
+                    const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
+                    if (originMovement && originMovement.balance !== undefined) {
+                        newOriginBalance = originMovement.balance;
+                    }
+                }
+
+                const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
+                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
+                form.reset();
+                await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos
+                populateAccountSelect('cuentaOrigenOtroUsuario');
+            } catch (error) {
+                console.error('Error al realizar la transferencia a otro usuario:', error);
                 mostrarMensaje("Error", `Error: ${error.message}`, true);
             }
         };
@@ -989,12 +1147,12 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const originAccountNumber = cuentaOrigenSelect.value; // CAMBIO: Usamos originAccountNumber
+            const originAccountNumber = cuentaOrigenSelect.value;
             const destinationName = form.nombreDestino.value.trim();
             const destinationBank = form.bancoDestino.value;
-            const destinationAccountNumber = form.cuentaDestinoExterna.value.trim(); // CAMBIO: Usamos destinationAccountNumber
+            const destinationAccountNumber = form.cuentaDestinoExterna.value.trim();
             const amount = parseFloat(form.montoTransferenciaExterna.value);
-            const description = form.descripcionTransferenciaExterna.value.trim(); // Nuevo campo de descripción
+            const description = form.descripcionTransferenciaExterna.value.trim();
 
             if (!originAccountNumber || !destinationName || !destinationBank || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
@@ -1003,19 +1161,18 @@
             }
 
             try {
-                // CAMBIO: Endpoint actualizado a /api/transactions/external-transfer
                 const response = await fetch('/api/transactions/external-transfer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        originAccountNumber: originAccountNumber, // Coincide con el DTO
-                        destinationName: destinationName, // Coincide con el DTO
-                        destinationBank: destinationBank, // Coincide con el DTO
-                        destinationAccountNumber: destinationAccountNumber, // Coincide con el DTO
-                        amount: amount, // Coincide con el DTO
-                        description: description // Coincide con el DTO
+                        originAccountNumber: originAccountNumber,
+                        destinationName: destinationName,
+                        destinationBank: destinationBank,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
                     })
                 });
 
@@ -1026,7 +1183,6 @@
                     return;
                 }
 
-                // CAMBIO: Ajuste para la respuesta de ExternalTransferResponse
                 mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} a la cuenta de ${destinationName} (${destinationAccountNumber}) en ${destinationBank} realizada con éxito. Nuevo saldo: ${formatoMoneda(data.newOriginAccountBalance)}`);
                 form.reset();
                 await cargarCuentasUsuario();
@@ -1052,20 +1208,19 @@
 
         // Función para cargar y mostrar movimientos desde el backend
         const cargarMovimientos = () => {
-            // CAMBIO: Endpoint actualizado a /api/movements/history
             let url = '/api/movements/history?'; 
             const params = new URLSearchParams();
 
             // Añadir parámetros de filtro si existen valores en los inputs
             if (fechaInicioInput.value) {
-                params.append('startDate', fechaInicioInput.value); // CAMBIO: Parámetro 'startDate'
+                params.append('startDate', fechaInicioInput.value);
             }
             if (fechaFinInput.value) {
-                params.append('endDate', fechaFinInput.value); // CAMBIO: Parámetro 'endDate'
+                params.append('endDate', fechaFinInput.value);
             }
             if (tipoMovimientoSelect.value !== 'todos') {
                 // El backend espera el enum en MAYÚSCULAS (INCOME, EXPENSE)
-                params.append('type', tipoMovimientoSelect.value.toUpperCase()); // CAMBIO: Parámetro 'type' y toUpperCase
+                params.append('type', tipoMovimientoSelect.value.toUpperCase());
             }
 
             url += params.toString(); // Concatena los parámetros a la URL
@@ -1081,7 +1236,7 @@
                     return response.json(); // Parsea la respuesta JSON
                 })
                 .then(data => {
-                    pintarTablaMovimientos(data); // Llama a la función para pintar la tabla con los datos del backend
+                    pintarTablaMovimientos(data, 'tablaMovimientos'); // Llama a la función para pintar la tabla con los datos del backend
                 })
                 .catch(error => {
                     console.error('Error cargando movimientos:', error);
@@ -1131,7 +1286,7 @@
             e.preventDefault();
             const monto = parseFloat(formPagoServicio.montoPagar.value);
             const descripcion = formPagoServicio.descripcionPago.value.trim();
-            const originAccountNumber = cuentaOrigenServicioSelect.value; // CAMBIO: Usamos originAccountNumber
+            const originAccountNumber = cuentaOrigenServicioSelect.value;
 
             if (isNaN(monto) || monto <= 0 || !originAccountNumber) {
                 mensajePago.textContent = 'Por favor, introduce un monto válido y selecciona una cuenta.';
@@ -1142,19 +1297,16 @@
             const nuevaDescripcion = descripcion ? `Pago ${servicio.nombre}: ${descripcion}` : `Pago ${servicio.nombre}`;
             
             try {
-                // NOTA: Este endpoint '/api/servicios/pago' no fue proporcionado en TransactionServiceImpl.
-                // Si esta funcionalidad debe ser implementada, se necesitará un nuevo endpoint en el backend.
-                // Por ahora, se asume que existe o se simulará.
                 const response = await fetch('/api/servicios/pago', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        accountNumber: originAccountNumber, // Se espera un accountNumber en el backend
+                        accountNumber: originAccountNumber,
                         amount: monto,
                         description: nuevaDescripcion,
-                        serviceCode: servicio.codigo // Podrías necesitar este campo en el backend
+                        serviceCode: servicio.codigo
                     })
                 });
 
@@ -1165,7 +1317,7 @@
                     return;
                 }
 
-                mostrarMensaje("Éxito", `¡Pago de ${servicio.nombre} por ${formatoMoneda(monto)} realizado con éxito! Nuevo saldo: ${formatoMoneda(data.newOriginAccountBalance || data.movement.amount)}`);
+                mostrarMensaje("Éxito", `¡Pago de ${servicio.nombre} por ${formatoMoneda(monto)} realizado con éxito! Nuevo saldo: ${formatoMoneda(data.balance)}`);
                 formPagoServicio.reset(); // Limpiar el formulario
                 await cargarCuentasUsuario();
                 populateAccountSelect('cuentaOrigenServicio');
