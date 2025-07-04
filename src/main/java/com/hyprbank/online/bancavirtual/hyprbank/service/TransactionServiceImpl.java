@@ -22,6 +22,8 @@ import com.hyprbank.online.bancavirtual.hyprbank.dto.ExternalTransferResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Para gestion de transacciones
+import org.springframework.data.domain.PageRequest; // AGREGADO: Importar PageRequest
+import org.springframework.data.domain.Pageable; // AGREGADO: Importar Pageable
 
 // Importaciones de Java Utilities
 import java.math.BigDecimal;
@@ -31,8 +33,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 // Importaciones de Logging
-import org.slf4j.Logger; // CORREGIDO: slf4j
-import org.slf4j.LoggerFactory; // CORREGIDO: slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Implementacion de la interfaz {@link TransactionService}.
@@ -423,7 +425,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         responseDTO.setLastOriginMovement(mapMovementToDTO(expense));
 
-        List<Movement> recentMovements = movementRepository.findByAccountIdOrderByDateDesc(originAccount.getId());
+        // LINEA QUE DA ERROR:
+        List<Movement> recentMovements = movementRepository.findByAccountIdOrderByDateDesc(originAccount.getId(), PageRequest.of(0, 5));
         responseDTO.setRecentMovements(
             recentMovements.stream()
                 .map(this::mapMovementToDTO)
