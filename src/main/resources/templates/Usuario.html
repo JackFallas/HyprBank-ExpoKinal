@@ -23,6 +23,15 @@
             background-color: #047857; /* Emerald-700 */
             color: white;
         }
+        /* Estilo para el overlay */
+        #overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+        #overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans">
@@ -32,6 +41,9 @@
         <button id="btnToggleSidebar" class="fixed top-4 left-4 z-50 bg-emerald-600 p-3 rounded-md shadow-md hover:bg-emerald-700 transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
             ☰
         </button>
+
+        <!-- Overlay para cerrar el sidebar al hacer clic fuera en móvil -->
+        <div id="overlay" class="fixed inset-0 z-30 bg-black opacity-0 pointer-events-none transition-opacity duration-300 hidden"></div>
 
         <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-gray-800 flex flex-col p-6 space-y-6 -translate-x-full transition-transform duration-300">
             <div>
@@ -63,10 +75,6 @@
                         </svg>
                     </a>
                     <div id="submenuTransacciones" class="hidden flex flex-col space-y-2 mt-2">
-                        <a href="#" data-id="deposito" class="submenu-item flex items-center px-4 py-2 rounded-full hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                            Depósito
-                        </a>
                         <a href="#" data-id="retiro" class="submenu-item flex items-center px-4 py-2 rounded-full hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
                             Retiro
@@ -75,7 +83,13 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
-                            Transferencia Interna
+                            Transferencia entre mis cuentas
+                        </a>
+                        <a href="#" data-id="transferenciasOtrosUsuarios" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            Transferencia a otro usuario
                         </a>
                         <a href="#" data-id="transferenciasExternas" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +122,7 @@
             </div>
 
             <div class="mt-auto">
-                <a href="#" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
+                <a href="/logout" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
                     </svg>
@@ -120,10 +134,20 @@
         <main id="contenido" class="flex-1 p-8 bg-gray-900 overflow-auto min-h-screen"></main>
     </div>
 
+    <!-- Modal de Mensajes (para éxito/error) -->
+    <div id="modalMensaje" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+            <h2 id="modalMensajeTitulo" class="text-2xl font-bold mb-4"></h2>
+            <p id="modalMensajeContenido" class="mb-6 text-gray-300"></p>
+            <button type="button" id="btnCerrarMensaje" class="px-5 py-2 bg-emerald-600 rounded-full hover:bg-emerald-700">Cerrar</button>
+        </div>
+    </div>
+
 <script>
     const sidebar = document.getElementById('sidebar');
     const btnToggleSidebar = document.getElementById('btnToggleSidebar');
     const contenido = document.getElementById('contenido');
+    const overlay = document.getElementById('overlay'); // Referencia al overlay
 
     const toggleServiciosSidebar = document.getElementById('toggleServiciosSidebar');
     const submenuServicios = document.getElementById('submenuServicios');
@@ -166,6 +190,31 @@
         }).format(valor);
     }
 
+    // Función para mostrar un modal de mensaje
+    function mostrarMensaje(titulo, contenido, esError = false) {
+        const modal = document.getElementById("modalMensaje");
+        const modalTitulo = document.getElementById("modalMensajeTitulo");
+        const modalContenido = document.getElementById("modalMensajeContenido");
+
+        modalTitulo.textContent = titulo;
+        modalContenido.textContent = contenido;
+
+        if (esError) {
+            modalTitulo.classList.remove("text-emerald-400");
+            modalTitulo.classList.add("text-red-400");
+        } else {
+            modalTitulo.classList.remove("text-red-400");
+            modalTitulo.classList.add("text-emerald-400");
+        }
+        modal.classList.remove("hidden");
+    }
+
+    // Cerrar modal de mensaje
+    document.getElementById("btnCerrarMensaje").addEventListener("click", () => {
+        document.getElementById("modalMensaje").classList.add("hidden");
+    });
+
+
     // Definición de las secciones del contenido principal
     const secciones = {
         inicio: `
@@ -189,11 +238,13 @@
                             <tr>
                                 <th class="py-2 px-3">Fecha</th>
                                 <th class="py-2 px-3">Descripción</th>
+                                <th class="py-2 px-3">Cuenta</th>
                                 <th class="py-2 px-3">Tipo</th>
                                 <th class="py-2 px-3">Monto</th>
                             </tr>
                         </thead>
                         <tbody id="ultimosMovimientosTableBody" class="text-gray-100">
+                            <tr><td colspan="5" class="p-3 text-center text-gray-400">Cargando últimos movimientos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -229,6 +280,10 @@
                             <label for="montoDeposito" class="block font-semibold mb-1">Monto a depositar (GTQ):</label>
                             <input type="number" id="montoDeposito" name="montoDeposito" min="0.01" step="0.01" placeholder="Ej. 500.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
                         </div>
+                        <div>
+                            <label for="descripcionDeposito" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionDeposito" name="descripcionDeposito" placeholder="Ej. Depósito de cheque" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
                         <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
                             Realizar Depósito
                         </button>
@@ -258,6 +313,10 @@
                             <label for="montoRetiro" class="block font-semibold mb-1">Monto a retirar (GTQ):</label>
                             <input type="number" id="montoRetiro" name="montoRetiro" min="0.01" step="0.01" placeholder="Ej. 200.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
                         </div>
+                        <div>
+                            <label for="descripcionRetiro" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionRetiro" name="descripcionRetiro" placeholder="Ej. Retiro en cajero" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
                         <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
                             Realizar Retiro
                         </button>
@@ -266,13 +325,13 @@
                 </div>
             </section>
         `,
-        // Nueva sección para Transferencia Interna
+        // Nueva sección para Transferencia Interna (entre mis cuentas)
         transferenciasInternas: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
                     <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                        Transferencia Interna
+                        Transferencia entre mis cuentas
                     </h2>
                     <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero entre tus propias cuentas.</p>
                     
@@ -293,6 +352,10 @@
                             <label for="montoTransferenciaInterna" class="block font-semibold mb-1">Monto a transferir (GTQ):</label>
                             <input type="number" id="montoTransferenciaInterna" name="montoTransferenciaInterna" min="0.01" step="0.01" placeholder="Ej. 150.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
                         </div>
+                        <div>
+                            <label for="descripcionTransferenciaInterna" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionTransferenciaInterna" name="descripcionTransferenciaInterna" placeholder="Ej. Pago de factura" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
                         <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
                             Realizar Transferencia
                         </button>
@@ -301,7 +364,43 @@
                 </div>
             </section>
         `,
-        // La sección de transferencias existente, ahora renombrada
+        // NUEVA SECCIÓN: Transferencia a otros usuarios del banco
+        transferenciasOtrosUsuarios: `
+            <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        Transferencia a otro usuario
+                    </h2>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Transfiere dinero a cuentas de otros usuarios en kinalBAnk.</p>
+                    
+                    <form id="formTransferenciaOtroUsuario" class="space-y-4">
+                        <div>
+                            <label for="cuentaOrigenOtroUsuario" class="block font-semibold mb-1">Cuenta de origen:</label>
+                            <select id="cuentaOrigenOtroUsuario" name="cuentaOrigenOtroUsuario" class="w-full bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                <option value="" disabled selected>Selecciona tu cuenta de origen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cuentaDestinoOtroUsuario" class="block font-semibold mb-1">Número de cuenta destino:</label>
+                            <input type="text" id="cuentaDestinoOtroUsuario" name="cuentaDestinoOtroUsuario" placeholder="Ej. 123456789012" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="montoTransferenciaOtroUsuario" class="block font-semibold mb-1">Monto a transferir (GTQ):</label>
+                            <input type="number" id="montoTransferenciaOtroUsuario" name="montoTransferenciaOtroUsuario" min="0.01" step="0.01" placeholder="Ej. 150.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="descripcionTransferenciaOtroUsuario" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionTransferenciaOtroUsuario" name="descripcionTransferenciaOtroUsuario" placeholder="Ej. Pago de factura" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                            Realizar Transferencia
+                        </button>
+                        <p id="mensajeTransferenciaOtroUsuario" class="mt-4 text-center"></p>
+                    </form>
+                </div>
+            </section>
+        `,
         transferenciasExternas: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transferencias Externas</h1>
@@ -333,7 +432,11 @@
                         </div>
                         <div>
                             <label for="montoTransferenciaExterna" class="block font-semibold mb-1">Monto</label>
-                            <input type="number" id="montoTransferenciaExterna" name="montoTransferenciaExterna" min="1" placeholder="Ej. 100.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            <input type="number" id="montoTransferenciaExterna" name="montoTransferenciaExterna" min="0.01" step="0.01" placeholder="Ej. 100.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        </div>
+                        <div>
+                            <label for="descripcionTransferenciaExterna" class="block font-semibold mb-1">Descripción (opcional):</label>
+                            <input type="text" id="descripcionTransferenciaExterna" name="descripcionTransferenciaExterna" placeholder="Ej. Pago de servicio" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                         </div>
                         <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
                             Transferir
@@ -342,14 +445,13 @@
                     </form>
                     <div class="bg-gray-800 rounded-xl p-6 shadow-lg flex flex-col justify-center items-center text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-emerald-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p class="text-gray-300 mb-2">Ingresa los datos para realizar una transferencia bancaria externa.</p>
                     </div>
                 </div>
             </section>
         `,
-
         historial: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Historial de Movimientos</h1>
@@ -382,7 +484,8 @@
                         <tr>
                             <th class="py-3 px-4 text-left">Fecha</th>
                             <th class="py-3 px-4 text-left">Descripción</th>
-                            <th class="py-3 px-4 text-left">Cuenta</th> <th class="py-3 px-4 text-left">Tipo</th>
+                            <th class="py-3 px-4 text-left">Cuenta</th>
+                            <th class="py-3 px-4 text-left">Tipo</th>
                             <th class="py-3 px-4 text-left">Monto</th>
                         </tr>
                     </thead>
@@ -391,7 +494,6 @@
                 </table>
             </section>
         `,
-
         // Nueva estructura para servicioDetalle con formulario
         servicioDetalle: (serviceId) => {
             const service = serviciosData[serviceId];
@@ -444,7 +546,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
                 </svg>
                 <h1 class="text-3xl font-bold mb-4 text-emerald-400">¿Seguro que deseas cerrar sesión?</h1>
-                <button class="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-full shadow-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-red-400">Cerrar sesión</button>
+                <button id="confirmCerrarSesion" class="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-full shadow-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-red-400">Cerrar sesión</button>
             </section>
         `
     };
@@ -454,7 +556,7 @@
     /**
      * Muestra la sección de contenido principal y actualiza la UI de la barra lateral.
      * @param {string} id - El ID de la sección principal a mostrar (ej. 'inicio', 'historial').
-     * @param {string} [subId=null] - El ID del sub-servicio si la sección es 'servicioDetalle' o 'transaccionDetalle'.
+     * @param {string} [subId=null] - El ID del sub-servicio si la sección es 'servicioDetalle'.
      */
     function mostrarSeccion(id, subId = null) {
         // Carga el contenido de la sección
@@ -465,16 +567,24 @@
             contenido.innerHTML = secciones[id] || `<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>`;
             // Inicializa funciones específicas de cada sección
             if (id === 'historial') inicializarHistorial();
-            if (id === 'transferenciasExternas') inicializarTransferenciasExternas(); // Renombrada
-            if (id === 'deposito') inicializarDeposito();
+            if (id === 'transferenciasExternas') inicializarTransferenciasExternas();
             if (id === 'retiro') inicializarRetiro();
             if (id === 'transferenciasInternas') inicializarTransferenciasInternas();
+            if (id === 'transferenciasOtrosUsuarios') inicializarTransferenciasOtrosUsuarios(); // NUEVO
             if (id === 'inicio') inicializarInicio();
             if (id === 'miCuenta') inicializarMiCuenta();
+            // Depósito ya no está en el menú de usuario
+            // if (id === 'deposito') inicializarDeposito();
+            if (id === 'cerrarSesion') { // Agregamos el listener para cerrar sesión
+                document.getElementById('confirmCerrarSesion').addEventListener('click', () => {
+                    window.location.href = '/logout'; // Redirige a la URL de logout de Spring Security
+                });
+            }
         }
         
         // Lógica para ocultar el menú y el botón cuando se selecciona una opción
         sidebar.classList.add('-translate-x-full'); // Oculta el sidebar
+        overlay.classList.add('hidden'); // Oculta el overlay
         contenido.classList.remove('con-sidebar-visible'); // Quita el margen del contenido
         btnToggleSidebar.style.display = 'block'; // Asegura que el botón sea visible cuando el sidebar está oculto
 
@@ -532,6 +642,7 @@
     function pintarTablaMovimientos(datos, targetId = 'tablaMovimientos') {
         const tabla = document.getElementById(targetId);
         if (!tabla) return;
+
         tabla.innerHTML = ''; // Limpiar contenido previo
 
         if (datos.length === 0) {
@@ -545,15 +656,23 @@
                 return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
             };
 
-            const tipoDisplay = capitalizeFirstLetter(mov.tipo); // Mostrar "Ingreso" o "Egreso"
+            const tipoDisplay = capitalizeFirstLetter(mov.type); 
+            const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
+            const amountSign = mov.type === 'INCOME' ? '+' : '-'; // Aseguramos el signo correcto
+
+            // Ajuste para la descripción de transferencias internas para mayor claridad
+            let descriptionDisplay = mov.description;
+            // La lógica de descripción ya viene del backend más clara, solo la mostramos.
+            // Si necesitas más ajustes aquí, se pueden añadir.
 
             tabla.innerHTML += `
                 <tr class="border-t border-gray-700 hover:bg-gray-700 transition">
-                    <td class="py-3 px-4">${mov.fecha}</td>
-                    <td class="py-3 px-4">${mov.descripcion}</td>
-                    <td class="py-3 px-4">${mov.numeroCuenta || 'N/A'}</td> <td class="py-3 px-4">${tipoDisplay}</td>
-                    <td class="py-3 px-4 ${mov.tipo === 'INGRESO' ? 'text-green-400' : 'text-red-400'}">
-                        ${mov.monto >= 0 ? '+' : ''}${formatoMoneda(Math.abs(mov.monto))}
+                    <td class="py-3 px-4">${mov.date}</td>
+                    <td class="py-3 px-4">${descriptionDisplay}</td>
+                    <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
+                    <td class="py-3 px-4">${tipoDisplay}</td>
+                    <td class="py-3 px-4 ${amountClass}">
+                        ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
                     </td>
                 </tr>
             `;
@@ -564,9 +683,9 @@
      * Rellena un select de HTML con las cuentas del usuario.
      * @param {string} selectId - ID del select a rellenar.
      * @param {boolean} includeDefaultOption - Si se debe incluir la opción por defecto "Selecciona una cuenta".
-     * @param {string|null} excludeAccount - Número de cuenta a excluir (para transferencias internas).
+     * @param {string|null} excludeAccountNumber - Número de cuenta a excluir (para transferencias internas).
      */
-    function populateAccountSelect(selectId, includeDefaultOption = true, excludeAccount = null) {
+    function populateAccountSelect(selectId, includeDefaultOption = true, excludeAccountNumber = null) {
         const selectElement = document.getElementById(selectId);
         if (!selectElement) return;
 
@@ -590,12 +709,12 @@
         }
 
         userAccounts.forEach(account => {
-            if (excludeAccount && account.numeroCuenta === excludeAccount) {
+            if (excludeAccountNumber && account.accountNumber === excludeAccountNumber) {
                 return; // Saltar la cuenta si debe ser excluida
             }
             const option = document.createElement('option');
-            option.value = account.numeroCuenta;
-            option.textContent = `${account.tipoCuenta} (${account.numeroCuenta}) - ${formatoMoneda(account.saldo)}`;
+            option.value = account.accountNumber;
+            option.textContent = `${account.accountType} (${account.accountNumber}) - Saldo: ${formatoMoneda(account.balance)}`;
             selectElement.appendChild(option);
         });
     }
@@ -606,7 +725,7 @@
      */
     async function cargarCuentasUsuario() {
         try {
-            const response = await fetch('/api/dashboard/cuentas');
+            const response = await fetch('/api/accounts/me');
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
                     window.location.href = '/login';
@@ -620,6 +739,45 @@
             console.error('Error al cargar las cuentas:', error);
             userAccounts = []; // Limpiar en caso de error
             return [];
+        }
+    }
+
+    /**
+     * Carga los últimos 5 movimientos del usuario para el dashboard.
+     */
+    async function cargarUltimosMovimientos() {
+        const ultimosMovimientosTableBody = document.getElementById('ultimosMovimientosTableBody');
+        if (!ultimosMovimientosTableBody) return;
+
+        ultimosMovimientosTableBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-400">Cargando últimos movimientos...</td></tr>';
+
+        try {
+            // Endpoint para obtener el historial de movimientos (posiblemente con un límite)
+            const response = await fetch('/api/movements/history?limit=5'); // Asume que tu backend soporta un parámetro 'limit'
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener los últimos movimientos.');
+            }
+            const movimientos = await response.json();
+            pintarTablaMovimientos(movimientos, 'ultimosMovimientosTableBody'); // Usar la misma función de pintar
+            
+            // Actualizar "Última actividad"
+            const dashboardUltimaActividad = document.getElementById('dashboardUltimaActividad');
+            if (dashboardUltimaActividad && movimientos.length > 0) {
+                const ultimoMovimiento = movimientos[0];
+                dashboardUltimaActividad.textContent = `${ultimoMovimiento.date}: ${ultimoMovimiento.description} (${formatoMoneda(ultimoMovimiento.amount)})`;
+            } else if (dashboardUltimaActividad) {
+                dashboardUltimaActividad.textContent = 'No hay actividad reciente.';
+            }
+
+        } catch (error) {
+            console.error('Error al cargar últimos movimientos:', error);
+            ultimosMovimientosTableBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-red-400">Error al cargar últimos movimientos.</td></tr>';
+            const dashboardUltimaActividad = document.getElementById('dashboardUltimaActividad');
+            if (dashboardUltimaActividad) dashboardUltimaActividad.textContent = 'Error al cargar actividad.';
         }
     }
 
@@ -641,11 +799,11 @@
             const data = await response.json();
             const dashboardTitulo = document.getElementById('dashboardTitulo');
             if (dashboardTitulo) {
-                dashboardTitulo.textContent = data.nombreCompleto;
+                dashboardTitulo.textContent = data.fullName;
             }
             const saldoPrincipalElem = document.getElementById('dashboardSaldoDisponible');
             if (saldoPrincipalElem) {
-                saldoPrincipalElem.textContent = formatoMoneda(data.saldoPrincipal);
+                saldoPrincipalElem.textContent = formatoMoneda(data.totalBalance);
             }
         } catch (error) {
             console.error('Error al cargar datos del dashboard:', error);
@@ -655,31 +813,9 @@
             if (saldoPrincipalElem) saldoPrincipalElem.textContent = formatoMoneda(0); // Fallback
         }
 
-        // Cargar movimientos recientes desde el backend
-        try {
-            const response = await fetch('/api/movimientos/historial?limit=5'); // Asumiendo un endpoint para los últimos 5
-            if (!response.ok) throw new Error('Error al obtener los últimos movimientos.');
-            const ultimosMovimientos = await response.json();
-            pintarTablaMovimientos(ultimosMovimientos, 'ultimosMovimientosTableBody');
-            
-            const ultimaActividadElem = document.getElementById('dashboardUltimaActividad');
-            if (ultimaActividadElem) {
-                if (ultimosMovimientos.length > 0) {
-                    const ultimoMov = ultimosMovimientos[0];
-                    ultimaActividadElem.textContent = `${ultimoMov.fecha} - ${ultimoMov.descripcion}`;
-                } else {
-                    ultimaActividadElem.textContent = 'No hay actividad reciente.';
-                }
-            }
-        } catch (error) {
-            console.error('Error cargando últimos movimientos:', error);
-            const tabla = document.getElementById('ultimosMovimientosTableBody');
-            if (tabla) tabla.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-red-400">Error al cargar movimientos recientes.</td></tr>'; // Adjust colspan
-            const ultimaActividadElem = document.getElementById('dashboardUltimaActividad');
-            if (ultimaActividadElem) ultimaActividadElem.textContent = 'Error al cargar actividad.';
-        }
+        // Llamar a la nueva función para cargar los últimos movimientos
+        cargarUltimosMovimientos();
     }
-
     /**
      * Inicializa la sección "Mi cuenta", cargando las cuentas del user desde el backend.
      */
@@ -690,7 +826,15 @@
         cuentasContainer.innerHTML = `<p class="text-gray-400 text-center col-span-2">Cargando cuentas...</p>`; // Mensaje de carga
 
         try {
-            const cuentas = await cargarCuentasUsuario(); // Utiliza la función compartida
+            const response = await fetch('/api/dashboard/accounts'); // Tu DashboardRestController ya tiene este endpoint
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener las cuentas del usuario.');
+            }
+            const cuentas = await response.json(); // userAccounts ya no es global aquí, sino local
 
             cuentasContainer.innerHTML = ''; // Limpiar el mensaje de carga
 
@@ -702,14 +846,16 @@
             cuentas.forEach(cuenta => {
                 const cuentaCard = `
                     <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                        <h2 class="text-lg text-gray-300 mb-2">Cuenta ${cuenta.tipoCuenta.toLowerCase()}</h2>
-                        <p class="text-emerald-400 text-3xl font-mono">${formatoMoneda(cuenta.saldo)}</p>
-                        <p class="text-gray-400 mt-1">No. ${cuenta.numeroCuenta}</p>
-                        <span class="text-xs ${cuenta.estado === 'ACTIVA' ? 'text-green-500' : 'text-red-500'} uppercase">${cuenta.estado}</span>
+                        <h2 class="text-lg text-gray-300 mb-2">Cuenta ${cuenta.accountType.toLowerCase()}</h2>
+                        <p class="text-emerald-400 text-3xl font-mono">${formatoMoneda(cuenta.balance)}</p>
+                        <p class="text-gray-400 mt-1">No. ${cuenta.accountNumber}</p>
+                        <span class="text-xs ${cuenta.status === 'ACTIVA' ? 'text-green-500' : 'text-red-500'} uppercase">${cuenta.status}</span>
                     </div>
                 `;
                 cuentasContainer.innerHTML += cuentaCard;
             });
+            // Asegurarse de que userAccounts global se actualice para otros selects
+            userAccounts = cuentas; // <--- AGREGAR ESTA LÍNEA
         } catch (error) {
             console.error('Error al cargar las cuentas:', error);
             cuentasContainer.innerHTML = `<p class="text-red-400 text-center col-span-2">Error al cargar las cuentas.</p>`;
@@ -718,123 +864,122 @@
 
     /**
      * Inicializa la sección de Depósito.
+     * NOTA: Según la nueva lógica, esta sección ya no estará disponible para el usuario final.
+     * Se mantiene el código por si se decide reintroducirla o para referencia.
      */
-   async function inicializarDeposito() {
-    const form = document.getElementById('formDeposito');
-    const mensaje = document.getElementById('mensajeDeposito');
-    const cuentaSelect = document.getElementById('cuentaDeposito');
+    async function inicializarDeposito() {
+        const form = document.getElementById('formDeposito');
+        const mensaje = document.getElementById('mensajeDeposito');
+        const cuentaSelect = document.getElementById('cuentaDeposito');
 
-    if (!form) return;
+        if (!form) return;
 
-    await cargarCuentasUsuario(); // Asegura que userAccounts esté lleno
-    populateAccountSelect('cuentaDeposito'); // Rellena el select de cuentas
+        await cargarCuentasUsuario(); // Asegura que userAccounts esté lleno
+        populateAccountSelect('cuentaDeposito'); // Rellena el select de cuentas
 
-    form.onsubmit = async e => {
-        e.preventDefault();
-        const numeroCuenta = cuentaSelect.value;
-        const monto = parseFloat(form.montoDeposito.value);
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const accountNumber = cuentaSelect.value;
+            const amount = parseFloat(form.montoDeposito.value);
+            const description = form.descripcionDeposito.value.trim();
 
-        if (!numeroCuenta || isNaN(monto) || monto <= 0) {
-            mensaje.textContent = 'Por favor complete todos los campos correctamente.';
-            mensaje.className = 'text-red-500 mt-4 text-center';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/transacciones/deposito', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    numeroCuenta,
-                    monto,
-                    // *** CAMBIO CLAVE AQUÍ: 'tipo' en lugar de 'tipoMovimiento' ***
-                    tipo: 'INGRESO' // Ahora coincide con 'private TipoMovimiento tipo;' en tu DTO
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                // Ahora, data.message podría ser un error diferente si el backend tiene otras validaciones,
-                // pero ya no debería ser "El tipo de movimiento es obligatorio" por falta del campo 'tipo'.
-                throw new Error(data.message || 'Error al realizar el depósito.');
+            if (!accountNumber || isNaN(amount) || amount <= 0) {
+                mensaje.textContent = 'Por favor complete todos los campos correctamente.';
+                mensaje.className = 'text-red-500 mt-4 text-center';
+                return;
             }
 
-            mensaje.textContent = `Depósito de ${formatoMoneda(monto)} en la cuenta ${numeroCuenta} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.saldoActual)}`;
-            mensaje.className = 'text-green-400 mt-4 text-center';
-            form.reset(); // Limpiar el formulario
-            await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos en selects
-            populateAccountSelect('cuentaDeposito'); // Repopular selects
-        } catch (error) {
-            console.error('Error al realizar el depósito:', error);
-            mensaje.textContent = `Error: ${error.message}`;
-            mensaje.className = 'text-red-500 mt-4 text-center';
-        }
-    };
-}
+            try {
+                const response = await fetch('/api/transactions/deposit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accountNumber: accountNumber,
+                        amount: amount,
+                        description: description,
+                        type: 'INCOME'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje("Error", data.message || 'Error al realizar el depósito.', true);
+                    return;
+                }
+
+                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`);
+                form.reset(); // Limpiar el formulario
+                await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos en selects
+                populateAccountSelect('cuentaDeposito'); // Repopular selects
+            } catch (error) {
+                console.error('Error al realizar el depósito:', error);
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
+            }
+        };
+    }
 
     /**
      * Inicializa la sección de Retiro.
      */
     async function inicializarRetiro() {
-    const form = document.getElementById('formRetiro');
-    const mensaje = document.getElementById('mensajeRetiro');
-    const cuentaSelect = document.getElementById('cuentaRetiro');
+        const form = document.getElementById('formRetiro');
+        const mensaje = document.getElementById('mensajeRetiro');
+        const cuentaSelect = document.getElementById('cuentaRetiro');
 
-    if (!form) return;
+        if (!form) return;
 
-    await cargarCuentasUsuario();
-    populateAccountSelect('cuentaRetiro');
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaRetiro');
 
-    form.onsubmit = async e => {
-        e.preventDefault();
-        const numeroCuenta = cuentaSelect.value;
-        const monto = parseFloat(form.montoRetiro.value);
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const accountNumber = cuentaSelect.value;
+            const amount = parseFloat(form.montoRetiro.value);
+            const description = form.descripcionRetiro.value.trim();
 
-        if (!numeroCuenta || isNaN(monto) || monto <= 0) {
-            mensaje.textContent = 'Por favor complete todos los campos correctamente.';
-            mensaje.className = 'text-red-500 mt-4 text-center';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/transacciones/retiro', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    numeroCuenta,
-                    monto,
-                    // *** ¡AGREGA ESTA LÍNEA PARA EL RETIRO! ***
-                    tipo: 'EGRESO' // Para un retiro, el tipo de movimiento es EGRESO
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                // Ahora, si hay un error, debería ser diferente, como "Saldo insuficiente"
-                throw new Error(data.message || 'Error al realizar el retiro.');
+            if (!accountNumber || isNaN(amount) || amount <= 0) {
+                mensaje.textContent = 'Por favor complete todos los campos correctamente.';
+                mensaje.className = 'text-red-500 mt-4 text-center';
+                return;
             }
 
-            mensaje.textContent = `Retiro de ${formatoMoneda(monto)} de la cuenta ${numeroCuenta} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.saldoActual)}`;
-            mensaje.className = 'text-green-400 mt-4 text-center';
-            form.reset();
-            await cargarCuentasUsuario();
-            populateAccountSelect('cuentaRetiro');
-        } catch (error) {
-            console.error('Error al realizar el retiro:', error);
-            mensaje.textContent = `Error: ${error.message}`;
-            mensaje.className = 'text-red-500 mt-4 text-center';
-        }
-    };
-}
+            try {
+                const response = await fetch('/api/transactions/withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accountNumber: accountNumber,
+                        amount: amount,
+                        description: description,
+                        type: 'EXPENSE'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje("Error", data.message || 'Error al realizar el retiro.', true);
+                    return;
+                }
+
+                mostrarMensaje("Éxito", `Retiro de ${formatoMoneda(amount)} de la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`);
+                form.reset();
+                await cargarCuentasUsuario();
+                populateAccountSelect('cuentaRetiro');
+            } catch (error) {
+                console.error('Error al realizar el retiro:', error);
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
+            }
+        };
+    }
 
     /**
-     * Inicializa la sección de Transferencia Interna.
+     * Inicializa la sección de Transferencia Interna (entre cuentas del mismo usuario).
      */
     async function inicializarTransferenciasInternas() {
         const form = document.getElementById('formTransferenciaInterna');
@@ -855,47 +1000,134 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const cuentaOrigen = cuentaOrigenSelect.value;
-            const cuentaDestino = cuentaDestinoSelect.value;
-            const monto = parseFloat(form.montoTransferenciaInterna.value);
+            const originAccountNumber = cuentaOrigenSelect.value;
+            const destinationAccountNumber = cuentaDestinoSelect.value;
+            const amount = parseFloat(form.montoTransferenciaInterna.value);
+            const description = form.descripcionTransferenciaInterna.value.trim();
 
-            if (!cuentaOrigen || !cuentaDestino || isNaN(monto) || monto <= 0) {
+            if (!originAccountNumber || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
                 mensaje.className = 'text-red-500 mt-4 text-center';
                 return;
             }
 
-            if (cuentaOrigen === cuentaDestino) {
+            if (originAccountNumber === destinationAccountNumber) {
                 mensaje.textContent = 'La cuenta de origen y la de destino no pueden ser la misma.';
                 mensaje.className = 'text-red-500 mt-4 text-center';
                 return;
             }
 
             try {
-                const response = await fetch('/api/transacciones/transferenciaInterna', {
+                const response = await fetch('/api/transactions/transfer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ cuentaOrigen, cuentaDestino, monto })
+                    body: JSON.stringify({
+                        originAccountNumber: originAccountNumber,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
+                    })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || 'Error al realizar la transferencia interna.');
+                    mostrarMensaje("Error", data.message || 'Error al realizar la transferencia interna.', true);
+                    return;
                 }
 
-                mensaje.textContent = `Transferencia de ${formatoMoneda(monto)} de ${cuentaOrigen} a ${cuentaDestino} realizada con éxito.`;
-                mensaje.className = 'text-green-400 mt-4 text-center';
+                let newOriginBalance = null;
+                if (data.movements && data.movements.length > 0) {
+                    const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
+                    if (originMovement && originMovement.balance !== undefined) {
+                        newOriginBalance = originMovement.balance;
+                    }
+                }
+
+                const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
+                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
                 form.reset();
                 await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos
                 populateAccountSelect('cuentaOrigenInterna');
                 populateAccountSelect('cuentaDestinoInterna');
             } catch (error) {
                 console.error('Error al realizar la transferencia interna:', error);
-                mensaje.textContent = `Error: ${error.message}`;
-                mensaje.className = 'text-red-500 mt-4 text-center';
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
+            }
+        };
+    }
+
+    /**
+     * NUEVA FUNCIÓN: Inicializa la sección de Transferencia a otros usuarios del banco.
+     */
+    async function inicializarTransferenciasOtrosUsuarios() {
+        const form = document.getElementById('formTransferenciaOtroUsuario');
+        const mensaje = document.getElementById('mensajeTransferenciaOtroUsuario');
+        const cuentaOrigenSelect = document.getElementById('cuentaOrigenOtroUsuario');
+        const cuentaDestinoInput = document.getElementById('cuentaDestinoOtroUsuario'); // Es un input, no un select
+
+        if (!form) return;
+
+        await cargarCuentasUsuario();
+        populateAccountSelect('cuentaOrigenOtroUsuario'); // Solo se necesita poblar la cuenta de origen del usuario actual
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const originAccountNumber = cuentaOrigenSelect.value;
+            const destinationAccountNumber = cuentaDestinoInput.value.trim(); // Obtener el valor del input
+            const amount = parseFloat(form.montoTransferenciaOtroUsuario.value);
+            const description = form.descripcionTransferenciaOtroUsuario.value.trim();
+
+            if (!originAccountNumber || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
+                mostrarMensaje('Error', 'Por favor complete todos los campos correctamente.', true);
+                return;
+            }
+
+            if (originAccountNumber === destinationAccountNumber) {
+                mostrarMensaje('Error', 'La cuenta de origen y la de destino no pueden ser la misma.', true);
+                return;
+            }
+
+            try {
+                // Usar el nuevo endpoint para transferencias a otros usuarios
+                const response = await fetch('/api/transactions/transfer-to-other-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        originAccountNumber: originAccountNumber,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje("Error", data.message || 'Error al realizar la transferencia a otro usuario.', true);
+                    return;
+                }
+
+                let newOriginBalance = null;
+                if (data.movements && data.movements.length > 0) {
+                    const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
+                    if (originMovement && originMovement.balance !== undefined) {
+                        newOriginBalance = originMovement.balance;
+                    }
+                }
+
+                const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
+                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
+                form.reset();
+                await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos
+                populateAccountSelect('cuentaOrigenOtroUsuario');
+            } catch (error) {
+                console.error('Error al realizar la transferencia a otro usuario:', error);
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
             }
         };
     }
@@ -915,42 +1147,49 @@
 
         form.onsubmit = async e => {
             e.preventDefault();
-            const cuentaOrigen = cuentaOrigenSelect.value;
-            const nombreDestino = form.nombreDestino.value.trim();
-            const bancoDestino = form.bancoDestino.value;
-            const cuentaDestino = form.cuentaDestinoExterna.value.trim();
-            const monto = parseFloat(form.montoTransferenciaExterna.value);
+            const originAccountNumber = cuentaOrigenSelect.value;
+            const destinationName = form.nombreDestino.value.trim();
+            const destinationBank = form.bancoDestino.value;
+            const destinationAccountNumber = form.cuentaDestinoExterna.value.trim();
+            const amount = parseFloat(form.montoTransferenciaExterna.value);
+            const description = form.descripcionTransferenciaExterna.value.trim();
 
-            if (!cuentaOrigen || !nombreDestino || !bancoDestino || !cuentaDestino || isNaN(monto) || monto <= 0) {
+            if (!originAccountNumber || !destinationName || !destinationBank || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
                 mensaje.textContent = 'Por favor complete todos los campos correctamente.';
                 mensaje.className = 'text-red-500 mt-4 text-center';
                 return;
             }
 
             try {
-                const response = await fetch('/api/transacciones/transferenciaExterna', { // Asumiendo este endpoint
+                const response = await fetch('/api/transactions/external-transfer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ cuentaOrigen, nombreDestino, bancoDestino, cuentaDestino, monto })
+                    body: JSON.stringify({
+                        originAccountNumber: originAccountNumber,
+                        destinationName: destinationName,
+                        destinationBank: destinationBank,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount: amount,
+                        description: description
+                    })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || 'Error al realizar la transferencia externa.');
+                    mostrarMensaje("Error", data.message || 'Error al realizar la transferencia externa.', true);
+                    return;
                 }
 
-                mensaje.textContent = `Transferencia de ${formatoMoneda(monto)} a la cuenta de ${nombreDestino} (${cuentaDestino}) en ${bancoDestino} realizada con éxito.`;
-                mensaje.className = 'text-green-400 mt-4 text-center';
+                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} a la cuenta de ${destinationName} (${destinationAccountNumber}) en ${destinationBank} realizada con éxito. Nuevo saldo: ${formatoMoneda(data.newOriginAccountBalance)}`);
                 form.reset();
                 await cargarCuentasUsuario();
                 populateAccountSelect('cuentaOrigenExterna');
             } catch (error) {
                 console.error('Error al realizar la transferencia externa:', error);
-                mensaje.textContent = `Error: ${error.message}`;
-                mensaje.className = 'text-red-500 mt-4 text-center';
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
             }
         };
     }
@@ -969,19 +1208,19 @@
 
         // Función para cargar y mostrar movimientos desde el backend
         const cargarMovimientos = () => {
-            let url = '/api/movimientos/historial?'; // Endpoint del backend
+            let url = '/api/movements/history?'; 
             const params = new URLSearchParams();
 
             // Añadir parámetros de filtro si existen valores en los inputs
             if (fechaInicioInput.value) {
-                params.append('fechaInicio', fechaInicioInput.value);
+                params.append('startDate', fechaInicioInput.value);
             }
             if (fechaFinInput.value) {
-                params.append('fechaFin', fechaFinInput.value);
+                params.append('endDate', fechaFinInput.value);
             }
             if (tipoMovimientoSelect.value !== 'todos') {
-                // El backend espera el enum en MAYÚSCULAS (INGRESO, EGRESO)
-                params.append('tipo', tipoMovimientoSelect.value.toUpperCase());
+                // El backend espera el enum en MAYÚSCULAS (INCOME, EXPENSE)
+                params.append('type', tipoMovimientoSelect.value.toUpperCase());
             }
 
             url += params.toString(); // Concatena los parámetros a la URL
@@ -997,7 +1236,7 @@
                     return response.json(); // Parsea la respuesta JSON
                 })
                 .then(data => {
-                    pintarTablaMovimientos(data); // Llama a la función para pintar la tabla con los datos del backend
+                    pintarTablaMovimientos(data, 'tablaMovimientos'); // Llama a la función para pintar la tabla con los datos del backend
                 })
                 .catch(error => {
                     console.error('Error cargando movimientos:', error);
@@ -1020,7 +1259,7 @@
         // Evento para el botón de reportes (funcionalidad no implementada en backend aún)
         if (btnReportesHistorial) {
             btnReportesHistorial.addEventListener('click', () => {
-                alert("Generando reporte de historial (funcionalidad no implementada en backend aún).");
+                mostrarMensaje("Información", "Generando reporte de historial (funcionalidad no implementada en backend aún).");
                 // Aquí podrías generar la URL para el reporte, incluyendo los filtros actuales
                 // Por ejemplo: `/api/movimientos/reporte?fechaInicio=...&fechaFin=...&tipo=...`
             });
@@ -1047,9 +1286,9 @@
             e.preventDefault();
             const monto = parseFloat(formPagoServicio.montoPagar.value);
             const descripcion = formPagoServicio.descripcionPago.value.trim();
-            const numeroCuentaOrigen = cuentaOrigenServicioSelect.value;
+            const originAccountNumber = cuentaOrigenServicioSelect.value;
 
-            if (isNaN(monto) || monto <= 0 || !numeroCuentaOrigen) {
+            if (isNaN(monto) || monto <= 0 || !originAccountNumber) {
                 mensajePago.textContent = 'Por favor, introduce un monto válido y selecciona una cuenta.';
                 mensajePago.className = 'text-red-500 mt-4 text-center';
                 return;
@@ -1058,34 +1297,33 @@
             const nuevaDescripcion = descripcion ? `Pago ${servicio.nombre}: ${descripcion}` : `Pago ${servicio.nombre}`;
             
             try {
-                const response = await fetch('/api/servicios/pago', { // Asumiendo este endpoint
+                const response = await fetch('/api/servicios/pago', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        numeroCuentaOrigen,
-                        codigoServicio: servicio.codigo,
-                        monto,
-                        descripcion: nuevaDescripcion
+                        accountNumber: originAccountNumber,
+                        amount: monto,
+                        description: nuevaDescripcion,
+                        serviceCode: servicio.codigo
                     })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || `Error al realizar el pago de ${servicio.nombre}.`);
+                    mostrarMensaje("Error", data.message || `Error al realizar el pago de ${servicio.nombre}.`, true);
+                    return;
                 }
 
-                mensajePago.textContent = `¡Pago de ${servicio.nombre} por ${formatoMoneda(monto)} realizado con éxito! Nuevo saldo: ${formatoMoneda(data.saldoActual)}`;
-                mensajePago.className = 'text-green-400 mt-4 text-center';
+                mostrarMensaje("Éxito", `¡Pago de ${servicio.nombre} por ${formatoMoneda(monto)} realizado con éxito! Nuevo saldo: ${formatoMoneda(data.balance)}`);
                 formPagoServicio.reset(); // Limpiar el formulario
                 await cargarCuentasUsuario();
                 populateAccountSelect('cuentaOrigenServicio');
             } catch (error) {
                 console.error('Error al realizar el pago del servicio:', error);
-                mensajePago.textContent = `Error: ${error.message}`;
-                mensajePago.className = 'text-red-500 mt-4 text-center';
+                mostrarMensaje("Error", `Error: ${error.message}`, true);
             }
         };
 
@@ -1095,6 +1333,7 @@
                 contenido.innerHTML = `<p class="text-center mt-20 text-gray-400">Selecciona una opción de servicios del menú lateral.</p>`;
                 btnToggleSidebar.style.display = 'block'; // Asegura que el botón sea visible
                 sidebar.classList.add('-translate-x-full'); // Asegura que el sidebar esté oculto
+                overlay.classList.add('hidden'); // Oculta el overlay
                 contenido.classList.remove('con-sidebar-visible'); // Quita el margen del contenido
 
                 // Desactivar el sub-item activo (si lo hubiera)
@@ -1163,6 +1402,7 @@
 
         // Ocultar el botón del menú cuando el sidebar de servicios se abre (está visible)
         btnToggleSidebar.style.display = 'none';
+        overlay.classList.remove('hidden'); // Mostrar overlay
     });
 
     // Evento para alternar el submenú de Transacciones
@@ -1196,6 +1436,7 @@
 
         // Ocultar el botón del menú cuando el sidebar de transacciones se abre
         btnToggleSidebar.style.display = 'none';
+        overlay.classList.remove('hidden'); // Mostrar overlay
     });
 
 
@@ -1205,15 +1446,26 @@
         if (sidebarVisible) {
             // Si el sidebar está visible, lo ocultamos y mostramos el botón
             sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden'); // Ocultar overlay
             contenido.classList.remove('con-sidebar-visible');
             btnToggleSidebar.style.display = 'block'; 
         } else {
             // Si el sidebar está oculto, lo mostramos y ocultamos el botón
             sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden'); // Mostrar overlay
             contenido.classList.add('con-sidebar-visible');
             btnToggleSidebar.style.display = 'none';
         }
     });
+
+    // Evento para cerrar el sidebar al hacer clic en el overlay
+    overlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+        contenido.classList.remove('con-sidebar-visible');
+        btnToggleSidebar.style.display = 'block';
+    });
+
 
     // Cambiar sección al hacer clic en enlaces de la sidebar (excluyendo los toggles)
     document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -1242,11 +1494,13 @@
             sidebar.classList.remove('-translate-x-full');
             contenido.classList.add('con-sidebar-visible');
             btnToggleSidebar.style.display = 'none'; // Ocultar el botón en desktop
+            overlay.classList.add('hidden'); // Asegurarse de que el overlay esté oculto en desktop
         } else {
             // En móvil, el sidebar inicia oculto y el botón visible
             sidebar.classList.add('-translate-x-full');
             contenido.classList.remove('con-sidebar-visible');
             btnToggleSidebar.style.display = 'block'; // Mostrar el botón en móvil
+            overlay.classList.add('hidden'); // Asegurarse de que el overlay esté oculto inicialmente en móvil
         }
     }
 

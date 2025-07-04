@@ -36,6 +36,8 @@ import jakarta.validation.Valid; // Para activacion de validacion
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Collection; // Importar para Collection
+import org.springframework.security.core.GrantedAuthority; // Importar para GrantedAuthority
 
 // Importaciones de Logging
 import org.slf4j.Logger;
@@ -89,10 +91,13 @@ public class TransactionRestController {
         if (movement.getAccount() != null) {
             dto.setAccountId(movement.getAccount().getId());
             dto.setAccountNumber(movement.getAccount().getAccountNumber());
+            // Para el DTO de respuesta de movimiento, también necesitamos el balance actual de la cuenta
+            dto.setBalance(movement.getAccount().getBalance()); // Añadir el saldo actual de la cuenta
         } else {
             // Manejo si la cuenta es nula (no deberia ocurrir con movimientos persistidos validos).
             dto.setAccountId(null);
             dto.setAccountNumber("Cuenta Desconocida");
+            dto.setBalance(null); // Si la cuenta es desconocida, el balance también lo es
         }
         dto.setDate(movement.getDate());
         dto.setDescription(movement.getDescription());
@@ -102,7 +107,8 @@ public class TransactionRestController {
     }
 
     /**
-     * Endpoint para realizar un deposito en una cuenta especifica del usuario autenticado.
+     * Endpoint para realizar un deposito en una cuenta especifica.
+     * La lógica de si es un usuario normal o un administrador se gestiona internamente.
      *
      * @param request DTO {@link MovementRequest} con los detalles del deposito (numero de cuenta, monto, descripcion).
      * @param result Objeto {@link BindingResult} para capturar errores de validacion.
@@ -125,14 +131,31 @@ public class TransactionRestController {
 
         try {
             String userEmail = userDetails.getUsername();
-            User user = userRepository.findByEmail(userEmail)
+            User authenticatedUser = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado para el email: " + userEmail));
-            Long userId = user.getId();
 
-            Movement performedMovement = transactionService.performDeposit(request, userId);
+            // Verificar si el usuario autenticado tiene el rol de ADMIN
+            boolean isAdmin = authenticatedUser.getAuthorities().stream()
+                                               .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            Movement performedMovement;
+            if (isAdmin) {
+                // Si es ADMIN, el deposito se realiza a la cuenta especificada en el request, sin importar el dueño
+                performedMovement = transactionService.performAdminDeposit(request);
+            } else {
+                // Si no es ADMIN, el deposito se realiza a una cuenta que debe pertenecer al usuario autenticado
+                Long userId = authenticatedUser.getId();
+                performedMovement = transactionService.performDeposit(request, userId);
+            }
 
             MovementDTO movementDTO = mapMovementToDTO(performedMovement);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Deposito realizado con exito.", "movement", movementDTO));
+            // La respuesta del frontend espera un 'balance' directamente, no anidado en 'movement'
+            // Por lo tanto, extraemos el balance del DTO mapeado.
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Deposito realizado con exito.",
+                "movement", movementDTO,
+                "balance", movementDTO.getBalance() // Añadimos el balance directamente al mapa de respuesta
+            ));
         } catch (IllegalArgumentException e) {
             logger.error("Error al realizar deposito: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -173,7 +196,7 @@ public class TransactionRestController {
             Movement performedMovement = transactionService.performWithdrawal(request, userId);
 
             MovementDTO movementDTO = mapMovementToDTO(performedMovement);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Retiro realizado con exito.", "movement", movementDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Retiro realizado con exito.", "movement", movementDTO, "balance", movementDTO.getBalance()));
         } catch (IllegalArgumentException e) {
             logger.error("Error al realizar retiro: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -228,7 +251,52 @@ public class TransactionRestController {
     }
 
     /**
-     * Endpoint para realizar una transferencia a una cuenta externa (a un tercero) dentro del mismo sistema bancario.
+     * NUEVO ENDPOINT: Realiza una transferencia de dinero entre una cuenta del usuario autenticado
+     * y una cuenta de OTRO usuario dentro del mismo banco.
+     *
+     * @param request DTO {@link TransferRequest} con los detalles de la transferencia (número de cuenta origen, número de cuenta destino, monto, descripción).
+     * @param result Objeto {@link BindingResult} para capturar errores de validacion.
+     * @param userDetails Objeto {@link UserDetails} inyectado por Spring Security, que representa al usuario autenticado.
+     * @return ResponseEntity con un mensaje de exito y una lista de los {@link MovementDTO}s generados,
+     * o un mensaje de error si la validacion falla o ocurre una excepcion.
+     */
+    @PostMapping("/transfer-to-other-user")
+    public ResponseEntity<?> transferToOtherUser(
+            @Valid @RequestBody TransferRequest request,
+            BindingResult result,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        if (result.hasErrors()) {
+            List<String> errors = result.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(Map.of("message", "Errores de validacion en la solicitud de transferencia a otro usuario", "errors", errors));
+        }
+
+        try {
+            String userEmail = userDetails.getUsername();
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado para el email: " + userEmail));
+            Long userId = user.getId();
+
+            List<Movement> generatedMovements = transactionService.performInternalTransferToOtherUser(request, userId);
+
+            List<MovementDTO> movementsDTO = generatedMovements.stream()
+                    .map(this::mapMovementToDTO)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Transferencia a otro usuario realizada con exito.", "movements", movementsDTO));
+        } catch (IllegalArgumentException e) {
+            logger.error("Error al realizar transferencia a otro usuario: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            logger.error("Error interno del servidor al procesar la transferencia a otro usuario: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Error interno del servidor al procesar la transferencia a otro usuario: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Endpoint para realizar una transferencia a una cuenta externa (a un tercero) fuera del mismo sistema bancario.
      *
      * @param request DTO {@link ExternalTransferRequest} con los detalles de la transferencia externa.
      * @param result Objeto {@link BindingResult} para capturar errores de validacion.

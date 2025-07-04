@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Administrador | kinalBAnk</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-900 text-white font-sans">
+    <!-- *** LÍNEA DE DEPURACIÓN CRÍTICA: SI ESTO NO APARECE, HAY UN PROBLEMA DE PARSEO HTML/THYMELEAF *** -->
+    <script>
+      console.log("¡El body se está cargando y este script INICIAL se ejecutó!");
+    </script>
+    <!----------------------------------------------------------------------------------------------------->
+
+    <div class="flex min-h-screen">
+      <button
+        id="btnToggleSidebar"
+        aria-label="Mostrar menú lateral"
+        class="fixed top-4 left-4 z-50 bg-emerald-600 p-3 rounded-md shadow-md hover:bg-emerald-700 transition focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      >
+        ☰
+      </button>
+      <div
+        id="overlay"
+        class="fixed inset-0 bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-40"
+      ></div>
+
+      <!-- Barra lateral -->
+      <aside
+        id="sidebar"
+        class="fixed top-0 left-0 z-50 w-64 h-screen bg-gray-800 flex flex-col p-6 space-y-6 transform -translate-x-full transition-transform duration-300 ease-in-out"
+      >
+        <div>
+          <div
+            class="flex items-center space-x-3 text-2xl font-bold text-white mb-6 select-none"
+          >
+            <span>🛠️</span><span>Admin kinalBAnk</span>
+          </div>
+          <nav class="flex flex-col space-y-3">
+            <a
+              href="#"
+              data-id="dashboard"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Dashboard</a
+            >
+            <a
+              href="#"
+              data-id="clientes"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Clientes</a
+            >
+            <a
+              href="#"
+              data-id="transacciones"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Transacciones</a
+            >
+            <!-- NUEVO: Enlace para Depósito -->
+            <a
+              href="#"
+              data-id="deposito"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                Depósito
+            </a>
+            <a
+              href="#"
+              data-id="reportes"
+              class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+              >Reportes</a
+            >
+            <!-- ELIMINADO: Gestión de cuentas -->
+            <!-- <a href="#" data-id="gestionCuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Gestión de cuentas</a> -->
+            <!-- ELIMINADO: Citas -->
+            <!-- <a href="#" data-id="citas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Citas</a> -->
+            <!-- ELIMINADO: Cuentas (ya no es una sección separada, se gestiona en Depósito o Clientes) -->
+            <!-- <a href="#" data-id="cuentas" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Cuentas</a> -->
+            <!-- ELIMINADO: Configuración -->
+            <!-- <a href="#" data-id="configuracion" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">Configuración</a> -->
+
+            <div class="mt-auto">
+                <a href="/logout" data-id="cerrarSesion" class="flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-red-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                    </svg>
+                    Cerrar sesión
+                </a>
+            </div>
+          </nav>
+        </div>
+      </aside>
+
+<!-- Modal para editar cliente -->
+<div id="modalEditarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
+    <h2 class="text-2xl font-bold mb-4 text-emerald-400">✏️ Editar Cliente</h2>
+    <form id="formEditarCliente" class="space-y-4">
+      <input type="hidden" id="editarIdCliente" /> <!-- Campo oculto para el ID del cliente -->
+      <div>
+        <label class="block mb-1 text-sm">Nombre</label>
+        <input type="text" id="editarNombre" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Apellido</label>
+        <input type="text" id="editarApellido" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Email</label>
+        <input type="email" id="editarEmail" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">DPI</label>
+        <input type="text" id="editarDPI" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">NIT</label>
+        <input type="text" id="editarNIT" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Teléfono</label>
+        <input type="text" id="editarTelefono" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm">Estado</label>
+        <select id="editarEstado" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600">
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+          <option value="Bloqueado">Bloqueado</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" id="btnCancelarEditar" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar -->
+<div id="modalConfirmacion" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+    <h2 class="text-2xl font-bold mb-4 text-red-400">⚠️ Confirmar Eliminación</h2>
+    <p class="mb-6 text-gray-300">¿Estás seguro de que deseas eliminar este usuario?</p>
+    <div class="flex justify-center space-x-4">
+      <button type="button" id="btnConfirmarCancelar" class="px-5 py-2 bg-gray-700 rounded-full hover:bg-gray-600">Cancelar</button>
+      <button type="button" id="btnConfirmarEliminar" class="px-5 py-2 bg-red-600 rounded-full hover:bg-red-700">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Mensajes (para éxito/error) -->
+<div id="modalMensaje" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+    <h2 id="modalMensajeTitulo" class="text-2xl font-bold mb-4"></h2>
+    <p id="modalMensajeContenido" class="mb-6 text-gray-300"></p>
+    <button type="button" id="btnCerrarMensaje" class="px-5 py-2 bg-emerald-600 rounded-full hover:bg-emerald-700">Cerrar</button>
+  </div>
+</div>
+
+
+      <!-- Contenedor principal para contenido dinámico -->
+      <main
+        id="contenido"
+        class="flex-1 p-8 bg-gray-900 overflow-auto min-h-screen"
+      ></main>
+    </div>
+
+    <script th:inline="javascript">
+      // *** VERIFICACIÓN DE SCRIPT: SI VES ESTO EN LA CONSOLA, EL JS SE ESTÁ EJECUTANDO ***
+      console.log("Admin.html script principal está ejecutándose.");
+
+      // Asegúrate de que los datos de los usuarios estén disponibles en el JavaScript
+      // Esto es crucial para que la tabla se pueda poblar.
+      const serverUsers = /*[[${users != null ? users : '[]'}]]*/ [];
+      console.log("Usuarios del servidor:", serverUsers); // Depuración: ver qué datos llegan
+
+      const sidebarLinks = document.querySelectorAll(".sidebar-link");
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          cambiarPestania(link.dataset.id); // mantiene funcionalidad actual
+          ocultarSidebar(); // <-- esta es la clave: oculta el menú
+        });
+      });
+      const contenido = document.getElementById("contenido");
+
+      // Datos ficticios para mostrar (puedes reemplazar con API real)
+      const datos = {
+        totalClientes: serverUsers.length, // Se calculará dinámicamente
+        saldoGlobal: 98765432.15, // Estos podrían venir del backend también
+        cuentasActivas: 1340,
+        cuentasInactivas: 180,
+        cuentasBloqueadas: 15,
+        citasSinConfirmar: 4,
+        nuevosClientesSemana: [5, 8, 10, 15, 12, 20, 18], // últimos 7 días
+        volumenTransaccionesMes: [120000, 95000, 110000, 130000, 90000, 150000], // últimos 6 meses
+        // transacciones y cuentas se mantienen ficticias si no las pasas desde el backend
+        transacciones: [
+          {
+            date: "2025-06-10", // CAMBIO: 'date' en lugar de 'fecha'
+            description: "Depósito efectivo", // CAMBIO: 'description'
+            type: "INCOME", // CAMBIO: 'type' (enum)
+            amount: 1500,
+            accountNumber: "1000000001" // Añadido para simulación
+          },
+          {
+            date: "2025-06-12",
+            description: "Retiro cajero",
+            type: "EXPENSE",
+            amount: 500,
+            accountNumber: "1000000002"
+          },
+          {
+            date: "2025-06-14",
+            description: "Transferencia a C002",
+            type: "EXPENSE",
+            amount: 700,
+            accountNumber: "1000000001"
+          },
+        ],
+        // Las cuentas se cargarán desde el backend para el depósito
+        // cuentas: [ ... ]
+      };
+
+      // Variable para almacenar todas las cuentas del sistema (para el admin)
+      let allSystemAccounts = [];
+
+      // Función para formatear números a moneda
+      function formatoMoneda(num) {
+        return num.toLocaleString("es-GT", {
+          style: "currency",
+          currency: "GTQ",
+          minimumFractionDigits: 2,
+        });
+      }
+
+      // Función para crear gráfico (Chart.js)
+      function crearGrafico(ctx, labels, data, label, color) {
+        return new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label,
+                data,
+                borderColor: color,
+                backgroundColor: color + "44",
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      // Contenido dinámico para cada pestaña
+      const secciones = {
+        dashboard: `
+        <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+          <h1 class="text-4xl font-bold mb-8 text-emerald-400 text-center">Dashboard</h1>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Clientes Registrados</h2>
+              <p class="text-5xl font-mono text-emerald-400">${
+                datos.totalClientes
+              }</p>
+              <button
+                data-id="clientes"
+                class="mt-3 bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+              >Ver más</button>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Saldo Global del Banco</h2>
+              <p class="text-4xl font-mono text-emerald-400">${formatoMoneda(
+                datos.saldoGlobal
+              )}</p>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+              <h2 class="text-xl font-semibold mb-2">Cuentas Activas / Inactivas</h2>
+              <p class="text-3xl font-mono text-emerald-400">${
+                datos.cuentasActivas
+              } / ${datos.cuentasInactivas}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Nuevos Clientes por Semana</h3>
+              <canvas id="graficoClientes"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Volumen de Transacciones por Mes (GTQ)</h3>
+              <canvas id="graficoTransacciones"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-xl mx-auto text-center">
+            <h3 class="text-xl font-semibold mb-4 text-yellow-400">Indicadores de alerta</h3>
+            <p>Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong></p>
+            <p>Citas sin confirmar: <strong>${
+              datos.citasSinConfirmar
+            }</strong></p>
+          </div>
+        </section>
+      `,
+
+        clientes: `
+        <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+          <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
+            <a
+              href="/register"
+              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+            >Agregar Cliente</a>
+          </div>
+          <input
+            type="text"
+            id="buscadorClientes"
+            placeholder="Buscar por nombre, email o ID..."
+            class="w-full mb-4 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+            <thead class="bg-gray-700 text-gray-300">
+              <tr>
+                <th class="py-3 px-4 text-left">ID</th>
+                <th class="py-3 px-4 text-left">Nombre</th>
+                <th class="py-3 px-4 text-left">Apellido</th>
+                <th class="py-3 px-4 text-left">Email</th>
+                <th class="py-3 px-4 text-left">DPI</th>
+                <th class="py-3 px-4 text-left">NIT</th>
+                <th class="py-3 px-4 text-left">Teléfono</th>
+                <th class="py-3 px-4 text-left">Estado</th>
+                <th class="py-3 px-4 text-left">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaClientes" class="text-gray-100">
+              <!-- Aquí se cargan los clientes dinámicamente -->
+            </tbody>
+          </table>
+        </section>
+      `,
+
+        transacciones: `
+        <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
+          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Transacciones</h1>
+
+          <div class="flex flex-wrap gap-4 mb-6">
+            <input
+              type="date"
+              id="filtroFechaInicio"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+              placeholder="Fecha inicio"
+            />
+            <input
+              type="date"
+              id="filtroFechaFin"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+              placeholder="Fecha fin"
+            />
+            <select
+              id="filtroTipo"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white"
+            >
+              <option value="">Tipo de transacción</option>
+              <option value="INCOME">Depósito</option>
+              <option value="EXPENSE">Retiro/Transferencia</option>
+            </select>
+            <input
+              type="text"
+              id="buscadorTransacciones"
+              placeholder="Buscar por ID o descripción"
+              class="px-3 py-2 rounded-md bg-gray-700 text-white flex-grow min-w-[200px]"
+            />
+            <button
+              id="btnExportarTransacciones"
+              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+            >
+              Exportar PDF/Excel
+            </button>
+          </div>
+
+          <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+            <thead class="bg-gray-700 text-gray-300">
+              <tr>
+                <th class="py-3 px-4 text-left cursor-pointer" data-orden="date">Fecha ↑↓</th>
+                <th class="py-3 px-4 text-left">Descripción</th>
+                <th class="py-3 px-4 text-left">Tipo</th>
+                <th class="py-3 px-4 text-left">Monto</th>
+                <th class="py-3 px-4 text-left">Cuenta</th> <!-- Nueva columna para cuenta -->
+              </tr>
+            </thead>
+            <tbody id="tablaTransacciones" class="text-gray-100">
+              <!-- Aquí se cargan las transacciones -->
+            </tbody>
+          </table>
+        </section>
+      `,
+        // NUEVA SECCIÓN: Depósito para Administradores
+        deposito: `
+            <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Realizar Depósito
+                    </h2>
+                    <p class="text-lg text-gray-300 mb-6 text-center">Realiza un depósito a cualquier cuenta del sistema.</p>
+
+                    <form id="formDepositoAdmin" class="space-y-4">
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-grow">
+                                <label for="numeroCuentaBusqueda" class="block font-semibold mb-1">Número de Cuenta:</label>
+                                <input type="text" id="numeroCuentaBusqueda" name="numeroCuentaBusqueda" placeholder="Ej. 1000000001" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <button type="button" id="btnBuscarCuenta" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-md font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-400 h-full">
+                                Buscar
+                            </button>
+                        </div>
+
+                        <div id="datosCuenta" class="space-y-3 bg-gray-700 p-4 rounded-md hidden">
+                            <h3 class="text-xl font-semibold text-emerald-300">Detalles de la Cuenta:</h3>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Nombre del Titular:</label>
+                                <input type="text" id="nombreTitular" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Apellido del Titular:</label>
+                                <input type="text" id="apellidoTitular" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Tipo de Cuenta:</label>
+                                <input type="text" id="tipoCuenta" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Saldo Actual:</label>
+                                <input type="text" id="saldoActual" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                        </div>
+
+                        <div id="camposDeposito" class="space-y-4 hidden">
+                            <div>
+                                <label for="montoDepositoAdmin" class="block font-semibold mb-1">Monto a depositar (GTQ):</label>
+                                <input type="number" id="montoDepositoAdmin" name="montoDepositoAdmin" min="0.01" step="0.01" placeholder="Ej. 500.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <div>
+                                <label for="descripcionDepositoAdmin" class="block font-semibold mb-1">Descripción (opcional):</label>
+                                <input type="text" id="descripcionDepositoAdmin" name="descripcionDepositoAdmin" placeholder="Ej. Depósito en ventanilla" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            </div>
+                            <button type="submit" id="btnConfirmarDeposito" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                Confirmar Depósito
+                            </button>
+                        </div>
+                        <p id="mensajeDepositoAdmin" class="mt-4 text-center"></p>
+                    </form>
+                </div>
+            </section>
+        `,
+        reportes: `
+        <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white flex flex-col items-center justify-center">
+          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Reportes</h1>
+
+          <div class="w-full max-w-md mb-6">
+            <label class="block mb-2 font-semibold" for="rangoFechasReporte">Rango de fechas:</label>
+            <input type="date" id="rangoInicioReporte" class="w-full mb-2 px-3 py-2 rounded-md bg-gray-700 text-white" />
+            <input type="date" id="rangoFinReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white" />
+          </div>
+
+          <div class="w-full max-w-md mb-6">
+            <label class="block mb-2 font-semibold" for="tipoReporte">Tipo de reporte:</label>
+            <select id="tipoReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white">
+              <option value="mensual">Mensual</option>
+              <option value="anual">Anual</option>
+              <option value="porCliente">Por Cliente</option>
+              <option value="porCuenta">Por Cuenta</option>
+            </select>
+          </div>
+
+          <button
+            id="btnGenerarReporte"
+            class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
+          >
+            Generar Reporte
+          </button>
+
+          <div id="vistaPreviaReporte" class="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-3xl text-center text-gray-300 hidden">
+            Aquí aparecerá la vista previa del reporte generado.
+          </div>
+
+          <button
+            id="btnEnviarCorreoReporte"
+            class="mt-4 bg-blue-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition hidden"
+          >
+            Enviar por correo
+          </button>
+        </section>
+      `,
+        // ELIMINADO: gestionCuentas
+        // ELIMINADO: citas
+        // ELIMINADO: cuentas
+        // ELIMINADO: configuracion
+      };
+
+      // Función para mostrar un modal de mensaje
+      function mostrarMensaje(titulo, contenido, esError = false) {
+          const modal = document.getElementById("modalMensaje");
+          const modalTitulo = document.getElementById("modalMensajeTitulo");
+          const modalContenido = document.getElementById("modalMensajeContenido");
+
+          modalTitulo.textContent = titulo;
+          modalContenido.textContent = contenido;
+
+          if (esError) {
+              modalTitulo.classList.remove("text-emerald-400");
+              modalTitulo.classList.add("text-red-400");
+          } else {
+              modalTitulo.classList.remove("text-red-400");
+              modalTitulo.classList.add("text-emerald-400");
+          }
+          modal.classList.remove("hidden");
+      }
+
+      // Cerrar modal de mensaje
+      document.getElementById("btnCerrarMensaje").addEventListener("click", () => {
+          document.getElementById("modalMensaje").classList.add("hidden");
+      });
+
+
+      // Renderiza la lista de clientes con filtro y acciones
+      function renderClientes() {
+        const tbody = document.getElementById("tablaClientes");
+        const buscadorClientes = document.getElementById("buscadorClientes");
+        const filtro = buscadorClientes ? buscadorClientes.value.toLowerCase() : "";
+        let html = "";
+
+        const filtrados = serverUsers.filter(
+          (c) =>
+            c.id.toString().includes(filtro) ||
+            c.firstName.toLowerCase().includes(filtro) ||
+            c.lastName.toLowerCase().includes(filtro) ||
+            c.email.toLowerCase().includes(filtro) ||
+            (c.dpi && c.dpi.toLowerCase().includes(filtro)) ||
+            (c.nit && c.nit.toLowerCase().includes(filtro)) ||
+            (c.phoneNumber && c.phoneNumber.toLowerCase().includes(filtro))
+        );
+
+        if (filtrados.length === 0) {
+          html = `<tr><td colspan="9" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
+        } else {
+          filtrados.forEach((c) => {
+            html += `
+              <tr class="border-b border-gray-700 last:border-b-0">
+                <td class="py-3 px-4">${c.id}</td>
+                <td class="py-3 px-4">${c.firstName}</td>
+                <td class="py-3 px-4">${c.lastName}</td>
+                <td class="py-3 px-4">${c.email}</td>
+                <td class="py-3 px-4">${c.dpi || 'N/A'}</td>
+                <td class="py-3 px-4">${c.nit || 'N/A'}</td>
+                <td class="py-3 px-4">${c.phoneNumber || 'N/A'}</td>
+                <td class="py-3 px-4">${c.enabled ? 'Activo' : 'Inactivo'}</td>
+                <td class="py-3 px-4 space-x-2">
+                  <button class="text-emerald-400 hover:underline btnVerCliente" data-id="${c.id}">Ver</button>
+                  <button class="text-yellow-400 hover:underline btnEditarCliente" data-id="${c.id}">Editar</button>
+                  <button class="text-red-500 hover:underline btnEliminarCliente" data-id="${c.id}">Eliminar</button>
+                </td>
+              </tr>
+            `;
+          });
+        }
+        tbody.innerHTML = html;
+
+        // Re-adjuntar listeners para los botones de edición y eliminación después de renderizar
+        document.querySelectorAll(".btnEditarCliente").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const clienteId = e.target.dataset.id;
+                const clienteAEditar = serverUsers.find(user => user.id.toString() === clienteId);
+                if (clienteAEditar) {
+                    editarIdCliente.value = clienteAEditar.id;
+                    document.getElementById("editarNombre").value = clienteAEditar.firstName;
+                    document.getElementById("editarApellido").value = clienteAEditar.lastName;
+                    document.getElementById("editarEmail").value = clienteAEditar.email;
+                    document.getElementById("editarDPI").value = clienteAEditar.dpi || '';
+                    document.getElementById("editarNIT").value = clienteAEditar.nit || '';
+                    document.getElementById("editarTelefono").value = clienteAEditar.phoneNumber || '';
+                    // Asumiendo que 'enabled' se mapea a 'Activo'/'Inactivo' en el select
+                    document.getElementById("editarEstado").value = clienteAEditar.enabled ? 'Activo' : 'Inactivo';
+                    modalEditar.classList.remove("hidden");
+                }
+            });
+        });
+
+        document.querySelectorAll(".btnEliminarCliente").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const clienteId = e.target.dataset.id;
+                // Mostrar modal de confirmación
+                document.getElementById("modalConfirmacion").classList.remove("hidden");
+                // Adjuntar listener al botón de confirmar eliminación del modal
+                document.getElementById("btnConfirmarEliminar").onclick = () => {
+                    eliminarCliente(clienteId);
+                    document.getElementById("modalConfirmacion").classList.add("hidden");
+                };
+            });
+        });
+      }
+
+      // Función para enviar la solicitud de actualización de cliente
+      async function actualizarCliente() {
+          const id = document.getElementById("editarIdCliente").value;
+          const firstName = document.getElementById("editarNombre").value;
+          const lastName = document.getElementById("editarApellido").value;
+          const email = document.getElementById("editarEmail").value;
+          const dpi = document.getElementById("editarDPI").value;
+          const nit = document.getElementById("editarNIT").value;
+          const phoneNumber = document.getElementById("editarTelefono").value;
+          const estado = document.getElementById("editarEstado").value; // 'Activo', 'Inactivo', 'Bloqueado'
+
+          const data = {
+              id: id,
+              firstName: firstName,
+              lastName: lastName,
+              email: email,
+              dpi: dpi,
+              nit: nit,
+              phoneNumber: phoneNumber,
+              // Convertir el string de estado a booleano para 'enabled'
+              enabled: estado === 'Activo' ? true : false // Ajuste para el campo 'enabled'
+          };
+
+          try {
+              const response = await fetch(`/api/users/${id}`, {
+                  method: 'PUT',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+              });
+
+              if (response.ok) {
+                  const updatedUser = await response.json();
+                  mostrarMensaje("Éxito", "Cliente actualizado exitosamente.");
+                  // Actualizar serverUsers y re-renderizar tabla
+                  const index = serverUsers.findIndex(user => user.id.toString() === id);
+                  if (index !== -1) {
+                      // Actualizar el objeto en serverUsers con los datos de la respuesta
+                      serverUsers[index] = updatedUser;
+                  }
+                  renderClientes(); // Vuelve a renderizar la tabla para mostrar los cambios
+              } else {
+                  const errorText = await response.text();
+                  mostrarMensaje("Error", `Error al actualizar cliente: ${errorText}`, true);
+              }
+          } catch (error) {
+              console.error('Error al enviar la solicitud de actualización:', error);
+              mostrarMensaje("Error", "No se pudo conectar con el servidor para actualizar el cliente.", true);
+          } finally {
+              modalEditar.classList.add("hidden"); // Cierra el modal de edición
+          }
+      }
+
+      // Función para enviar la solicitud de eliminación de cliente
+      async function eliminarCliente(id) {
+          try {
+              const response = await fetch(`/api/users/${id}`, {
+                  method: 'DELETE',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  }
+              });
+
+              if (response.ok) {
+                  mostrarMensaje("Éxito", "Cliente eliminado exitosamente.");
+                  // Eliminar el usuario de serverUsers y re-renderizar tabla
+                  const index = serverUsers.findIndex(user => user.id.toString() === id);
+                  if (index !== -1) {
+                      serverUsers.splice(index, 1); // Elimina el usuario del array
+                  }
+                  renderClientes(); // Vuelve a renderizar la tabla
+              } else {
+                  const errorText = await response.text();
+                  mostrarMensaje("Error", `Error al eliminar cliente: ${errorText}`, true);
+              }
+          } catch (error) {
+              console.error('Error al enviar la solicitud de eliminación:', error);
+              mostrarMensaje("Error", "No se pudo conectar con el servidor para eliminar el cliente.", true);
+          }
+      }
+
+
+    // Renderiza la tabla de transacciones
+    async function renderTransacciones() {
+        const tbody = document.getElementById("tablaTransacciones");
+        const filtroFechaInicio = document.getElementById("filtroFechaInicio").value;
+        const filtroFechaFin = document.getElementById("filtroFechaFin").value;
+        const filtroTipo = document.getElementById("filtroTipo").value;
+        const buscadorTransacciones = document.getElementById("buscadorTransacciones").value.toLowerCase();
+
+        let url = '/api/movements/history?';
+        const params = new URLSearchParams();
+
+        if (filtroFechaInicio) params.append('startDate', filtroFechaInicio);
+        if (filtroFechaFin) params.append('endDate', filtroFechaFin);
+        if (filtroTipo) params.append('type', filtroTipo); // Ya viene en MAYÚSCULAS (INCOME/EXPENSE)
+        // No hay un parámetro de búsqueda por descripción o ID en el backend actual para movimientos,
+        // así que el filtro del buscador se aplicará en el frontend si es necesario.
+
+        url += params.toString();
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener las transacciones.');
+            }
+            const transaccionesData = await response.json();
+
+            let html = "";
+            let filteredTransactions = transaccionesData;
+
+            // Filtrado por buscador en el frontend (si el backend no lo soporta)
+            if (buscadorTransacciones) {
+                filteredTransactions = transaccionesData.filter(t => 
+                    (t.description && t.description.toLowerCase().includes(buscadorTransacciones)) ||
+                    (t.accountNumber && t.accountNumber.includes(buscadorTransacciones))
+                );
+            }
+
+            if (filteredTransactions.length === 0) {
+                html = `<tr><td colspan="5" class="text-center py-6 text-gray-500">No se encontraron transacciones.</td></tr>`;
+            } else {
+                filteredTransactions.forEach((t) => {
+                    const tipoDisplay = t.type === 'INCOME' ? 'Depósito' : 
+                                        (t.type === 'EXPENSE' ? 'Retiro/Transferencia' : t.type);
+                    html += `
+                        <tr class="border-b border-gray-700 last:border-b-0">
+                            <td class="py-3 px-4">${t.date}</td>
+                            <td class="py-3 px-4">${t.description}</td>
+                            <td class="py-3 px-4">${tipoDisplay}</td>
+                            <td class="py-3 px-4 ${t.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}">${formatoMoneda(t.amount)}</td>
+                            <td class="py-3 px-4">${t.accountNumber || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+            }
+            tbody.innerHTML = html;
+        } catch (error) {
+            console.error('Error cargando transacciones:', error);
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-400">Error al cargar transacciones.</td></tr>`;
+        }
+    }
+
+
+    // Función para cargar todas las cuentas del sistema para el admin
+    async function cargarTodasLasCuentas() {
+        try {
+            const response = await fetch('/api/accounts/all'); // Endpoint para todas las cuentas
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    throw new Error('No autenticado');
+                }
+                throw new Error('Error al obtener todas las cuentas.');
+            }
+            allSystemAccounts = await response.json(); // Almacena en la variable global
+            return allSystemAccounts;
+        } catch (error) {
+            console.error('Error al cargar todas las cuentas:', error);
+            allSystemAccounts = [];
+            return [];
+        }
+    }
+
+    // Función para rellenar un select con todas las cuentas del sistema
+    function populateAllAccountsSelect(selectId) {
+        const selectElement = document.getElementById(selectId);
+        if (!selectElement) return;
+
+        selectElement.innerHTML = ''; // Limpiar opciones previas
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Selecciona una cuenta';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        selectElement.appendChild(defaultOption);
+
+        if (allSystemAccounts.length === 0) {
+            const noAccountsOption = document.createElement('option');
+            noAccountsOption.value = '';
+            noAccountsOption.textContent = 'No hay cuentas disponibles';
+            noAccountsOption.disabled = true;
+            selectElement.appendChild(noAccountsOption);
+            return;
+        }
+
+        allSystemAccounts.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.accountNumber;
+            option.textContent = `${account.accountNumber} - ${account.userName} (${account.accountType}) - Saldo: ${formatoMoneda(account.balance)}`;
+            selectElement.appendChild(option);
+        });
+    }
+
+    let currentAccountForDeposit = null;
+
+   async function buscarCuentaPorNumero(accountNumber) {
+    try {
+        const response = await fetch(`/api/accounts/number/${accountNumber}`); // Asume este nuevo endpoint en tu backend
+        if (!response.ok) {
+            if (response.status === 404) {
+                mostrarMensaje("Error", `Cuenta con número ${accountNumber} no encontrada.`, true);
+            } else if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login';
+                throw new Error('No autenticado');
+            } else {
+                throw new Error('Error al buscar la cuenta. Intente de nuevo.');
+            }
+        }
+        const accountData = await response.json();
+        return accountData;
+    } catch (error) {
+        console.error('Error al buscar cuenta:', error);
+        mostrarMensaje("Error", `No se pudo buscar la cuenta: ${error.message}`, true);
+        return null;
+    }
+}
+
+// NUEVA FUNCIÓN: Inicializa la sección de Depósito para Administradores
+async function inicializarDepositoAdmin() {
+    const form = document.getElementById('formDepositoAdmin');
+    const mensaje = document.getElementById('mensajeDepositoAdmin');
+    const numeroCuentaBusquedaInput = document.getElementById('numeroCuentaBusqueda');
+    const btnBuscarCuenta = document.getElementById('btnBuscarCuenta');
+    const datosCuentaDiv = document.getElementById('datosCuenta');
+    const camposDepositoDiv = document.getElementById('camposDeposito');
+    
+    // Campos para rellenar
+    const nombreTitularInput = document.getElementById('nombreTitular');
+    const apellidoTitularInput = document.getElementById('apellidoTitular');
+    const tipoCuentaInput = document.getElementById('tipoCuenta');
+    const saldoActualInput = document.getElementById('saldoActual');
+    const montoDepositoAdminInput = document.getElementById('montoDepositoAdmin');
+    const descripcionDepositoAdminInput = document.getElementById('descripcionDepositoAdmin');
+
+    // Ocultar campos de depósito y datos de cuenta al inicio
+    datosCuentaDiv.classList.add('hidden');
+    camposDepositoDiv.classList.add('hidden');
+    mensaje.textContent = ''; // Limpiar mensajes previos
+
+    btnBuscarCuenta.onclick = async () => {
+        const accountNumber = numeroCuentaBusquedaInput.value.trim();
+        if (!accountNumber) {
+            mostrarMensaje("Advertencia", 'Por favor, ingrese un número de cuenta.', true);
+            return;
+        }
+
+        // Limpiar campos y ocultar si hay una búsqueda nueva
+        nombreTitularInput.value = '';
+        apellidoTitularInput.value = '';
+        tipoCuentaInput.value = '';
+        saldoActualInput.value = '';
+        datosCuentaDiv.classList.add('hidden');
+        camposDepositoDiv.classList.add('hidden');
+        mensaje.textContent = '';
+        currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
+
+        const account = await buscarCuentaPorNumero(accountNumber);
+
+        if (account) {
+            currentAccountForDeposit = account; // Almacena la cuenta encontrada
+            nombreTitularInput.value = account.userName; // Asume que 'userName' tiene el nombre del titular
+            apellidoTitularInput.value = account.userLastName; // Asume 'userLastName' para el apellido
+            tipoCuentaInput.value = account.accountType;
+            saldoActualInput.value = formatoMoneda(account.balance);
+            
+            datosCuentaDiv.classList.remove('hidden'); // Mostrar detalles de la cuenta
+            camposDepositoDiv.classList.remove('hidden'); // Mostrar campos de depósito
+            montoDepositoAdminInput.focus(); // Pone el foco en el monto para que el admin pueda empezar a escribir
+        } else {
+            // Si no se encontró la cuenta, asegurar que los campos estén ocultos
+            datosCuentaDiv.classList.add('hidden');
+            camposDepositoDiv.classList.add('hidden');
+        }
+    };
+
+    form.onsubmit = async e => {
+        e.preventDefault();
+        
+        if (!currentAccountForDeposit) {
+            mostrarMensaje("Error", 'Por favor, busque y seleccione una cuenta primero.', true);
+            return;
+        }
+
+        const accountNumber = currentAccountForDeposit.accountNumber; // Usar el número de la cuenta encontrada
+        const amount = parseFloat(montoDepositoAdminInput.value);
+        const description = descripcionDepositoAdminInput.value.trim();
+
+        if (isNaN(amount) || amount <= 0) {
+            mostrarMensaje("Error", 'Por favor, ingrese un monto válido mayor a cero.', true);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/transactions/deposit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    accountNumber: accountNumber,
+                    amount: amount,
+                    description: description,
+                    type: 'INCOME' // Siempre INCOME para depósitos
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Aquí es donde capturarías el mensaje de error del backend
+                mostrarMensaje("Error", data.message || 'Error al realizar el depósito. Verifique los datos e intente de nuevo.', true);
+                console.error("Detalles del error del backend:", data); // Para depuración
+                return;
+            }
+
+            mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`); // Asume que la respuesta tiene 'balance'
+            form.reset(); // Limpiar el formulario
+            numeroCuentaBusquedaInput.value = ''; // Limpiar el número de cuenta de búsqueda
+            datosCuentaDiv.classList.add('hidden'); // Ocultar datos de cuenta
+            camposDepositoDiv.classList.add('hidden'); // Ocultar campos de depósito
+            currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
+            // Opcional: Recargar transacciones si quieres que el historial se actualice inmediatamente
+            // renderTransacciones(); 
+        } catch (error) {
+            console.error('Error al realizar el depósito:', error);
+            mostrarMensaje("Error", `No se pudo conectar con el servidor para realizar el depósito: ${error.message}`, true);
+        }
+    };
+}
+
+
+
+      // Función para cargar sección y activar enlaces
+      function cambiarPestania(id) {
+        // Quitar clase active de todos
+        sidebarLinks.forEach((link) =>
+          link.classList.remove("bg-emerald-600", "text-white")
+        );
+        // Agregar active al clickeado
+        const linkActivo = Array.from(sidebarLinks).find(
+          (link) => link.dataset.id === id
+        );
+        if (linkActivo) {
+          linkActivo.classList.add("bg-emerald-600", "text-white");
+        }
+        // Cambiar contenido
+        contenido.innerHTML =
+          secciones[id] ||
+          '<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>';
+
+        // Al cargar cada sección, ejecutar funciones específicas
+        if (id === "dashboard") {
+          // Crear gráficos
+          setTimeout(() => {
+            const ctxClientes = document.getElementById("graficoClientes");
+            const ctxTransacciones = document.getElementById(
+              "graficoTransacciones"
+            );
+            if (ctxClientes) {
+              crearGrafico(
+                ctxClientes,
+                ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+                datos.nuevosClientesSemana,
+                "Nuevos clientes",
+                "rgba(34,197,94,1)"
+              );
+            }
+            if (ctxTransacciones) {
+              crearGrafico(
+                ctxTransacciones,
+                ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+                datos.volumenTransaccionesMes,
+                "Transacciones (GTQ)",
+                "rgba(34,197,94,1)"
+              );
+            }
+          }, 100);
+        } else if (id === "clientes") {
+          setTimeout(() => {
+            renderClientes();
+
+            // Buscador clientes
+            document
+              .getElementById("buscadorClientes")
+              .addEventListener("input", renderClientes);
+          }, 50);
+        } else if (id === "transacciones") {
+          setTimeout(() => {
+            renderTransacciones(); // Ahora llama a la función actualizada
+
+            // Adjuntar listeners para filtros y buscador
+            document.getElementById("filtroFechaInicio").addEventListener("change", renderTransacciones);
+            document.getElementById("filtroFechaFin").addEventListener("change", renderTransacciones);
+            document.getElementById("filtroTipo").addEventListener("change", renderTransacciones);
+            document.getElementById("buscadorTransacciones").addEventListener("input", renderTransacciones);
+
+            // Botón exportar
+            document
+              .getElementById("btnExportarTransacciones")
+              .addEventListener("click", () => {
+                mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel aún no implementada.");
+              });
+
+          }, 50);
+        } else if (id === "deposito") { // NUEVO: Inicializa la sección de depósito
+            setTimeout(() => {
+                inicializarDepositoAdmin();
+            }, 50);
+        } else if (id === "reportes") {
+          setTimeout(() => {
+            // Botones de reportes
+            document
+              .getElementById("btnGenerarReporte")
+              .addEventListener("click", () => {
+                const vista = document.getElementById("vistaPreviaReporte");
+                const btnCorreo = document.getElementById(
+                  "btnEnviarCorreoReporte"
+                );
+                vista.innerHTML = `<p>Reporte generado: tipo <strong>${
+                  document.getElementById("tipoReporte").value
+                }</strong>, fechas <strong>${
+                  document.getElementById("rangoInicioReporte").value
+                } a ${
+                  document.getElementById("rangoFinReporte").value
+                }</strong>.</p>`;
+                vista.classList.remove("hidden");
+                btnCorreo.classList.remove("hidden");
+              });
+
+            document
+              .getElementById("btnEnviarCorreoReporte")
+              .addEventListener("click", () => {
+                mostrarMensaje("Información", "Reporte enviado por correo (simulado).");
+              });
+          }, 50);
+        }
+        // ELIMINADAS: gestionCuentas, citas, cuentas, configuracion
+      }
+
+      // Función para formatear moneda local GTQ (ya existe, se mantiene)
+      // function formatoMoneda(valor) { ... }
+
+      // Función para crear gráfico con Chart.js (ya existe, se mantiene)
+      // function crearGrafico(ctx, etiquetas, datosGrafico, etiqueta, color) { ... }
+
+      // Evento click en links sidebar (ya existe, se mantiene)
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const id = link.dataset.id;
+          cambiarPestania(id);
+        });
+      });
+
+      const sidebar = document.getElementById("sidebar");
+      const btnToggleSidebar = document.getElementById("btnToggleSidebar");
+      const overlay = document.getElementById("overlay");
+
+      let sidebarVisible = false;
+
+      function mostrarSidebar() {
+        sidebar.classList.remove("-translate-x-full");
+        overlay.classList.remove("opacity-0", "pointer-events-none");
+        overlay.classList.add("opacity-100", "pointer-events-auto");
+        sidebarVisible = true;
+      }
+
+      function ocultarSidebar() {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("opacity-0", "pointer-events-none");
+        overlay.classList.remove("opacity-100", "pointer-events-auto");
+        sidebarVisible = false;
+      }
+
+      btnToggleSidebar.addEventListener("click", () => {
+        if (sidebarVisible) {
+          ocultarSidebar();
+        } else {
+          mostrarSidebar();
+        }
+      });
+
+      overlay.addEventListener("click", () => {
+        ocultarSidebar();
+      });
+
+// Referencias a modal y botones
+const modalEditar = document.getElementById("modalEditarCliente");
+const btnCancelarEditar = document.getElementById("btnCancelarEditar");
+const formEditar = document.getElementById("formEditarCliente");
+const editarIdCliente = document.getElementById("editarIdCliente");
+
+const modalConfirmacion = document.getElementById("modalConfirmacion");
+const btnConfirmarCancelar = document.getElementById("btnConfirmarCancelar");
+
+// Cerrar modal de edición al hacer clic en cancelar
+btnCancelarEditar.addEventListener("click", () => {
+  modalEditar.classList.add("hidden");
+});
+
+// Enviar formulario de edición al backend
+formEditar.addEventListener("submit", function (e) {
+  e.preventDefault(); // Evitar el envío de formulario por defecto
+  actualizarCliente(); // Llama a la función para enviar la actualización
+});
+
+// Cerrar modal de confirmación al hacer clic en cancelar
+btnConfirmarCancelar.addEventListener("click", () => {
+    modalConfirmacion.classList.add("hidden");
+});
+
+      // Manejar el cierre de sesión
+      document.querySelector('a[data-id="cerrarSesion"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        // Redirige a la URL de logout de Spring Security
+        window.location.href = '/logout'; 
+      });
+
+
+      // Mostrar dashboard por defecto
+      // Se ejecuta después de que el DOM esté completamente cargado
+      document.addEventListener('DOMContentLoaded', () => {
+          cambiarPestania("dashboard");
+      });
+    </script>
+  </body>
+</html>

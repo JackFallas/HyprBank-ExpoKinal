@@ -1,37 +1,26 @@
 package com.hyprbank.online.bancavirtual.hyprbank.model;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder; // Asegurate de que esta importacion este presente
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
-/*
- * Clase de entidad para representar un Usuario en el sistema bancario.
- *
- * Esta clase mapea a la tabla 'users' en la base de datos y
- * implementa la interfaz UserDetails de Spring Security para integrarse
- * con el sistema de autenticacion.
- *
- * @Entity indica que esta clase es una entidad JPA.
- * @Table especifica el nombre de la tabla en la base de datos.
- * @Data de Lombok genera getters, setters, toString, equals y hashCode.
- * @NoArgsConstructor y @AllArgsConstructor de Lombok generan constructores.
- */
 @Entity
 @Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // ¡Añade esta anotacion para habilitar el patron Builder!
+@Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "accounts"})
 public class User implements UserDetails {
 
     @Id
@@ -50,6 +39,21 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String dpi;
+
+    @Column(nullable = true)
+    private String nit;
+
+    @Column(nullable = true)
+    private String phoneNumber;
+
+    // --- NUEVO CAMPO AÑADIDO: 'enabled' ---
+    @Column(nullable = false) // Generalmente un usuario está habilitado o deshabilitado
+    private boolean enabled;
+    // --- FIN NUEVO CAMPO ---
+
+    // Relación OneToMany con Account: Un usuario puede tener muchas cuentas
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Account> accounts = new ArrayList<>();
 
@@ -60,6 +64,23 @@ public class User implements UserDetails {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Collection<Role> roles;
+
+    // --- Métodos de utilidad para la relación bidireccional ---
+    public void addAccount(Account account) {
+        if (this.accounts == null) {
+            this.accounts = new ArrayList<>();
+        }
+        this.accounts.add(account);
+        account.setUser(this);
+    }
+
+    public void removeAccount(Account account) {
+        if (this.accounts != null) {
+            this.accounts.remove(account);
+            account.setUser(null);
+        }
+    }
+    // --- FIN Métodos de utilidad ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -96,6 +117,8 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        // Este método es parte de UserDetails y ahora devuelve el valor de la propiedad 'enabled'
+        return this.enabled;
     }
 }
+

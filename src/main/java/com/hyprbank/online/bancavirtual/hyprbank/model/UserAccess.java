@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+
+// Importaciones de Hibernate para OnDelete
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 /*
  * Entidad JPA que representa un registro de acceso de usuario en la base de datos.
  *
@@ -32,8 +36,9 @@ public class UserAccess {
     private Long id; // El ID unico para cada registro de acceso
 
     @ManyToOne(fetch = FetchType.LAZY) // Define una relacion de muchos-a-uno: muchos accesos pueden ser de un solo usuario
-    @JoinColumn(name = "user_id", nullable = false) // Especifica la columna de la clave foranea en la tabla 'user_accesses' que apunta a la tabla 'users'
-    private User user; // El objeto User al que pertenece este registro de acceso
+    @JoinColumn(name = "user_id", nullable = true) // <--- CAMBIADO A nullable = true
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private User user; // El objeto User al que pertenece este registro de acceso (puede ser null para intentos fallidos)
 
     @Column(nullable = false) // Indica que esta columna no puede ser nula
     private LocalDateTime accessDateTime; // Almacena la fecha y hora exacta del acceso
@@ -43,4 +48,7 @@ public class UserAccess {
 
     @Column(length = 45) // Define la longitud para la direccion IP
     private String ipAddress; // Opcional: para registrar la direccion IP desde donde se hizo el acceso
+
+    @Column(name = "attempted_username", length = 255) // <--- NUEVA COLUMNA para el nombre de usuario intentado
+    private String attemptedUsername; // Almacena el nombre de usuario que se intentó usar (útil para fallos)
 }
