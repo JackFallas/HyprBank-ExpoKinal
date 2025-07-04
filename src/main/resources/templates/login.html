@@ -1,95 +1,111 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="utf-8">
-    <title>Inicio de Sesion</title>
-    <!-- Latest compiled and minified CSS -->
-    <!-- Apunta a tu archivo local de Bootstrap CSS -->
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyprBank - Inicio de Sesión</title>
 
-    <!-- Optional theme -->
-    <!-- Apunta a tu archivo local del tema de Bootstrap CSS -->
-    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
-
-    <!-- ¡Hemos eliminado la referencia a SweetAlert2 ya que no la usaremos aquí! -->
+    <!-- Enlace a tu archivo local de Tailwind CSS con la ruta corregida -->
+    <!-- Asegúrate de que el proceso de compilación de Tailwind CLI esté ejecutándose para generar este archivo -->
+    <link rel="stylesheet" href="/css/output.css">
+    
+    <!-- CDN de SweetAlert2 para los mensajes de alerta -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center">
 
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                    aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span
-                        class="icon-bar"></span> <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#" th:href="@{/}">Registro y
-                    inicio de sesión</a>
+    <div class="container mx-auto px-4">
+        <div class="max-w-md mx-auto bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700/30">
+
+            <!-- Logo y Título de HyprBank -->
+            <div class="flex items-center justify-center mb-6">
+                <!-- Ruta corregida para la imagen del logo -->
+                <img src="/img/hyprland-logo.svg" alt="HyprBank Logo" class="w-10 h-10 mr-3">
+                <h1 class="text-3xl font-bold text-white">HyprBank</h1>
             </div>
-        </div>
-    </nav>
 
-    <br>
-    <br>
+            <h2 class="text-2xl font-bold mb-6 text-center text-emerald-500">Inicia Sesión</h2>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 col-md-offset-3">
+            <form th:action="@{/login}" method="post">
 
-                <h1>Inicia Sesión</h1>
-                <form th:action="@{/login}" method="post">
+                <!-- Mensaje de error de login (se muestra si el parámetro 'error' está en la URL) -->
+                <!-- SweetAlert2 manejará esto, pero mantenemos el th:if para la lógica del backend -->
+                <div th:if="${param.error}" id="loginError" data-message="Usuario o Contraseña inválidos"></div>
 
-                    <!-- Mensaje de error de login (se muestra si el parámetro 'error' está en la URL) -->
-                    <div th:if="${param.error}">
-                        <div class="alert alert-danger">Usuario o Contraseña inválidos</div>
-                    </div>
+                <!-- Mensaje de cierre de sesión (se muestra si el parámetro 'logout' está en la URL) -->
+                <div th:if="${param.logout}" id="logoutSuccess" data-message="Se ha cerrado la sesión"></div>
 
-                    <!-- Mensaje de cierre de sesión (se muestra si el parámetro 'logout' está en la URL) -->
-                    <div th:if="${param.logout}">
-                        <div class="alert alert-info">Se ha cerrado la sesión</div>
-                    </div>
+                <!-- Mensaje de acceso denegado (si el parámetro 'denegado' está en la URL) -->
+                <div th:if="${param.denegado}" id="accessDenied" data-message="No tienes permisos para acceder a esta página."></div>
 
-                    <!-- Si tuvieras un mensaje de "acceso denegado" (param.denegado), lo añadirías aquí: -->
-                    <!-- <div th:if="${param.denegado}">
-                        <div class="alert alert-warning">No tienes permisos para acceder a esta página.</div>
-                    </div> -->
-
-
-                    <div class="form-group">
-                        <label class="control-label" for="username">Username: </label> <input id="username" name="username" type="text"
-                            class="form-control" required autofocus="autofocus" placeholder="Digite su email ID">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label" for="password">Password: </label> <input id="password" type="password" name="password"
-                            class="form-control" required autofocus="autofocus" placeholder="Digite su contraseña">
-                    </div>
-
-                    <div class="form-group">
-                        <div class="row">
-                            <div class="col-md-6 col-md-offset-3">
-                                <input type="submit" class="form-control btn btn-primary" id="login-submit" value="Iniciar Sesión" />
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <div class="form-group">
-                    <!-- Aquí el enlace para registrarse. Asegúrate de que la URL sea correcta para tu AuthController -->
-                    <!-- Si tu AuthController mapea a /register, entonces th:href="@{/register}" -->
-                    <!-- Si solo el administrador crea cuentas, considera cambiar el texto o eliminar este enlace. -->
-                    <span>¿Eres nuevo? <a th:href="@{/register}">Registrate Aquí!</a></span>
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="email">Email:</label>
+                    <input id="email" name="username" type="text"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required autofocus placeholder="Ingresa tu email">
                 </div>
 
-            </div>
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="password">Password:</label>
+                    <input id="password" type="password" name="password"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Contraseña">
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-center"> 
+                        <!-- SE ELIMINÓ EL DOBLE ESPACIO AQUÍ -->
+                        <input type="submit" 
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline cursor-pointer w-full transition duration-200"
+                            value="Iniciar Sesión" />
+                    </div>
+                </div>
+            </form>
+
+            <!-- El enlace para registrarse ha sido eliminado según tu solicitud -->
+
         </div>
     </div>
 
-    <!-- Apunta a tu archivo local de jQuery JS (Bootstrap 3 lo necesita) -->
-    <script th:src="@{/js/jquery.min.js}"></script>
-    <!-- Apunta a tu archivo local de Bootstrap JS -->
-    <script th:src="@{/js/bootstrap.min.js}"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Función para mostrar SweetAlert2
+        function showSweetAlert(icon, title, text) {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                background: '#2D3748', // bg-gray-800
+                color: '#CBD5E0', // text-gray-300
+                confirmButtonColor: '#10B981', // bg-emerald-600
+            });
+        }
+
+        // Manejo de mensajes de error de login
+        const loginErrorDiv = document.getElementById('loginError');
+        if (loginErrorDiv) {
+            showSweetAlert('error', 'Error en inicio de sesión', loginErrorDiv.dataset.message);
+        }
+
+        // Manejo de mensajes de cierre de sesión
+        const logoutSuccessDiv = document.getElementById('logoutSuccess');
+        if (logoutSuccessDiv) {
+            showSweetAlert('info', 'Sesión cerrada', logoutSuccessDiv.dataset.message);
+        }
+
+        // Manejo de mensajes de acceso denegado
+        const accessDeniedDiv = document.getElementById('accessDenied');
+        if (accessDeniedDiv) {
+            showSweetAlert('warning', 'Acceso denegado', accessDeniedDiv.dataset.message);
+        }
+
+        // Limpiar los parámetros de la URL para evitar que la alerta se muestre de nuevo al recargar
+        window.history.replaceState({}, document.title, window.location.pathname);
+    </script>
+
 </body>
 
 </html>

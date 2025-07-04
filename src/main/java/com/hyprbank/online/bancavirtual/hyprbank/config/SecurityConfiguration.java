@@ -76,16 +76,18 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // CSRF deshabilitado para simplificar el desarrollo
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authorize -> authorize
                 // Rutas públicas: accesibles sin autenticación.
-                // ¡Hemos quitado /register y /register** de aquí!
+                // Aseguramos acceso a la página de login y a todos los recursos estáticos.
                 .requestMatchers(
-                    "/login", "/login**",
-                    "/css/**", "/js/**", "/img/**", "/webjars/**"
+                    "/login", "/login**", // La página de login en sí
+                    "/css/**", "/js/**", "/img/**", "/webjars/**", // Recursos estáticos comunes
+                    "/resources/**", "/static/**" // Rutas adicionales para recursos estáticos si se usan
                 ).permitAll()
 
+                // La página de registro es solo para ADMIN
                 .requestMatchers("/register", "/register**").hasRole("ADMIN")
 
                 // Rutas protegidas por roles específicos.
@@ -96,18 +98,18 @@ public class SecurityConfiguration {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .successHandler(accesoRol)
-                .failureUrl("/login?error")
-                .permitAll()
+                .loginPage("/login") // La URL de tu página de login
+                .loginProcessingUrl("/login") // URL a la que el formulario POST se envía
+                .successHandler(accesoRol) // Manejador de éxito personalizado
+                .failureUrl("/login?error") // Redirige aquí si el login falla
+                .permitAll() // Permite a todos acceder al formulario de login
             )
             .logout(logout -> logout
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
+                .invalidateHttpSession(true) // Invalida la sesión HTTP
+                .clearAuthentication(true) // Limpia la autenticación
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // URL para cerrar sesión
+                .logoutSuccessUrl("/login?logout") // Redirige aquí después de cerrar sesión
+                .permitAll() // Permite a todos acceder al proceso de logout
             );
 
         return http.build();
