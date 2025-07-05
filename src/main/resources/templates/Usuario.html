@@ -75,7 +75,6 @@
                         </svg>
                     </a>
                     <div id="submenuTransacciones" class="hidden flex flex-col space-y-2 mt-2">
-                        <!-- Retiro ELIMINADO -->
                         <a href="#" data-id="transferenciasInternas" class="submenu-item flex items-center px-4 py-2 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -88,7 +87,6 @@
                             </svg>
                             Transferencia a otro usuario
                         </a>
-                        <!-- Transferencia Externa ELIMINADO -->
                     </div>
 
                     <a href="#" data-id="historial" class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105">
@@ -274,9 +272,6 @@
                 </div>
             </section>
         `,
-        // Depósito ya no está en el menú de usuario, solo para admin
-        // retiro: ELIMINADO
-        // transferenciasInternas: Mantenida, pero su uso práctico es limitado con una sola cuenta
         transferenciasInternas: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
@@ -315,7 +310,6 @@
                 </div>
             </section>
         `,
-        // NUEVA SECCIÓN: Transferencia a otros usuarios del banco (incluye lo que antes era "externa")
         transferenciasOtrosUsuarios: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
@@ -332,10 +326,33 @@
                                 <option value="" disabled selected>Selecciona tu cuenta de origen</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="cuentaDestinoOtroUsuario" class="block font-semibold mb-1">Número de cuenta destino:</label>
-                            <input type="text" id="cuentaDestinoOtroUsuario" name="cuentaDestinoOtroUsuario" placeholder="Ej. 123456789012" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                        
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-grow">
+                                <label for="numeroCuentaDestinoBusqueda" class="block font-semibold mb-1">Número de cuenta destino:</label>
+                                <input type="text" id="numeroCuentaDestinoBusqueda" name="numeroCuentaDestinoBusqueda" placeholder="Ej. 123456789012" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
+                            </div>
+                            <button type="button" id="btnBuscarCuentaDestino" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-md font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-400 h-full">
+                                Buscar
+                            </button>
                         </div>
+
+                        <div id="datosCuentaDestino" class="space-y-3 bg-gray-700 p-4 rounded-md hidden">
+                            <h3 class="text-xl font-semibold text-emerald-300">Detalles de la Cuenta de Destino:</h3>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Nombre del Titular:</label>
+                                <input type="text" id="nombreTitularDestino" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Apellido del Titular:</label>
+                                <input type="text" id="apellidoTitularDestino" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-sm text-gray-300">Tipo de Cuenta:</label>
+                                <input type="text" id="tipoCuentaDestino" class="w-full p-2 rounded bg-gray-600 text-white cursor-not-allowed" readonly />
+                            </div>
+                        </div>
+
                         <div>
                             <label for="montoTransferenciaOtroUsuario" class="block font-semibold mb-1">Monto a transferir (GTQ):</label>
                             <input type="number" id="montoTransferenciaOtroUsuario" name="montoTransferenciaOtroUsuario" min="0.01" step="0.01" placeholder="Ej. 150.00" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
@@ -344,7 +361,7 @@
                             <label for="descripcionTransferenciaOtroUsuario" class="block font-semibold mb-1">Descripción (opcional):</label>
                             <input type="text" id="descripcionTransferenciaOtroUsuario" name="descripcionTransferenciaOtroUsuario" placeholder="Ej. Pago de factura" class="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                         </div>
-                        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        <button type="submit" id="btnConfirmarTransferenciaOtroUsuario" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-full font-bold shadow-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-400">
                             Realizar Transferencia
                         </button>
                         <p id="mensajeTransferenciaOtroUsuario" class="mt-4 text-center"></p>
@@ -352,7 +369,6 @@
                 </div>
             </section>
         `,
-        // transferenciasExternas: ELIMINADO
         historial: `
             <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
                 <h1 class="text-3xl font-bold mb-6 text-emerald-400">Historial de Movimientos</h1>
@@ -395,7 +411,6 @@
                 </table>
             </section>
         `,
-        // Nueva estructura para servicioDetalle con formulario
         servicioDetalle: (serviceId) => {
             const service = serviciosData[serviceId];
             if (!service) return `<p class="text-center text-red-400">Servicio no encontrado.</p>`;
@@ -453,6 +468,7 @@
     };
 
     let userAccounts = []; // Variable para almacenar las cuentas del usuario
+    let foundDestinationAccount = null; // Variable global para almacenar la cuenta de destino encontrada
 
     /**
      * Muestra la sección de contenido principal y actualiza la UI de la barra lateral.
@@ -471,7 +487,6 @@
             if (id === 'historial') inicializarHistorial();
             if (id === 'transferenciasInternas') inicializarTransferenciasInternas();
             if (id === 'transferenciasOtrosUsuarios') inicializarTransferenciasOtrosUsuarios();
-            // La sección de inicio se inicializa directamente al cargar, o cuando se vuelve a ella
             if (id === 'inicio') inicializarInicio(); 
             if (id === 'miCuenta') inicializarMiCuenta();
             if (id === 'cerrarSesion') { // Agregamos el listener para cerrar sesión
@@ -590,6 +605,21 @@
             const amountSign = mov.type === 'INCOME' ? '+' : '-'; 
 
             let descriptionDisplay = mov.description;
+
+            // Lógica para enriquecer la descripción de transferencias
+            // Asumimos que el backend puede enviar `transferOriginAccount` y `transferDestinationAccount`
+            if (mov.description && mov.description.includes('Transferencia')) {
+                if (mov.type === 'EXPENSE' && mov.transferDestinationAccount) {
+                    descriptionDisplay = `Transferencia a: ${mov.transferDestinationAccount}`;
+                } else if (mov.type === 'INCOME' && mov.transferOriginAccount) {
+                    descriptionDisplay = `Transferencia por: ${mov.transferOriginAccount}`;
+                }
+            }
+            // Si el backend ya envía la descripción completa (ej. "Transferencia a: C002"),
+            // y no proporciona los campos `transferOriginAccount`/`transferDestinationAccount`
+            // o si la descripción no incluye "Transferencia", entonces `descriptionDisplay`
+            // se mantendrá como `mov.description` original.
+
 
             const row = document.createElement('tr');
             row.className = 'border-t border-gray-700 hover:bg-gray-700 transition';
@@ -808,9 +838,6 @@
         }
     }
 
-    // Depósito ya no está en el menú de usuario, ni tiene función inicializar
-    // Retiro ELIMINADO, por lo tanto su función inicializar también se elimina.
-
     /**
      * Inicializa la sección de Transferencia Interna (entre cuentas del mismo usuario).
      * Nota: Con una sola cuenta por usuario, esta funcionalidad es limitada.
@@ -847,6 +874,13 @@
 
             if (originAccountNumber === destinationAccountNumber) {
                 mostrarMensaje('Error', 'La cuenta de origen y la de destino no pueden ser la misma.', true);
+                return;
+            }
+
+            // Validar saldo
+            const selectedOriginAccount = userAccounts.find(acc => acc.accountNumber === originAccountNumber);
+            if (selectedOriginAccount && amount > selectedOriginAccount.balance) {
+                mostrarMensaje("Error", `Saldo insuficiente en la cuenta de origen. Su saldo actual es: ${formatoMoneda(selectedOriginAccount.balance)}.`, true);
                 return;
             }
 
@@ -892,6 +926,30 @@
         };
     }
 
+    // Función para buscar una cuenta por su número (reutilizada del admin)
+    async function buscarCuentaPorNumero(accountNumber) {
+        try {
+            const response = await fetch(`${window.location.origin}/api/accounts/number/${accountNumber}`); // Usar URL absoluta
+            if (!response.ok) {
+                console.error(`Error de respuesta para /api/accounts/number/${accountNumber}: Estado ${response.status}, Mensaje: ${response.statusText}`);
+                if (response.status === 404) {
+                    mostrarMensaje("Error", `Cuenta con número ${accountNumber} no encontrada.`, true);
+                } else if (response.status === 401 || response.status === 403) {
+                    window.location.href = `${window.location.origin}/login`; // Usar URL absoluta
+                    throw new Error('No autenticado');
+                } else {
+                    throw new Error('Error al buscar la cuenta. Intente de nuevo.');
+                }
+            }
+            const accountData = await response.json();
+            return accountData;
+        } catch (error) {
+            console.error('Error al buscar cuenta:', error);
+            mostrarMensaje("Error", `No se pudo buscar la cuenta: ${error.message}`, true);
+            return null;
+        }
+    }
+
     /**
      * Inicializa la sección de Transferencia a otros usuarios del banco.
      * Esta es la principal función de envío de dinero.
@@ -901,73 +959,209 @@
         const form = document.getElementById('formTransferenciaOtroUsuario');
         const mensaje = document.getElementById('mensajeTransferenciaOtroUsuario');
         const cuentaOrigenSelect = document.getElementById('cuentaOrigenOtroUsuario');
-        const cuentaDestinoInput = document.getElementById('cuentaDestinoOtroUsuario'); // Es un input, no un select
+        const numeroCuentaDestinoBusquedaInput = document.getElementById('numeroCuentaDestinoBusqueda'); // Input de búsqueda
+        const btnBuscarCuentaDestino = document.getElementById('btnBuscarCuentaDestino'); // Botón de búsqueda
+        const datosCuentaDestinoDiv = document.getElementById('datosCuentaDestino'); // Div para mostrar datos
+        const nombreTitularDestinoInput = document.getElementById('nombreTitularDestino');
+        const apellidoTitularDestinoInput = document.getElementById('apellidoTitularDestino');
+        const tipoCuentaDestinoInput = document.getElementById('tipoCuentaDestino');
+        const montoTransferenciaOtroUsuarioInput = document.getElementById('montoTransferenciaOtroUsuario');
+        const descripcionTransferenciaOtroUsuarioInput = document.getElementById('descripcionTransferenciaOtroUsuario');
+        const btnConfirmarTransferenciaOtroUsuario = document.getElementById('btnConfirmarTransferenciaOtroUsuario');
+
 
         if (!form) return;
+
+        // Limpiar y ocultar datos de destino al inicio
+        datosCuentaDestinoDiv.classList.add('hidden');
+        nombreTitularDestinoInput.value = '';
+        apellidoTitularDestinoInput.value = '';
+        tipoCuentaDestinoInput.value = '';
+        foundDestinationAccount = null; // Reiniciar la cuenta de destino encontrada
 
         await cargarCuentasUsuario();
         populateAccountSelect('cuentaOrigenOtroUsuario'); // Solo se necesita poblar la cuenta de origen del usuario actual
 
-        form.onsubmit = async e => {
-            e.preventDefault();
-            const originAccountNumber = cuentaOrigenSelect.value;
-            const destinationAccountNumber = cuentaDestinoInput.value.trim(); // Obtener el valor del input
-            const amount = parseFloat(form.montoTransferenciaOtroUsuario.value);
-            const description = form.descripcionTransferenciaOtroUsuario.value.trim();
-
-            if (!originAccountNumber || !destinationAccountNumber || isNaN(amount) || amount <= 0) {
-                mostrarMensaje('Error', 'Por favor complete todos los campos correctamente.', true);
-                return;
-            }
-
-            if (originAccountNumber === destinationAccountNumber) {
-                mostrarMensaje('Error', 'La cuenta de origen y la de destino no pueden ser la misma.', true);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${window.location.origin}/api/transactions/transfer-to-other-user`, { // URL absoluta
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        originAccountNumber: originAccountNumber,
-                        destinationAccountNumber: destinationAccountNumber,
-                        amount: amount,
-                        description: description
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    mostrarMensaje("Error", data.message || 'Error al realizar la transferencia a otro usuario.', true);
+        // Evento para el botón de búsqueda de cuenta de destino
+        if (btnBuscarCuentaDestino) {
+            btnBuscarCuentaDestino.onclick = async () => {
+                const accountNumber = numeroCuentaDestinoBusquedaInput.value.trim();
+                if (!accountNumber) {
+                    mostrarMensaje("Advertencia", 'Por favor, ingrese un número de cuenta de destino.', true);
                     return;
                 }
 
-                let newOriginBalance = null;
-                if (data.movements && data.movements.length > 0) {
-                    const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
-                    if (originMovement && originMovement.balance !== undefined) {
-                        newOriginBalance = originMovement.balance;
-                    }
+                // Limpiar y ocultar datos de destino antes de una nueva búsqueda
+                datosCuentaDestinoDiv.classList.add('hidden');
+                nombreTitularDestinoInput.value = '';
+                apellidoTitularDestinoInput.value = '';
+                tipoCuentaDestinoInput.value = '';
+                foundDestinationAccount = null;
+
+                // Validar que la cuenta de destino no sea la misma que la de origen seleccionada
+                const selectedOriginAccNum = cuentaOrigenSelect.value;
+                if (selectedOriginAccNum && accountNumber === selectedOriginAccNum) {
+                    mostrarMensaje("Error", "No puede transferir a su propia cuenta de origen.", true);
+                    return;
                 }
 
-                const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
-                mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
-                form.reset();
-                await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos
-                populateAccountSelect('cuentaOrigenOtroUsuario');
-            } catch (error) {
-                console.error('Error al realizar la transferencia a otro usuario:', error);
-                mostrarMensaje("Error", `Error: ${error.message}`, true);
-            }
-        };
+                const account = await buscarCuentaPorNumero(accountNumber); // Reutilizamos la función de búsqueda
+                if (account) {
+                    foundDestinationAccount = account; // Almacenar la cuenta encontrada
+                    nombreTitularDestinoInput.value = account.userName || 'N/A';
+                    apellidoTitularDestinoInput.value = account.userLastName || 'N/A';
+                    tipoCuentaDestinoInput.value = account.accountType || 'N/A';
+                    datosCuentaDestinoDiv.classList.remove('hidden'); // Mostrar los datos
+                    if (mensaje) mensaje.textContent = ''; // Limpiar mensaje de éxito/error previo
+                } else {
+                    // buscarCuentaPorNumero ya muestra el mensaje de error
+                    datosCuentaDestinoDiv.classList.add('hidden'); // Asegurarse de que esté oculto
+                }
+            };
+        }
+
+        // Opcional: Búsqueda "on-the-fly" mientras se escribe (con debounce)
+        let debounceTimeout;
+        if (numeroCuentaDestinoBusquedaInput) {
+            numeroCuentaDestinoBusquedaInput.addEventListener('input', () => {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(async () => {
+                    const accountNumber = numeroCuentaDestinoBusquedaInput.value.trim();
+                    // Solo buscar si la longitud es razonable para evitar búsquedas excesivas
+                    if (accountNumber.length >= 6) { 
+                        // Limpiar y ocultar datos de destino antes de una nueva búsqueda
+                        datosCuentaDestinoDiv.classList.add('hidden');
+                        nombreTitularDestinoInput.value = '';
+                        apellidoTitularDestinoInput.value = '';
+                        tipoCuentaDestinoInput.value = '';
+                        foundDestinationAccount = null;
+
+                        // Validar que la cuenta de destino no sea la misma que la de origen seleccionada
+                        const selectedOriginAccNum = cuentaOrigenSelect.value;
+                        if (selectedOriginAccNum && accountNumber === selectedOriginAccNum) {
+                            mostrarMensaje("Advertencia", "No puede transferir a su propia cuenta de origen.", true);
+                            return;
+                        }
+
+                        const account = await buscarCuentaPorNumero(accountNumber);
+                        if (account) {
+                            foundDestinationAccount = account;
+                            nombreTitularDestinoInput.value = account.userName || 'N/A';
+                            apellidoTitularDestinoInput.value = account.userLastName || 'N/A';
+                            tipoCuentaDestinoInput.value = account.accountType || 'N/A';
+                            datosCuentaDestinoDiv.classList.remove('hidden');
+                            if (mensaje) mensaje.textContent = '';
+                        } else {
+                            datosCuentaDestinoDiv.classList.add('hidden');
+                        }
+                    } else if (accountNumber.length < 6 && foundDestinationAccount) {
+                        // Si el usuario borra el número, ocultar los datos
+                        datosCuentaDestinoDiv.classList.add('hidden');
+                        nombreTitularDestinoInput.value = '';
+                        apellidoTitularDestinoInput.value = '';
+                        tipoCuentaDestinoInput.value = '';
+                        foundDestinationAccount = null;
+                    }
+                }, 500); // 500ms de retardo
+            });
+        }
+
+        // Manejar el envío del formulario de transferencia a otro usuario
+        if (form) {
+            form.onsubmit = async e => {
+                e.preventDefault();
+
+                const originAccountNumber = cuentaOrigenSelect.value;
+                const destinationAccountNumber = numeroCuentaDestinoBusquedaInput.value.trim(); // Usar el valor del input
+                const amount = parseFloat(montoTransferenciaOtroUsuarioInput.value);
+                const description = descripcionTransferenciaOtroUsuarioInput.value.trim();
+
+                // Validaciones previas al envío
+                if (!originAccountNumber) {
+                    mostrarMensaje("Error", "Por favor, seleccione su cuenta de origen.", true);
+                    return;
+                }
+                if (!destinationAccountNumber) {
+                    mostrarMensaje("Error", "Por favor, ingrese el número de cuenta de destino.", true);
+                    return;
+                }
+                if (!foundDestinationAccount || foundDestinationAccount.accountNumber !== destinationAccountNumber) {
+                    // Asegurarse de que la cuenta de destino fue buscada y validada
+                    mostrarMensaje("Error", "Por favor, busque y valide la cuenta de destino antes de transferir.", true);
+                    return;
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    mostrarMensaje("Error", 'Por favor, ingrese un monto válido mayor a cero.', true);
+                    return;
+                }
+                if (originAccountNumber === destinationAccountNumber) {
+                    mostrarMensaje('Error', 'No puede transferir a su propia cuenta. Utilice la transferencia interna.', true);
+                    return;
+                }
+
+                // Validar saldo de la cuenta de origen
+                const selectedOriginAccount = userAccounts.find(acc => acc.accountNumber === originAccountNumber);
+                if (selectedOriginAccount && amount > selectedOriginAccount.balance) {
+                    mostrarMensaje("Error", `Saldo insuficiente en la cuenta de origen. Su saldo actual es: ${formatoMoneda(selectedOriginAccount.balance)}.`, true);
+                    return;
+                }
+
+                // Confirmación antes de transferir (opcional, pero buena práctica)
+                const confirmacion = confirm(`¿Está seguro de que desea transferir ${formatoMoneda(amount)} de su cuenta ${originAccountNumber} a la cuenta ${destinationAccountNumber} (Titular: ${foundDestinationAccount.userName || 'Desconocido'})?`);
+                if (!confirmacion) {
+                    return; // El usuario canceló
+                }
+
+                try {
+                    const response = await fetch(`${window.location.origin}/api/transactions/transfer-to-other-user`, { // Tu endpoint de backend
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            originAccountNumber: originAccountNumber,
+                            destinationAccountNumber: destinationAccountNumber,
+                            amount: amount,
+                            description: description
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        mostrarMensaje("Error", data.message || 'Error al realizar la transferencia a otro usuario.', true);
+                        return;
+                    }
+
+                    let newOriginBalance = null;
+                    if (data.movements && data.movements.length > 0) {
+                        const originMovement = data.movements.find(mov => mov.accountNumber === originAccountNumber);
+                        if (originMovement && originMovement.balance !== undefined) {
+                            newOriginBalance = originMovement.balance;
+                        }
+                    }
+
+                    const balanceMessage = newOriginBalance !== null ? ` Nuevo saldo de origen: ${formatoMoneda(newOriginBalance)}` : '';
+                    mostrarMensaje("Éxito", `Transferencia de ${formatoMoneda(amount)} de ${originAccountNumber} a ${destinationAccountNumber} realizada con éxito.${balanceMessage}`);
+                    
+                    // Limpiar el formulario y reiniciar el estado
+                    form.reset();
+                    numeroCuentaDestinoBusquedaInput.value = '';
+                    datosCuentaDestinoDiv.classList.add('hidden');
+                    nombreTitularDestinoInput.value = '';
+                    apellidoTitularDestinoInput.value = '';
+                    tipoCuentaDestinoInput.value = '';
+                    foundDestinationAccount = null;
+                    
+                    await cargarCuentasUsuario(); // Recargar cuentas para actualizar saldos en el select
+                    populateAccountSelect('cuentaOrigenOtroUsuario'); // Repopular el select de origen
+                } catch (error) {
+                    console.error('Error al realizar la transferencia a otro usuario:', error);
+                    mostrarMensaje("Error", `Error: ${error.message}`, true);
+                }
+            };
+        }
     }
-
-    // transferenciasExternas ELIMINADO, por lo tanto su función inicializar también se elimina.
-
 
     /**
      * Inicializa la sección de historial, incluyendo la lógica de filtrado y reportería.
@@ -1068,6 +1262,13 @@
             if (isNaN(monto) || monto <= 0 || !originAccountNumber) {
                 mensajePago.textContent = 'Por favor, introduce un monto válido y selecciona una cuenta.';
                 mensajePago.className = 'text-red-500 mt-4 text-center';
+                return;
+            }
+
+            // Validar saldo
+            const selectedOriginAccount = userAccounts.find(acc => acc.accountNumber === originAccountNumber);
+            if (selectedOriginAccount && monto > selectedOriginAccount.balance) {
+                mostrarMensaje("Error", `Saldo insuficiente en la cuenta de origen. Su saldo actual es: ${formatoMoneda(selectedOriginAccount.balance)}.`, true);
                 return;
             }
 
@@ -1283,7 +1484,6 @@
 
     // Inicializar la vista al cargar la página
     generarSubmenuServicios();
-    // Los ítems del submenuTransacciones ya están en el HTML, no necesitan generarse
     mostrarSeccion('inicio'); // Carga la sección de inicio por defecto
     document.querySelector('.sidebar-link[data-id="inicio"]').classList.add("bg-emerald-600", "text-white");
     
