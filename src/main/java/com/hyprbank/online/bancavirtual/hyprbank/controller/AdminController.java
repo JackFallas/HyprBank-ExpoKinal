@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@Controller // ¡IMPORTANTE! Cambiado a @Controller
+@Controller
 public class AdminController {
 
     private final UserService userService;
