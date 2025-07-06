@@ -45,6 +45,11 @@ public class Role implements GrantedAuthority { // Nombre de clase actualizado
     @Column(nullable = false, unique = true) // El nombre del rol no puede ser nulo y debe ser unico
     private String name; // Ej. "ROLE_USER", "ROLE_ADMIN" (convencion de Spring Security) - Nombre de campo actualizado
 
+    // Constructor adicional para crear un Role solo con el nombre
+    public Role(String name) {
+        this.name = name;
+    }
+
     @Override
     public String getAuthority() {
         // Este metodo es requerido por GrantedAuthority y devuelve el nombre del rol.

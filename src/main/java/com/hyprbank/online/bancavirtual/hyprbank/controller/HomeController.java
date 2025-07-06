@@ -2,7 +2,7 @@ package com.hyprbank.online.bancavirtual.hyprbank.controller;
 
 // Importaciones de Servicios
 import com.hyprbank.online.bancavirtual.hyprbank.service.UserService;
-import com.hyprbank.online.bancavirtual.hyprbank.model.User; // Asegúrate de que esta es tu entidad User
+// import com.hyprbank.online.bancavirtual.hyprbank.model.User; // ELIMINADO: Ya no se usa directamente aquí
 
 // Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HomeController {
 
-    private final UserService userService;
+    private final UserService userService; // Mantener si se usa en otros métodos, si no, eliminar
 
     /*
      * Constructor para la inyección de dependencias.
@@ -38,15 +38,7 @@ public class HomeController {
     /**
      * Maneja las solicitudes GET a la ruta raíz "/".
      *
-     * Con la configuración actual de Spring Security, si un usuario no está autenticado
-     * y accede a "/", Spring Security lo interceptará y lo redirigirá a "/login"
-     * ANTES de que este método sea ejecutado.
-     *
-     * Si el usuario está autenticado y accede a "/", este método se ejecutará
-     * y mostrará la página "index.html".
-     *
-     * @param model El objeto Model de Spring MVC para pasar datos a la vista.
-     * @return El nombre de la vista "index" (src/main/resources/templates/index.html).
+     * @param model El modelo para pasar datos a la vista (index.html).
      */
     @GetMapping("/")
     public String viewHomePage(Model model) {

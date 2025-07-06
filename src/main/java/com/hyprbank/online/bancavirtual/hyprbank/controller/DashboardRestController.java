@@ -23,19 +23,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 // Importaciones de Java Utilities
 import java.math.BigDecimal;
-import java.time.LocalDateTime; // No usada directamente aqui, pero podria ser en el DTO
+// import java.time.LocalDateTime; // ELIMINADO: No usada directamente aqui
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /*
- * Controlador REST para el dashboard de usuario.
+ * Controlador REST para el Dashboard del Usuario.
  *
- * Proporciona endpoints para que los usuarios autenticados puedan acceder a su informacion
- * personal basica, el saldo total de sus cuentas y una lista detallada de sus cuentas.
+ * Proporciona endpoints para que los usuarios autenticados puedan acceder a la información
+ * de su dashboard, como sus cuentas bancarias y un resumen de su saldo total.
  *
- * La anotacion @RestController combina @Controller y @ResponseBody, indicando que las
- * respuestas de los metodos se serializaran directamente al cuerpo de la respuesta HTTP.
+ * La anotación @RestController combina @Controller y @ResponseBody, indicando que las
+ * respuestas de los métodos se serializarán directamente al cuerpo de la respuesta HTTP.
  * @RequestMapping("/api/dashboard") define la ruta base para todos los endpoints de este controlador.
  */
 @RestController
@@ -43,106 +43,36 @@ import java.util.stream.Collectors;
 public class DashboardRestController {
 
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
+    private final AccountRepository accountRepository; // Mantener si se usa en otros métodos, si no, eliminar
 
-    /*
-     * Constructor para la inyeccion de dependencias.
-     * Spring inyectara las instancias de UserRepository y AccountRepository.
-     */
     @Autowired
     public DashboardRestController(UserRepository userRepository, AccountRepository accountRepository) {
         this.userRepository = userRepository;
-        this.accountRepository = accountRepository;
+        this.accountRepository = accountRepository; // Inicializar el repositorio
     }
 
     /**
-     * Endpoint para obtener la informacion basica del usuario autenticado y
-     * el saldo total combinado de todas sus cuentas.
+     * Obtiene los datos del dashboard para el usuario autenticado.
+     * Incluye información del usuario y sus cuentas asociadas.
      *
-     * @return ResponseEntity con un DashboardUserDTO si el usuario es encontrado,
-     * o ResponseEntity.notFound() si el usuario no existe.
+     * @return ResponseEntity con un {@link DashboardUserDTO} que contiene los datos del dashboard.
      */
-    @GetMapping("/me")
-    public ResponseEntity<?> getAuthenticatedUserDetails() {
-        // Obtener el objeto de autenticacion del contexto de seguridad de Spring.
+    @GetMapping("/user")
+    public ResponseEntity<DashboardUserDTO> getUserDashboard() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // El nombre de usuario (email) se obtiene de la autenticacion.
-        String userEmail = authentication.getName();
+        String userEmail = authentication.getName(); // Obtiene el email del usuario autenticado
 
-        // Buscar el usuario en la base de datos por su email.
-        Optional<User> userOptional = userRepository.findByEmail(userEmail);
-        if (userOptional.isEmpty()) {
-            // Si el usuario no se encuentra (lo cual no deberia pasar si esta autenticado), devolver 404.
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
 
-        // Calcular el saldo total sumando los saldos de todas las cuentas del usuario.
-        BigDecimal totalBalance = BigDecimal.ZERO;
-        if (user.getAccounts() != null && !user.getAccounts().isEmpty()) {
-            totalBalance = user.getAccounts().stream()
-                               .map(Account::getBalance)
-                               .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
+        List<Account> accounts = accountRepository.findByUser(user);
 
-        // Crear el DTO con la informacion resumida del dashboard usando el Builder.
-        DashboardUserDTO userDTO = DashboardUserDTO.builder()
-            .id(user.getId()) // Asegurate de incluir el ID
-            .fullName(user.getFirstName() + " " + user.getLastName())
-            .email(user.getEmail())
-            .totalBalance(totalBalance)
-            .accounts(user.getAccounts().stream() // Mapea tambien las cuentas
-                         .map(account -> {
-                             AccountDTO dto = new AccountDTO();
-                             dto.setId(account.getId());
-                             dto.setAccountNumber(account.getAccountNumber());
-                             dto.setAccountType(account.getAccountType());
-                             dto.setBalance(account.getBalance());
-                             dto.setStatus(account.getStatus());
-                             dto.setCreationDate(account.getCreationDate());
-                             if (account.getUser() != null) {
-                                 dto.setUserId(account.getUser().getId());
-                                 dto.setUserName(account.getUser().getFirstName() + " " + account.getUser().getLastName());
-                             } else {
-                                 dto.setUserId(null);
-                                 dto.setUserName("N/A");
-                             }
-                             return dto;
-                         })
-                         .collect(Collectors.toList()))
-            .build();
+        BigDecimal totalBalance = accounts.stream()
+                .map(Account::getBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Devolver una respuesta exitosa con el DTO.
-        return ResponseEntity.ok(userDTO);
-    }
-
-    /**
-     * Endpoint para obtener una lista detallada de todas las cuentas
-     * asociadas al usuario autenticado.
-     *
-     * @return ResponseEntity con una lista de AccountDTOs si se encuentran cuentas,
-     * o ResponseEntity.notFound() si el usuario no existe.
-     */
-    @GetMapping("/accounts")
-    public ResponseEntity<?> getUserAccounts() {
-        // Obtener el objeto de autenticacion y el email del usuario.
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = authentication.getName();
-
-        // Buscar el usuario en la base de datos.
-        Optional<User> userOptional = userRepository.findByEmail(userEmail);
-        if (userOptional.isEmpty()) {
-            // Si el usuario no se encuentra, devolver 404.
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
-
-        // Mapear la lista de entidades Account a una lista de AccountDTOs.
-        // Se utiliza stream() para procesar la coleccion de manera funcional.
-        List<AccountDTO> accountsDTO = user.getAccounts().stream()
+        List<AccountDTO> accountsDTO = accounts.stream()
                                            .map(account -> {
-                                               // Crear una nueva instancia de AccountDTO y poblar sus campos
-                                               // utilizando los getters de la entidad Account.
                                                AccountDTO dto = new AccountDTO();
                                                dto.setId(account.getId());
                                                dto.setAccountNumber(account.getAccountNumber());
@@ -163,7 +93,15 @@ public class DashboardRestController {
                                            })
                                            .collect(Collectors.toList()); // Recopilar los DTOs en una lista.
 
+        DashboardUserDTO dashboardUserDTO = DashboardUserDTO.builder()
+                .id(user.getId())
+                .fullName(user.getFirstName() + " " + user.getLastName())
+                .email(user.getEmail())
+                .totalBalance(totalBalance)
+                .accounts(accountsDTO)
+                .build();
+
         // Devolver una respuesta exitosa con la lista de DTOs.
-        return ResponseEntity.ok(accountsDTO);
+        return ResponseEntity.ok(dashboardUserDTO);
     }
 }

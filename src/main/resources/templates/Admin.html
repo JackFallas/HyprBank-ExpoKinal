@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/output.css">
     <!-- Chart.js para gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CDN de SweetAlert2 para los mensajes de alerta -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body class="bg-gray-900 text-white font-sans">
     <!-- *** LÍNEA DE DEPURACIÓN CRÍTICA: SI ESTO NO APARECE, HAY UN PROBLEMA DE PARSEO HTML/THYMELEAF *** -->
@@ -42,9 +44,9 @@
           <nav class="flex flex-col space-y-3">
             <a
               href="#"
-              data-id="dashboard"
+              data-id="inicio"
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-              >Dashboard</a
+              >Inicio</a
             >
             <a
               href="#"
@@ -52,8 +54,6 @@
               class="sidebar-link flex items-center px-4 py-3 rounded-full text-gray-300 hover:bg-emerald-600 hover:text-white cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
               >Clientes</a
             >
-            <!-- Se elimina el enlace "Transacciones" duplicado y se mantiene "Todos los Movimientos" -->
-            <!-- NUEVO: Enlace para Depósito -->
             <a
               href="#"
               data-id="deposito"
@@ -62,7 +62,6 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                 Depósito
             </a>
-            <!-- Se mantiene "Todos los Movimientos" y se le aplicará la lógica de filtros -->
             <a
               href="#"
               data-id="todosMovimientos"
@@ -91,6 +90,57 @@
         </div>
       </aside>
 
+<!-- Modal para registrar nuevo cliente -->
+<div id="modalRegistrarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
+        <h2 class="text-2xl font-bold mb-4 text-emerald-400">➕ Registrar Nuevo Cliente</h2>
+        <form id="formRegistrarCliente" class="space-y-4">
+            <div>
+                <label class="block mb-1 text-sm" for="regFirstName">Nombre:</label>
+                <input type="text" id="regFirstName" name="firstName" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required placeholder="Ingrese el nombre del cliente" />
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regLastName">Apellido:</label>
+                <input type="text" id="regLastName" name="lastName" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required placeholder="Ingrese el apellido del cliente" />
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regEmail">Email:</label>
+                <input type="email" id="regEmail" name="email" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required placeholder="Ingrese el email del cliente" />
+                <p id="emailWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un email válido.</p>
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regDPI">DPI:</label>
+                <input type="text" id="regDPI" name="dpi" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" placeholder="Ingrese el DPI del cliente (13 dígitos)" maxlength="13" />
+                <p id="dpiWarning" class="text-red-400 text-xs mt-1 hidden">El DPI debe contener 13 dígitos numéricos.</p>
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regNIT">NIT:</label>
+                <input type="text" id="regNIT" name="nit" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" placeholder="Ingrese el NIT del cliente (Ej. 1234567-8 o CF)" />
+                <p id="nitWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un NIT válido (ej. 1234567-8 o CF).</p>
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regPhoneNumber">Número de Teléfono:</label>
+                <input type="text" id="regPhoneNumber" name="phoneNumber" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" placeholder="Ej. 1234-5678" maxlength="9" />
+                <p id="phoneWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un número de teléfono válido (8 dígitos, formato 1234-5678).</p>
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regBirthDate">Fecha de Nacimiento:</label>
+                <input type="date" id="regBirthDate" name="birthDate" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+                <p id="birthDateWarning" class="text-red-400 text-xs mt-1 hidden">Debe ser mayor de 18 años.</p>
+            </div>
+            <div>
+                <label class="block mb-1 text-sm" for="regAddress">Dirección:</label>
+                <input type="text" id="regAddress" name="address" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required placeholder="Ingrese la dirección del cliente" />
+            </div>
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" id="btnCancelarRegistro" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700">Registrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 <!-- Modal para editar cliente -->
 <div id="modalEditarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
   <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6">
@@ -98,36 +148,81 @@
     <form id="formEditarCliente" class="space-y-4">
       <input type="hidden" id="editarIdCliente" /> <!-- Campo oculto para el ID del cliente -->
       <div>
-        <label class="block mb-1 text-sm">Nombre</label>
-        <input type="text" id="editarNombre" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+        <label class="block mb-1 text-sm" for="editarNombre">Nombre</label>
+        <input type="text" id="editarNombre" name="firstName" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
       </div>
       <div>
-        <label class="block mb-1 text-sm">Apellido</label>
-        <input type="text" id="editarApellido" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+        <label class="block mb-1 text-sm" for="editarApellido">Apellido</label>
+        <input type="text" id="editarApellido" name="lastName" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
       </div>
       <div>
-        <label class="block mb-1 text-sm">Email</label>
-        <input type="email" id="editarEmail" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+        <label class="block mb-1 text-sm" for="editarEmail">Email</label>
+        <input type="email" id="editarEmail" name="email" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+        <p id="editarEmailWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un email válido.</p>
       </div>
       <div>
-        <label class="block mb-1 text-sm">DPI</label>
-        <input type="text" id="editarDPI" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <label class="block mb-1 text-sm" for="editarDPI">DPI</label>
+        <input type="text" id="editarDPI" name="dpi" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" maxlength="13"/>
+        <p id="editarDpiWarning" class="text-red-400 text-xs mt-1 hidden">El DPI debe contener 13 dígitos numéricos.</p>
       </div>
       <div>
-        <label class="block mb-1 text-sm">NIT</label>
-        <input type="text" id="editarNIT" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <label class="block mb-1 text-sm" for="editarNIT">NIT</label>
+        <input type="text" id="editarNIT" name="nit" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <p id="editarNitWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un NIT válido (ej. 1234567-8 o CF).</p>
       </div>
       <div>
-        <label class="block mb-1 text-sm">Teléfono</label>
-        <input type="text" id="editarTelefono" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" />
+        <label class="block mb-1 text-sm" for="editarTelefono">Teléfono</label>
+        <input type="text" id="editarTelefono" name="phoneNumber" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" maxlength="9" />
+        <p id="editarPhoneWarning" class="text-red-400 text-xs mt-1 hidden">Ingrese un número de teléfono válido (8 dígitos, formato 1234-5678).</p>
       </div>
       <div>
-        <label class="block mb-1 text-sm">Estado</label>
-        <select id="editarEstado" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600">
-          <option value="Activo">Activo</option>
-          <option value="Inactivo">Inactivo</option>
-          <option value="Bloqueado">Bloqueado</option>
+        <label class="block mb-1 text-sm" for="editarAddress">Dirección:</label>
+        <input type="text" id="editarAddress" name="address" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required placeholder="Ingrese la dirección del cliente" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm" for="editarBirthDate">Fecha de Nacimiento:</label>
+        <input type="date" id="editarBirthDate" name="birthDate" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" required />
+        <p id="editarBirthDateWarning" class="text-red-400 text-xs mt-1 hidden">Debe ser mayor de 18 años.</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm" for="editarEstado">Estado</label>
+        <select id="editarEstado" name="status" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600">
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+          <option value="BLOQUEADO">Bloqueado</option>
         </select>
+      </div>
+      <!-- Campos de contraseña para edición (opcional) -->
+      <div>
+        <label class="block mb-1 text-sm" for="editarNewPassword">Nueva Contraseña (opcional):</label>
+        <input type="password" id="editarNewPassword" name="newPassword" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" placeholder="Dejar en blanco para no cambiar" />
+        <div id="editPasswordPolicyIndicators" class="mt-2 text-sm text-gray-400 space-y-1">
+            <p class="flex items-center">
+                <span id="edit-len-indicator" class="w-3 h-3 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                <span id="edit-len-text">Mínimo 8 caracteres</span>
+            </p>
+            <p class="flex items-center">
+                <span id="edit-upper-indicator" class="w-3 h-3 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                <span id="edit-upper-text">Al menos 1 mayúscula</span>
+            </p>
+            <p class="flex items-center">
+                <span id="edit-lower-indicator" class="w-3 h-3 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                <span id="edit-lower-text">Al menos 1 minúscula</span>
+            </p>
+            <p class="flex items-center">
+                <span id="edit-num-indicator" class="w-3 h-3 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                <span id="edit-num-text">Al menos 1 número</span>
+            </p>
+            <p class="flex items-center">
+                <span id="edit-special-indicator" class="w-3 h-3 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                <span id="edit-special-text">Al menos 1 caracter especial</span>
+            </p>
+        </div>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm" for="editarConfirmNewPassword">Confirmar Nueva Contraseña:</label>
+        <input type="password" id="editarConfirmNewPassword" name="confirmNewPassword" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600" placeholder="Confirma la nueva contraseña" />
+        <p id="editMatchWarning" class="text-red-400 text-xs mt-1 hidden">Las contraseñas no coinciden.</p>
       </div>
       <div class="flex justify-end space-x-3 pt-4">
         <button type="button" id="btnCancelarEditar" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Cancelar</button>
@@ -149,13 +244,17 @@
   </div>
 </div>
 
-<!-- Modal de Mensajes (para éxito/error) -->
-<div id="modalMensaje" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
-  <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-    <h2 id="modalMensajeTitulo" class="text-2xl font-bold mb-4"></h2>
-    <p id="modalMensajeContenido" class="mb-6 text-gray-300"></p>
-    <button type="button" id="btnCerrarMensaje" class="px-5 py-2 bg-emerald-600 rounded-full hover:bg-emerald-700">Cerrar</button>
-  </div>
+<!-- Nuevo Modal para mostrar credenciales de usuario creado -->
+<div id="modalCredenciales" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+        <h2 class="text-2xl font-bold mb-4 text-emerald-400">✅ Usuario Creado con Éxito</h2>
+        <p class="mb-2 text-gray-300">Aquí están los datos de acceso para el nuevo usuario:</p>
+        <div class="bg-gray-800 p-4 rounded-md mb-6 text-left">
+            <p class="text-gray-200"><strong>Email:</strong> <span id="crearUsuarioEmail"></span></p>
+            <p class="text-gray-200"><strong>Contraseña:</strong> <span id="crearUsuarioPassword"></span></p>
+        </div>
+        <button type="button" id="btnCerrarCredenciales" class="px-5 py-2 bg-emerald-600 rounded-full hover:bg-emerald-700">Cerrar</button>
+    </div>
 </div>
 
 
@@ -173,28 +272,23 @@
 
       // Asegúrate de que los datos de los usuarios estén disponibles en el JavaScript
       // Esto es crucial para que la tabla se pueda poblar.
-      const serverUsers = /*[[${users != null ? users : '[]'}]]*/ [];
+      let serverUsers = /*[[${users != null ? users : '[]'}]]*/ [];
       console.log("Usuarios del servidor:", serverUsers); // Depuración: ver qué datos llegan
 
       const sidebarLinks = document.querySelectorAll(".sidebar-link");
-      sidebarLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          cambiarPestania(link.dataset.id); // mantiene funcionalidad actual
-          ocultarSidebar(); // <-- esta es la clave: oculta el menú
-        });
-      });
+      
       const contenido = document.getElementById("contenido");
 
       // Datos ficticios para mostrar (puedes reemplazar con API real)
-      const datos = {
-        totalClientes: serverUsers.length, // Se calculará dinámicamente
-        saldoGlobal: 98765432.15, // Estos podrían venir del backend también
-        cuentasActivas: 1340,
-        cuentasInactivas: 180,
-        cuentasBloqueadas: 15,
-        citasSinConfirmar: 4,
-        nuevosClientesSemana: [5, 8, 10, 15, 12, 20, 18], // últimos 7 días
-        volumenTransaccionesMes: [120000, 95000, 110000, 130000, 90000, 150000], // últimos 6 meses
+      // Estos datos se actualizarán con llamadas a la API real en las funciones de inicialización
+      let dashboardStats = {
+          totalUsers: 0,
+          activeUsers: 0,
+          inactiveUsers: 0,
+          blockedUsers: 0,
+          citasSinConfirmar: 0, // Este dato no se está obteniendo del backend actualmente
+          nuevosClientesSemana: [0, 0, 0, 0, 0, 0, 0],
+          volumenTransaccionesMes: [0, 0, 0, 0, 0, 0],
       };
 
       // Variable para almacenar todas las cuentas del sistema (para el admin)
@@ -216,8 +310,14 @@
       }
 
       // Función para crear gráfico (Chart.js)
+      let clientsChartInstance = null; // Instancia global para el gráfico de clientes
+
       function crearGrafico(ctx, labels, data, label, color) {
-        return new Chart(ctx, {
+        // Destruir instancia anterior si existe para evitar duplicados
+        if (clientsChartInstance) {
+            clientsChartInstance.destroy();
+        }
+        clientsChartInstance = new Chart(ctx, {
           type: "line",
           data: {
             labels,
@@ -238,46 +338,61 @@
             scales: {
               y: {
                 beginAtZero: true,
+                ticks: {
+                    color: '#CBD5E0' // Color de las etiquetas del eje Y
+                }
               },
+              x: {
+                ticks: {
+                    color: '#CBD5E0' // Color de las etiquetas del eje X
+                }
+              }
             },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#CBD5E0' // Color del texto de la leyenda
+                    }
+                },
+                title: {
+                    display: true,
+                    text: label, // Usar el label del dataset como título
+                    color: '#CBD5E0' // Color del título
+                }
+            }
           },
         });
+        return clientsChartInstance; // Retornar la instancia
       }
 
       // Contenido dinámico para cada pestaña
       const secciones = {
-        dashboard: `
-        <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
+        inicio: (stats) => `
+        <section id="dashboard" class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
           <h1 class="text-4xl font-bold mb-8 text-emerald-400 text-center">Dashboard</h1>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
               <h2 class="text-xl font-semibold mb-2">Clientes Registrados</h2>
-              <p class="text-5xl font-mono text-emerald-400">${
-                datos.totalClientes
-              }</p>
+              <p class="text-5xl font-mono text-emerald-400">${stats.totalUsers}</p>
               <button
                 data-id="clientes"
                 class="mt-3 bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition sidebar-link"
               >Ver más</button>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-              <h2 class="text-xl font-semibold mb-2">Saldo Global del Banco</h2>
-              <p class="text-4xl font-mono text-emerald-400">${formatoMoneda(
-                datos.saldoGlobal
-              )}</p>
+              <h2 class="text-xl font-semibold mb-2">Clientes Activos / Inactivos</h2>
+              <p class="text-3xl font-mono text-emerald-400">${stats.activeUsers} / ${stats.inactiveUsers}</p>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-              <h2 class="text-xl font-semibold mb-2">Cuentas Activas / Inactivas</h2>
-              <p class="text-3xl font-mono text-emerald-400">${
-                datos.cuentasActivas
-              } / ${datos.cuentasInactivas}</p>
+              <h2 class="text-xl font-semibold mb-2">Clientes Bloqueados</h2>
+              <p class="text-3xl font-mono text-yellow-400">${stats.blockedUsers}</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Nuevos Clientes por Semana</h3>
-              <canvas id="graficoClientes"></canvas>
+              <h3 class="text-xl font-semibold mb-4 text-emerald-400">Distribución de Clientes por Estado</h3>
+              <canvas id="clientsChart"></canvas>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
               <h3 class="text-xl font-semibold mb-4 text-emerald-400">Volumen de Transacciones por Mes (GTQ)</h3>
@@ -287,10 +402,12 @@
 
           <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-xl mx-auto text-center">
             <h3 class="text-xl font-semibold mb-4 text-yellow-400">Indicadores de alerta</h3>
-            <p>Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong></p>
-            <p>Citas sin confirmar: <strong>${
-              datos.citasSinConfirmar
-            }</strong></p>
+            <p>Cuentas bloqueadas: <strong>${stats.blockedUsers}</strong></p>
+            <p>Citas sin confirmar: <strong>${stats.citasSinConfirmar}</strong></p>
+            <!-- Botón para generar reporte de accesos de usuarios -->
+            <button id="btnReporteAccesos" class="mt-4 bg-purple-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-purple-700 transition">
+                Generar Reporte de Accesos (PDF)
+            </button>
           </div>
         </section>
         `,
@@ -299,10 +416,16 @@
         <section class="max-w-6xl mx-auto min-h-[70vh] p-6 text-white">
           <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-emerald-400">Clientes</h1>
-            <a
-              href="/register"
-              class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
-            >Agregar Cliente</a>
+            <div class="flex space-x-3">
+                <button
+                  id="btnAbrirModalRegistro"
+                  class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition"
+                >Agregar Cliente</button>
+                <!-- Botón para generar reporte de clientes -->
+                <button id="btnReporteClientes" class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition">
+                    Generar Reporte de Clientes (PDF)
+                </button>
+            </div>
           </div>
           <input
             type="text"
@@ -330,8 +453,6 @@
           </table>
         </section>
         `,
-        // Se elimina la sección 'transacciones' ya que 'todosMovimientos' la reemplazará
-        // deposito: Se mantiene igual
         deposito: `
             <section class="max-w-xl mx-auto min-h-[70vh] p-6 text-white">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
@@ -390,11 +511,16 @@
                 </div>
             </section>
         `,
-        // Se modifica la sección 'todosMovimientos' para incluir los filtros y la tabla de transacciones
         todosMovimientos: `
             <section class="max-w-7xl mx-auto min-h-[70vh] p-6 text-white">
-                <h1 class="text-3xl font-bold mb-6 text-emerald-400">Todos los Movimientos del Banco</h1>
-                <div class="flex flex-wrap gap-4 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-emerald-400">Todos los Movimientos del Banco</h1>
+                    <!-- Botón para generar reporte de movimientos (PDF) - Alineado a la derecha -->
+                    <button id="btnReporteMovimientos" class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition">
+                        Generar Reporte de Movimientos (PDF)
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-4 mb-6 items-center"> <!-- Ajustado para alinear verticalmente -->
                     <div>
                         <label for="filtroFechaInicioMov" class="block text-gray-300 text-sm mb-1">Fecha Inicio:</label>
                         <input type="date" id="filtroFechaInicioMov" class="px-3 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
@@ -412,7 +538,7 @@
                         </select>
                     </div>
                     <div>
-                        <label for="buscadorMovimientos" class="block text-gray-300 text-sm mb-1">Buscar (ID/Descripción/Cuenta):</label>
+                        <label for="buscadorMovimientos" class="block text-gray-300 text-sm mb-1">Buscar (ID/Descripción/Cuenta/Usuario):</label>
                         <input
                             type="text"
                             id="buscadorMovimientos"
@@ -425,12 +551,6 @@
                         class="bg-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-700 transition self-end focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     >
                         Filtrar
-                    </button>
-                    <button
-                        id="btnExportarMovimientos"
-                        class="bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition self-end focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    >
-                        Exportar PDF/Excel
                     </button>
                 </div>
                 <table class="w-full bg-gray-800 rounded-lg overflow-hidden shadow-lg">
@@ -452,725 +572,125 @@
         `,
         reportes: `
         <section class="max-w-4xl mx-auto min-h-[70vh] p-6 text-white flex flex-col items-center justify-center">
-          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Reportes</h1>
+          <h1 class="text-3xl font-bold mb-6 text-emerald-400">Generación de Reportes</h1>
 
-          <div class="w-full max-w-md mb-6">
-            <label class="block mb-2 font-semibold" for="rangoFechasReporte">Rango de fechas:</label>
-            <input type="date" id="rangoInicioReporte" class="w-full mb-2 px-3 py-2 rounded-md bg-gray-700 text-white" />
-            <input type="date" id="rangoFinReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white" />
+          <div class="w-full max-w-md mb-6 space-y-4">
+            <button id="btnReporteClientes" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-200 ease-in-out transform hover:scale-105 w-full">
+                Generar Reporte de Clientes
+            </button>
+            <button id="btnReporteMovimientos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-200 ease-in-out transform hover:scale-105 w-full">
+                Generar Reporte de Movimientos
+            </button>
+            <button id="btnReporteAccesos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full focus:outline-none focus:shadow-outline transition duration-200 ease-in-out transform hover:scale-105 w-full">
+                Generar Reporte de Accesos
+            </button>
           </div>
-
-          <div class="w-full max-w-md mb-6">
-            <label class="block mb-2 font-semibold" for="tipoReporte">Tipo de reporte:</label>
-            <select id="tipoReporte" class="w-full px-3 py-2 rounded-md bg-gray-700 text-white">
-              <option value="mensual">Mensual</option>
-              <option value="anual">Anual</option>
-              <option value="porCliente">Por Cliente</option>
-              <option value="porCuenta">Por Cuenta</option>
-            </select>
-          </div>
-
-          <button
-            id="btnGenerarReporte"
-            class="bg-emerald-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-emerald-700 transition"
-          >
-            Generar Reporte
-          </button>
-
-          <div id="vistaPreviaReporte" class="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg w-full max-w-3xl text-center text-gray-300 hidden">
-            Aquí aparecerá la vista previa del reporte generado.
-          </div>
-
-          <button
-            id="btnEnviarCorreoReporte"
-            class="mt-4 bg-blue-600 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-blue-700 transition hidden"
-          >
-            Enviar por correo
-          </button>
         </section>
         `,
       };
 
-      // Función para mostrar un modal de mensaje
-      function mostrarMensaje(titulo, contenido, esError = false) {
-          const modal = document.getElementById("modalMensaje");
-          const modalTitulo = document.getElementById("modalMensajeTitulo");
-          const modalContenido = document.getElementById("modalMensajeContenido");
-
-          modalTitulo.textContent = titulo;
-          modalContenido.textContent = contenido;
-
-          if (esError) {
-              modalTitulo.classList.remove("text-emerald-400");
-              modalTitulo.classList.add("text-red-400");
-          } else {
-              modalTitulo.classList.remove("text-red-400");
-              modalTitulo.classList.add("text-emerald-400");
-          }
-          modal.classList.remove("hidden");
-      }
-
-      // Cerrar modal de mensaje
-      document.getElementById("btnCerrarMensaje").addEventListener("click", () => {
-          document.getElementById("modalMensaje").classList.add("hidden");
-      });
-
-
-      // Renderiza la lista de clientes con filtro y acciones
-      function renderClientes() {
-        const tbody = document.getElementById("tablaClientes");
-        const buscadorClientes = document.getElementById("buscadorClientes");
-        const filtro = buscadorClientes ? buscadorClientes.value.toLowerCase() : "";
-        let html = "";
-
-        const filtrados = serverUsers.filter(
-          (c) =>
-            c.id.toString().includes(filtro) ||
-            c.firstName.toLowerCase().includes(filtro) ||
-            c.lastName.toLowerCase().includes(filtro) ||
-            c.email.toLowerCase().includes(filtro) ||
-            (c.dpi && c.dpi.toLowerCase().includes(filtro)) ||
-            (c.nit && c.nit.toLowerCase().includes(filtro)) ||
-            (c.phoneNumber && c.phoneNumber.toLowerCase().includes(filtro))
-        );
-
-        if (filtrados.length === 0) {
-          html = `<tr><td colspan="9" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
-        } else {
-          filtrados.forEach((c) => {
-            html += `
-              <tr class="border-b border-gray-700 last:border-b-0">
-                <td class="py-3 px-4">${c.id}</td>
-                <td class="py-3 px-4">${c.firstName}</td>
-                <td class="py-3 px-4">${c.lastName}</td>
-                <td class="py-3 px-4">${c.email}</td>
-                <td class="py-3 px-4">${c.dpi || 'N/A'}</td>
-                <td class="py-3 px-4">${c.nit || 'N/A'}</td>
-                <td class="py-3 px-4">${c.phoneNumber || 'N/A'}</td>
-                <td class="py-3 px-4">${c.enabled ? 'Activo' : 'Inactivo'}</td>
-                <td class="py-3 px-4 space-x-2">
-                  <button class="text-emerald-400 hover:underline btnVerCliente" data-id="${c.id}">Ver</button>
-                  <button class="text-yellow-400 hover:underline btnEditarCliente" data-id="${c.id}">Editar</button>
-                  <button class="text-red-500 hover:underline btnEliminarCliente" data-id="${c.id}">Eliminar</button>
-                </td>
-              </tr>
-            `;
+      // Función para mostrar SweetAlert2
+      function showSweetAlert(icon, title, text, callback = null) {
+          Swal.fire({
+              icon: icon,
+              title: title,
+              html: text, // Usar html para permitir saltos de línea y negritas si es necesario
+              background: '#2D3748', // bg-gray-800
+              color: '#CBD5E0', // text-gray-300
+              confirmButtonColor: '#10B981', // bg-emerald-600
+              willClose: callback // Ejecutar callback al cerrar la alerta
           });
-        }
-        tbody.innerHTML = html;
-
-        // Re-adjuntar listeners para los botones de edición y eliminación después de renderizar
-        document.querySelectorAll(".btnEditarCliente").forEach(button => {
-            button.addEventListener("click", (e) => {
-                const clienteId = e.target.dataset.id;
-                const clienteAEditar = serverUsers.find(user => user.id.toString() === clienteId);
-                if (clienteAEditar) {
-                    editarIdCliente.value = clienteAEditar.id;
-                    document.getElementById("editarNombre").value = clienteAEditar.firstName;
-                    document.getElementById("editarApellido").value = clienteAEditar.lastName;
-                    document.getElementById("editarEmail").value = clienteAEditar.email;
-                    document.getElementById("editarDPI").value = clienteAEditar.dpi || '';
-                    document.getElementById("editarNIT").value = clienteAEditar.nit || '';
-                    document.getElementById("editarTelefono").value = clienteAEditar.phoneNumber || '';
-                    // Asumiendo que 'enabled' se mapea a 'Activo'/'Inactivo' en el select
-                    document.getElementById("editarEstado").value = clienteAEditar.enabled ? 'Activo' : 'Inactivo';
-                    modalEditar.classList.remove("hidden");
-                }
-            });
-        });
-
-        document.querySelectorAll(".btnEliminarCliente").forEach(button => {
-            button.addEventListener("click", (e) => {
-                const clienteId = e.target.dataset.id;
-                // Mostrar modal de confirmación
-                document.getElementById("modalConfirmacion").classList.remove("hidden");
-                // Adjuntar listener al botón de confirmar eliminación del modal
-                document.getElementById("btnConfirmarEliminar").onclick = () => {
-                    eliminarCliente(clienteId);
-                    document.getElementById("modalConfirmacion").classList.add("hidden");
-                };
-            });
-        });
       }
 
-      // Función para enviar la solicitud de actualización de cliente
-      async function actualizarCliente() {
-          const id = document.getElementById("editarIdCliente").value;
-          const firstName = document.getElementById("editarNombre").value;
-          const lastName = document.getElementById("editarApellido").value;
-          const email = document.getElementById("editarEmail").value;
-          const dpi = document.getElementById("editarDPI").value;
-          const nit = document.getElementById("editarNIT").value;
-          const phoneNumber = document.getElementById("editarTelefono").value;
-          const estado = document.getElementById("editarEstado").value; // 'Activo', 'Inactivo', 'Bloqueado'
+      // Elementos del DOM para modales y botones
+      const modalEditarCliente = document.getElementById("modalEditarCliente");
+      const btnCancelarEditar = document.getElementById("btnCancelarEditar");
+      const formEditarCliente = document.getElementById("formEditarCliente");
 
-          const data = {
-              id: id,
-              firstName: firstName,
-              lastName: lastName,
-              email: email,
-              dpi: dpi,
-              nit: nit,
-              phoneNumber: phoneNumber,
-              // Convertir el string de estado a booleano para 'enabled'
-              enabled: estado === 'Activo' ? true : false // Ajuste para el campo 'enabled'
-          };
+      const modalRegistrarCliente = document.getElementById("modalRegistrarCliente");
+      const btnCancelarRegistro = document.getElementById("btnCancelarRegistro");
+      const formRegistrarCliente = document.getElementById("formRegistrarCliente");
 
-          try {
-              const response = await fetch(`${window.location.origin}/api/users/${id}`, { // Usar URL absoluta
-                  method: 'PUT',
-                  headers: {
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify(data)
-              });
+      const modalCredenciales = document.getElementById("modalCredenciales");
+      const btnCerrarCredenciales = document.getElementById("btnCerrarCredenciales");
+      const crearUsuarioEmailSpan = document.getElementById("crearUsuarioEmail");
+      const crearUsuarioPasswordSpan = document.getElementById("crearUsuarioPassword");
 
-              if (response.ok) {
-                  const updatedUser = await response.json();
-                  mostrarMensaje("Éxito", "Cliente actualizado exitosamente.");
-                  // Actualizar serverUsers y re-renderizar tabla
-                  const index = serverUsers.findIndex(user => user.id.toString() === id);
-                  if (index !== -1) {
-                      // Actualizar el objeto en serverUsers con los datos de la respuesta
-                      serverUsers[index] = updatedUser;
-                  }
-                  renderClientes(); // Vuelve a renderizar la tabla para mostrar los cambios
-              } else {
-                  const errorText = await response.text();
-                  mostrarMensaje("Error", `Error al actualizar cliente: ${errorText}`, true);
-              }
-          } catch (error) {
-              console.error('Error al enviar la solicitud de actualización:', error);
-              mostrarMensaje("Error", "No se pudo conectar con el servidor para actualizar el cliente.", true);
-          } finally {
-              modalEditar.classList.add("hidden"); // Cierra el modal de edición
-          }
-      }
+      const modalConfirmacion = document.getElementById("modalConfirmacion");
+      const btnConfirmarCancelar = document.getElementById("btnConfirmarCancelar");
+      const btnConfirmarEliminar = document.getElementById("btnConfirmarEliminar");
+      let clienteIdAEliminar = null; // Variable para guardar el ID del cliente a eliminar
 
-      // Función para enviar la solicitud de eliminación de cliente
-      async function eliminarCliente(id) {
-          try {
-              const response = await fetch(`${window.location.origin}/api/users/${id}`, { // Usar URL absoluta
-                  method: 'DELETE',
-                  headers: {
-                      'Content-Type': 'application/json'
-                  }
-              });
+      // Elementos del formulario de registro de cliente
+      const regFirstNameInput = document.getElementById("regFirstName");
+      const regLastNameInput = document.getElementById("regLastName");
+      const regEmailInput = document.getElementById("regEmail");
+      const regDPIInput = document.getElementById("regDPI");
+      const regNITInput = document.getElementById("regNIT");
+      const regPhoneNumberInput = document.getElementById("regPhoneNumber");
+      const regAddressInput = document.getElementById("regAddress");
+      const regBirthDateInput = document.getElementById("regBirthDate");
 
-              if (response.ok) {
-                  mostrarMensaje("Éxito", "Cliente eliminado exitosamente.");
-                  // Eliminar el usuario de serverUsers y re-renderizar tabla
-                  const index = serverUsers.findIndex(user => user.id.toString() === id);
-                  if (index !== -1) {
-                      serverUsers.splice(index, 1); // Elimina el usuario del array
-                  }
-                  renderClientes(); // Vuelve a renderizar la tabla
-              } else {
-                  const errorText = await response.text();
-                  mostrarMensaje("Error", `Error al eliminar cliente: ${errorText}`, true);
-              }
-          } catch (error) {
-              console.error('Error al enviar la solicitud de eliminación:', error);
-              mostrarMensaje("Error", "No se pudo conectar con el servidor para eliminar el cliente.", true);
-          }
-      }
+      // Elementos de error de validación para registro
+      const emailWarning = document.getElementById("emailWarning");
+      const dpiWarning = document.getElementById("dpiWarning");
+      const nitWarning = document.getElementById("nitWarning");
+      const phoneWarning = document.getElementById("phoneWarning");
+      const birthDateWarning = document.getElementById("birthDateWarning");
 
-    // Función para cargar todas las cuentas del sistema para el admin
-    async function cargarTodasLasCuentas() {
-        try {
-            const response = await fetch(`${window.location.origin}/api/accounts/all`); // Usar URL absoluta
-            if (!response.ok) {
-                // Loguear el estado y el mensaje de error del servidor
-                console.error(`Error de respuesta para /api/accounts/all: Estado ${response.status}, Mensaje: ${response.statusText}`);
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = `${window.location.origin}/login`; // Usar URL absoluta
-                    throw new Error('No autenticado');
-                }
-                throw new Error('Error al obtener todas las cuentas.');
-            }
-            allSystemAccounts = await response.json(); // Almacena en la variable global
-            return allSystemAccounts;
-        } catch (error) {
-            console.error('Error al cargar todas las cuentas:', error);
-            allSystemAccounts = [];
-            return [];
-        }
-    }
+      // Elementos del modal de edición
+      const editarIdCliente = document.getElementById("editarIdCliente");
+      const editarNombre = document.getElementById("editarNombre");
+      const editarApellido = document.getElementById("editarApellido");
+      const editarEmail = document.getElementById("editarEmail");
+      const editarDPI = document.getElementById("editarDPI");
+      const editarNIT = document.getElementById("editarNIT");
+      const editarTelefono = document.getElementById("editarTelefono");
+      const editarAddress = document.getElementById("editarAddress");
+      const editarBirthDate = document.getElementById("editarBirthDate");
+      const editarEstado = document.getElementById("editarEstado"); // Ahora se llama "status" en el backend
+      const editarNewPassword = document.getElementById("editarNewPassword");
+      const editarConfirmNewPassword = document.getElementById("editarConfirmNewPassword");
 
-    // Función para rellenar un select con todas las cuentas del sistema
-    function populateAllAccountsSelect(selectId) {
-        const selectElement = document.getElementById(selectId);
-        if (!selectElement) return;
+      // Elementos de error de validación del modal de edición
+      const editarEmailWarning = document.getElementById("editarEmailWarning");
+      const editarDpiWarning = document.getElementById("editarDpiWarning");
+      const editarNitWarning = document.getElementById("editarNitWarning");
+      const editarPhoneWarning = document.getElementById("editarPhoneWarning");
+      const editarBirthDateWarning = document.getElementById("editarBirthDateWarning");
+      const editMatchWarning = document.getElementById("editMatchWarning");
 
-        selectElement.innerHTML = ''; // Limpiar opciones previas
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Selecciona una cuenta';
-        defaultOption.disabled = true;
-        defaultOption.selected = true;
-        selectElement.appendChild(defaultOption);
+      // Indicadores de política de contraseña para el modal de edición
+      const editPasswordPolicyIndicators = {
+          len: document.getElementById('edit-len-indicator'),
+          upper: document.getElementById('edit-upper-indicator'),
+          lower: document.getElementById('edit-lower-indicator'),
+          num: document.getElementById('edit-num-indicator'),
+          special: document.getElementById('edit-special-indicator')
+      };
 
-        if (allSystemAccounts.length === 0) {
-            const noAccountsOption = document.createElement('option');
-            noAccountsOption.value = '';
-            noAccountsOption.textContent = 'No hay cuentas disponibles';
-            noAccountsOption.disabled = true;
-            selectElement.appendChild(noAccountsOption);
-            return;
-        }
+      // Elementos para Depósitos (se obtienen dinámicamente)
+      let currentAccountForDeposit = null; // Almacena los datos de la cuenta buscada
+      let formDepositoAdmin = null;
+      let numeroCuentaBusquedaInput = null;
+      let btnBuscarCuenta = null;
+      let datosCuentaDiv = null;
+      let camposDepositoDiv = null;
+      let nombreTitularInput = null;
+      let apellidoTitularInput = null;
+      let tipoCuentaInput = null;
+      let saldoActualInput = null;
+      let montoDepositoAdminInput = null;
+      let descripcionDepositoAdminInput = null;
+      let btnConfirmarDeposito = null;
 
-        allSystemAccounts.forEach(account => {
-            const option = document.createElement('option');
-            option.value = account.accountNumber;
-            option.textContent = `${account.accountNumber} - ${account.userName} (${account.accountType}) - Saldo: ${formatoMoneda(account.balance)}`;
-            selectElement.appendChild(option);
-        });
-    }
-
-    let currentAccountForDeposit = null;
-
-    async function buscarCuentaPorNumero(accountNumber) {
-    try {
-        const response = await fetch(`${window.location.origin}/api/accounts/number/${accountNumber}`); // Usar URL absoluta
-        if (!response.ok) {
-            // Loguear el estado y el mensaje de error del servidor
-            console.error(`Error de respuesta para /api/accounts/number/${accountNumber}: Estado ${response.status}, Mensaje: ${response.statusText}`);
-            if (response.status === 404) {
-                mostrarMensaje("Error", `Cuenta con número ${accountNumber} no encontrada.`, true);
-            } else if (response.status === 401 || response.status === 403) {
-                window.location.href = `${window.location.origin}/login`; // Usar URL absoluta
-                throw new Error('No autenticado');
-            } else {
-                throw new Error('Error al buscar la cuenta. Intente de nuevo.');
-            }
-        }
-        const accountData = await response.json();
-        return accountData;
-    } catch (error) {
-        console.error('Error al buscar cuenta:', error);
-        mostrarMensaje("Error", `No se pudo buscar la cuenta: ${error.message}`, true);
-        return null;
-    }
-}
-
-// NUEVA FUNCIÓN: Inicializa la sección de Depósito para Administradores
-async function inicializarDepositoAdmin() {
-    const form = document.getElementById('formDepositoAdmin');
-    const mensaje = document.getElementById('mensajeDepositoAdmin');
-    const numeroCuentaBusquedaInput = document.getElementById('numeroCuentaBusqueda');
-    const btnBuscarCuenta = document.getElementById('btnBuscarCuenta');
-    const datosCuentaDiv = document.getElementById('datosCuenta');
-    const camposDepositoDiv = document.getElementById('camposDeposito');
-    
-    // Campos para rellenar
-    const nombreTitularInput = document.getElementById('nombreTitular');
-    const apellidoTitularInput = document.getElementById('apellidoTitular');
-    const tipoCuentaInput = document.getElementById('tipoCuenta');
-    const saldoActualInput = document.getElementById('saldoActual');
-    const montoDepositoAdminInput = document.getElementById('montoDepositoAdmin');
-    const descripcionDepositoAdminInput = document.getElementById('descripcionDepositoAdmin');
-
-    // Ocultar campos de depósito y datos de cuenta al inicio
-    datosCuentaDiv.classList.add('hidden');
-    camposDepositoDiv.classList.add('hidden');
-    if (mensaje) mensaje.textContent = ''; // Limpiar mensajes previos
-
-    if (btnBuscarCuenta) { // Asegurarse de que el botón existe antes de añadir el listener
-        btnBuscarCuenta.onclick = async () => {
-            const accountNumber = numeroCuentaBusquedaInput.value.trim();
-            if (!accountNumber) {
-                mostrarMensaje("Advertencia", 'Por favor, ingrese un número de cuenta.', true);
-                return;
-            }
-
-            // Limpiar campos y ocultar si hay una búsqueda nueva
-            nombreTitularInput.value = '';
-            apellidoTitularInput.value = '';
-            tipoCuentaInput.value = '';
-            saldoActualInput.value = '';
-            datosCuentaDiv.classList.add('hidden');
-            camposDepositoDiv.classList.add('hidden');
-            if (mensaje) mensaje.textContent = '';
-            currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
-
-            const account = await buscarCuentaPorNumero(accountNumber);
-
-            if (account) {
-                currentAccountForDeposit = account; // Almacena la cuenta encontrada
-                nombreTitularInput.value = account.userName || 'N/A'; // Asume que 'userName' tiene el nombre del titular
-                apellidoTitularInput.value = account.userLastName || 'N/A'; // Asume 'userLastName' para el apellido
-                tipoCuentaInput.value = account.accountType || 'N/A';
-                saldoActualInput.value = formatoMoneda(account.balance);
-                
-                datosCuentaDiv.classList.remove('hidden'); // Mostrar detalles de la cuenta
-                camposDepositoDiv.classList.remove('hidden'); // Mostrar campos de depósito
-                montoDepositoAdminInput.focus(); // Pone el foco en el monto para que el admin pueda empezar a escribir
-            } else {
-                // Si no se encontró la cuenta, asegurar que los campos estén ocultos
-                datosCuentaDiv.classList.add('hidden');
-                camposDepositoDiv.classList.add('hidden');
-            }
-        };
-    }
-
-    if (form) { // Asegurarse de que el formulario existe antes de añadir el listener
-        form.onsubmit = async e => {
-            e.preventDefault();
-            
-            if (!currentAccountForDeposit) {
-                mostrarMensaje("Error", 'Por favor, busque y seleccione una cuenta primero.', true);
-                return;
-            }
-
-            const accountNumber = currentAccountForDeposit.accountNumber; // Usar el número de la cuenta encontrada
-            const amount = parseFloat(montoDepositoAdminInput.value);
-            const description = descripcionDepositoAdminInput.value.trim();
-
-            if (isNaN(amount) || amount <= 0) {
-                mostrarMensaje("Error", 'Por favor, ingrese un monto válido mayor a cero.', true);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${window.location.origin}/api/transactions/deposit`, { // Usar URL absoluta
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        accountNumber: accountNumber,
-                        amount: amount,
-                        description: description,
-                        type: 'INCOME' // Siempre INCOME para depósitos
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    // Aquí es donde capturarías el mensaje de error del backend
-                    console.error(`Error de respuesta para /api/transactions/deposit: Estado ${response.status}, Mensaje: ${response.statusText}`);
-                    mostrarMensaje("Error", data.message || 'Error al realizar el depósito. Verifique los datos e intente de nuevo.', true);
-                    return;
-                }
-
-                mostrarMensaje("Éxito", `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.balance)}`); // Asume que la respuesta tiene 'balance'
-                form.reset(); // Limpiar el formulario
-                numeroCuentaBusquedaInput.value = ''; // Limpiar el número de cuenta de búsqueda
-                datosCuentaDiv.classList.add('hidden'); // Ocultar datos de cuenta
-                camposDepositoDiv.classList.add('hidden'); // Ocultar campos de depósito
-                currentAccountForDeposit = null; // Reiniciar la cuenta para depósito
-                // Opcional: Recargar transacciones si quieres que el historial se actualice inmediatamente
-                // renderTodosMovimientos(); // Se cambió a renderTodosMovimientos
-            } catch (error) {
-                console.error('Error al realizar el depósito:', error);
-                mostrarMensaje("Error", `No se pudo conectar con el servidor para realizar el depósito: ${error.message}`, true);
-            }
-        };
-    }
-}
-
-/**
- * Inicializa la sección del Dashboard de Administrador.
- * Ahora usa los datos ficticios que ya tenías.
- */
-function inicializarDashboardAdmin() {
-    console.log("Inicializando Dashboard de Administrador (usando datos ficticios)...");
-    const totalClientesElem = document.getElementById('dashboardTotalClientes');
-    const saldoGlobalElem = document.getElementById('dashboardSaldoGlobal');
-    const cuentasActivasInactivasElem = document.getElementById('dashboardCuentasActivasInactivas');
-    const cuentasBloqueadasElem = document.getElementById('dashboardCuentasBloqueadas');
-    const citasSinConfirmarElem = document.getElementById('dashboardCitasSinConfirmar');
-
-    // Usar los datos ficticios que ya tienes en el objeto `datos`
-    // NOTA: Los elementos con estos IDs no existen en el HTML del dashboard actual,
-    // pero se mantendrán los logs por si se añaden en el futuro.
-    if (totalClientesElem) totalClientesElem.textContent = datos.totalClientes;
-    if (saldoGlobalElem) saldoGlobalElem.textContent = formatoMoneda(datos.saldoGlobal);
-    if (cuentasActivasInactivasElem) cuentasActivasInactivasElem.textContent = `${datos.cuentasActivas} / ${datos.cuentasInactivas}`;
-    if (cuentasBloqueadasElem) cuentasBloqueadasElem.innerHTML = `Cuentas bloqueadas: <strong>${datos.cuentasBloqueadas}</strong>`;
-    if (citasSinConfirmarElem) citasSinConfirmarElem.innerHTML = `Citas sin confirmar: <strong>${datos.citasSinConfirmar}</strong>`;
-
-    // Si en el futuro quieres cargar estos datos del backend, puedes descomentar y adaptar esto:
-    /*
-    try {
-        const cacheBuster = new Date().getTime();
-        const response = await fetch(`${window.location.origin}/api/admin/dashboard-stats?_=${cacheBuster}`, { cache: 'no-store' });
-        if (!response.ok) {
-            console.error(`Error de respuesta para /api/admin/dashboard-stats: Estado ${response.status}, Mensaje: ${response.statusText}`);
-            if (response.status === 401 || response.status === 403) {
-                window.location.href = `${window.location.origin}/login`;
-                throw new Error('No autenticado para admin dashboard.');
-            }
-            throw new Error('Error al obtener estadísticas del dashboard de admin.');
-        }
-        const data = await response.json();
-        console.log("Datos de dashboard admin recibidos:", data);
-
-        if (totalClientesElem) totalClientesElem.textContent = data.totalUsers || '0';
-        if (saldoGlobalElem) saldoGlobalElem.textContent = formatoMoneda(data.totalBankBalance || 0.00);
-        if (cuentasActivasInactivasElem) cuentasActivasInactivasElem.textContent = `${data.activeAccounts || 0} / ${data.inactiveAccounts || 0}`;
-        if (cuentasBloqueadasElem) cuentasBloqueadasElem.innerHTML = `Cuentas bloqueadas: <strong>${data.blockedAccounts || 0}</strong>`;
-        if (citasSinConfirmarElem) citasSinConfirmarElem.innerHTML = `Citas sin confirmar: <strong>${data.unconfirmedAppointments || 0}</strong>`;
-
-        // Si tu backend proporciona datos para los gráficos, actualiza `datos.nuevosClientesSemana` y `datos.volumenTransaccionesMes` aquí
-        // datos.nuevosClientesSemana = data.newClientsPerWeek || datos.nuevosClientesSemana;
-        // datos.volumenTransaccionesMes = data.transactionVolumePerMonth || datos.volumenTransaccionesMes;
-
-    } catch (error) {
-        console.error('Error al cargar datos del dashboard de admin:', error);
-        if (totalClientesElem) totalClientesElem.textContent = 'Error';
-        if (saldoGlobalElem) saldoGlobalElem.textContent = formatoMoneda(0);
-        if (cuentasActivasInactivasElem) cuentasActivasInactivasElem.textContent = 'Error';
-        if (cuentasBloqueadasElem) cuentasBloqueadasElem.innerHTML = 'Cuentas bloqueadas: <strong>Error</strong>';
-        if (citasSinConfirmarElem) citasSinConfirmarElem.innerHTML = 'Citas sin confirmar: <strong>Error</strong>';
-        mostrarMensaje("Error", `No se pudieron cargar las estadísticas del dashboard: ${error.message}`, true);
-    }
-    */
-}
-
-/**
- * Inicializa la sección "Todos los Movimientos", cargando y mostrando todas las transacciones
- * con filtros y opciones de búsqueda.
- */
-async function inicializarTodosMovimientos() {
-    console.log("Inicializando sección Todos los Movimientos...");
-    const tablaTodosMovimientos = document.getElementById('tablaTodosMovimientos');
-    const filtroFechaInicioMov = document.getElementById('filtroFechaInicioMov');
-    const filtroFechaFinMov = document.getElementById('filtroFechaFinMov');
-    const filtroTipoMov = document.getElementById('filtroTipoMov');
-    const buscadorMovimientos = document.getElementById('buscadorMovimientos');
-    const btnFiltrarMovimientos = document.getElementById('btnFiltrarMovimientos');
-    const btnExportarMovimientos = document.getElementById('btnExportarMovimientos');
-
-    if (!tablaTodosMovimientos) return;
-
-    // Función para cargar y mostrar movimientos desde el backend
-    const cargarTodosMovimientos = async () => {
-        tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>';
-
-        try {
-            const cacheBuster = new Date().getTime();
-            let url = `${window.location.origin}/api/admin/movements/all?_=${cacheBuster}`;
-            const params = new URLSearchParams();
-
-            if (filtroFechaInicioMov && filtroFechaInicioMov.value) {
-                params.append('startDate', filtroFechaInicioMov.value);
-            }
-            if (filtroFechaFinMov && filtroFechaFinMov.value) {
-                params.append('endDate', filtroFechaFinMov.value);
-            }
-            if (filtroTipoMov && filtroTipoMov.value) {
-                params.append('type', filtroTipoMov.value.toUpperCase());
-            }
-
-            url += params.toString();
-            console.log("URL de fetch para todos los movimientos (con anti-caché):", url);
-
-            const response = await fetch(url, { cache: 'no-store' });
-            if (!response.ok) {
-                console.error(`Error de respuesta para /api/admin/movements/all: Estado ${response.status}, Mensaje: ${response.statusText}`);
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = `${window.location.origin}/login`;
-                    throw new Error('No autenticado para ver todos los movimientos.');
-                }
-                throw new Error('Error al obtener todos los movimientos.');
-            }
-            const movimientos = await response.json();
-            console.log("Todos los movimientos recibidos para admin:", movimientos);
-
-            let filteredMovs = movimientos;
-
-            // Filtrado por buscador en el frontend
-            if (buscadorMovimientos && buscadorMovimientos.value) {
-                const searchTerm = buscadorMovimientos.value.toLowerCase();
-                filteredMovs = movimientos.filter(mov =>
-                    (mov.description && mov.description.toLowerCase().includes(searchTerm)) ||
-                    (mov.accountNumber && mov.accountNumber.includes(searchTerm)) ||
-                    (mov.userName && mov.userName.toLowerCase().includes(searchTerm)) ||
-                    (mov.id && mov.id.toString().includes(searchTerm))
-                );
-            }
-
-            // Limpiar la tabla antes de cargar nuevos datos
-            tablaTodosMovimientos.innerHTML = ''; 
-
-            if (filteredMovs.length === 0) {
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = '<td colspan="6" class="p-3 text-center text-gray-400">No hay movimientos registrados que coincidan con los filtros.</td>';
-                tablaTodosMovimientos.appendChild(noDataRow);
-                return;
-            }
-
-            // Ordenar los datos por fecha descendente (más reciente primero)
-            filteredMovs.sort((a, b) => {
-                const dateA = new Date(a.date);
-                const dateB = new Date(b.date);
-                if (dateB.getTime() !== dateA.getTime()) {
-                    return dateB.getTime() - dateA.getTime();
-                }
-                return b.id - a.id; 
-            });
-
-            filteredMovs.forEach(mov => {
-                const tipoDisplay = mov.type === 'INCOME' ? 'Depósito' :
-                                    (mov.type === 'EXPENSE' ? 'Retiro/Transferencia' : capitalizeFirstLetter(mov.type));
-                const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
-                const amountSign = mov.type === 'INCOME' ? '+' : '-'; 
-
-                const row = document.createElement('tr');
-                row.className = 'border-t border-gray-700 hover:bg-gray-700 transition';
-                row.innerHTML = `
-                    <td class="py-3 px-4">${mov.date}</td>
-                    <td class="py-3 px-4">${mov.description || 'N/A'}</td>
-                    <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
-                    <td class="py-3 px-4">${tipoDisplay}</td>
-                    <td class="py-3 px-4 ${amountClass}">
-                        ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
-                    </td>
-                    <td class="py-3 px-4">${mov.userName || 'Desconocido'}</td>
-                `;
-                tablaTodosMovimientos.appendChild(row);
-            });
-
-        } catch (error) {
-            console.error('Error al cargar todos los movimientos:', error);
-            tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-red-400">Error al cargar todos los movimientos.</td></tr>';
-            mostrarMensaje("Error", `No se pudieron cargar todos los movimientos: ${error.message}`, true);
-        }
-    };
-
-    // Cargar movimientos la primera vez que se inicializa la sección
-    cargarTodosMovimientos();
-
-    // Adjuntar listeners para filtros y buscador
-    if (btnFiltrarMovimientos) {
-        btnFiltrarMovimientos.onclick = cargarTodosMovimientos;
-    }
-    if (filtroFechaInicioMov) filtroFechaInicioMov.addEventListener("change", cargarTodosMovimientos);
-    if (filtroFechaFinMov) filtroFechaFinMov.addEventListener("change", cargarTodosMovimientos);
-    if (filtroTipoMov) filtroTipoMov.addEventListener("change", cargarTodosMovimientos);
-    if (buscadorMovimientos) buscadorMovimientos.addEventListener("input", cargarTodosMovimientos);
-
-    // Botón exportar
-    if (btnExportarMovimientos) {
-        btnExportarMovimientos.addEventListener("click", () => {
-            mostrarMensaje("Información", "Funcionalidad para exportar PDF/Excel de todos los movimientos aún no implementada.");
-        });
-    }
-}
+      // Elementos para Reportes (se obtienen después de cargar la sección)
+      let btnReporteClientes = null;
+      let btnReporteMovimientos = null;
+      let btnReporteAccesos = null;
 
 
-      // Función para cargar sección y activar enlaces
-      function cambiarPestania(id) {
-        // Quitar clase active de todos
-        sidebarLinks.forEach((link) =>
-          link.classList.remove("bg-emerald-600", "text-white")
-        );
-        // Agregar active al clickeado
-        const linkActivo = Array.from(sidebarLinks).find(
-          (link) => link.dataset.id === id
-        );
-        if (linkActivo) {
-          linkActivo.classList.add("bg-emerald-600", "text-white");
-        }
-        // Cambiar contenido
-        contenido.innerHTML =
-          secciones[id] ||
-          '<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>';
-
-        // Al cargar cada sección, ejecutar funciones específicas
-        if (id === "dashboard") {
-          // Crear gráficos (los datos para los gráficos se actualizarán en inicializarDashboardAdmin)
-          setTimeout(() => {
-            const ctxClientes = document.getElementById("graficoClientes");
-            const ctxTransacciones = document.getElementById(
-              "graficoTransacciones"
-            );
-            if (ctxClientes) {
-              crearGrafico(
-                ctxClientes,
-                ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-                datos.nuevosClientesSemana, // Estos datos se pueden actualizar desde el backend en inicializarDashboardAdmin
-                "Nuevos clientes",
-                "rgba(34,197,94,1)"
-              );
-            }
-            if (ctxTransacciones) {
-              crearGrafico(
-                ctxTransacciones,
-                ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
-                datos.volumenTransaccionesMes, // Estos datos se pueden actualizar desde el backend en inicializarDashboardAdmin
-                "Transacciones (GTQ)",
-                "rgba(34,197,94,1)"
-              );
-            }
-          }, 100);
-          inicializarDashboardAdmin(); // Llamar a la inicialización del dashboard para cargar datos reales
-        } else if (id === "clientes") {
-          setTimeout(() => {
-            renderClientes();
-
-            // Buscador clientes
-            const buscadorClientesElem = document.getElementById("buscadorClientes");
-            if (buscadorClientesElem) { // Asegurarse de que el elemento existe
-                buscadorClientesElem.addEventListener("input", renderClientes);
-            }
-          }, 50);
-        } else if (id === "deposito") { // NUEVO: Inicializa la sección de depósito
-            setTimeout(() => {
-                inicializarDepositoAdmin();
-            }, 50);
-        } else if (id === "todosMovimientos") { // NUEVO: Inicializa la sección de todos los movimientos
-            setTimeout(() => {
-                inicializarTodosMovimientos(); // Ahora llama a la función actualizada con filtros
-            }, 50);
-        } else if (id === "reportes") {
-          setTimeout(() => {
-            // Botones de reportes
-            const btnGenerarReporteElem = document.getElementById("btnGenerarReporte");
-            const btnEnviarCorreoReporteElem = document.getElementById("btnEnviarCorreoReporte");
-
-            if (btnGenerarReporteElem) {
-                btnGenerarReporteElem.addEventListener("click", () => {
-                    const vista = document.getElementById("vistaPreviaReporte");
-                    const btnCorreo = document.getElementById(
-                      "btnEnviarCorreoReporte"
-                    );
-                    const rangoInicioReporteElem = document.getElementById("rangoInicioReporte");
-                    const rangoFinReporteElem = document.getElementById("rangoFinReporte");
-                    const tipoReporteElem = document.getElementById("tipoReporte");
-
-                    vista.innerHTML = `<p>Reporte generado: tipo <strong>${
-                      tipoReporteElem ? tipoReporteElem.value : 'N/A'
-                    }</strong>, fechas <strong>${
-                      rangoInicioReporteElem ? rangoInicioReporteElem.value : 'N/A'
-                    } a ${
-                      rangoFinReporteElem ? rangoFinReporteElem.value : 'N/A'
-                    }</strong>.</p>`;
-                    vista.classList.remove("hidden");
-                    if (btnCorreo) btnCorreo.classList.remove("hidden");
-                });
-            }
-
-            if (btnEnviarCorreoReporteElem) {
-                btnEnviarCorreoReporteElem.addEventListener("click", () => {
-                    mostrarMensaje("Información", "Reporte enviado por correo (simulado).");
-                });
-            }
-          }, 50);
-        }
-      }
-
-      // Evento click en links sidebar (ya existe, se mantiene)
-      sidebarLinks.forEach((link) => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          const id = link.dataset.id;
-          cambiarPestania(id);
-        });
-      });
-
+      // --- Funciones de Utilidad para Sidebar ---
       const sidebar = document.getElementById("sidebar");
       const btnToggleSidebar = document.getElementById("btnToggleSidebar");
       const overlay = document.getElementById("overlay");
@@ -1191,62 +711,1079 @@ async function inicializarTodosMovimientos() {
         sidebarVisible = false;
       }
 
-      btnToggleSidebar.addEventListener("click", () => {
-        if (sidebarVisible) {
-          ocultarSidebar();
-        } else {
-          mostrarSidebar();
+      // --- Validaciones de Campos ---
+
+      // Función genérica para actualizar el estado del indicador de contraseña
+      function updatePasswordIndicator(indicatorElement, isValid) {
+          if (isValid) {
+              indicatorElement.classList.remove('bg-red-400');
+              indicatorElement.classList.add('bg-green-400');
+          } else {
+              indicatorElement.classList.remove('bg-green-400');
+              indicatorElement.classList.add('bg-red-400');
+          }
+      }
+
+      // Función para validar la política de contraseña (usada en edición)
+      function validatePasswordPolicy(password, indicators) {
+          let isValid = true;
+
+          const isLenValid = password.length >= 8;
+          updatePasswordIndicator(indicators.len, isLenValid);
+          if (!isLenValid) isValid = false;
+
+          const isUpperValid = /[A-Z]/.test(password);
+          updatePasswordIndicator(indicators.upper, isUpperValid);
+          if (!isUpperValid) isValid = false;
+
+          const isLowerValid = /[a-z]/.test(password);
+          updatePasswordIndicator(indicators.lower, isLowerValid);
+          if (!isLowerValid) isValid = false;
+
+          const isNumValid = /\d/.test(password);
+          updatePasswordIndicator(indicators.num, isNumValid);
+          if (!isNumValid) isValid = false;
+
+          const isSpecialValid = /[!@#$%^&*()\-_=+\\[\]\\{\\}\\|;:'",<.>/?]/.test(password);
+          updatePasswordIndicator(indicators.special, isSpecialValid);
+          if (!isSpecialValid) isValid = false;
+
+          return isValid;
+      }
+
+      // Función para validar DPI (13 dígitos numéricos)
+      function validateDPI(dpi) {
+          const regex = /^\d{13}$/;
+          return regex.test(dpi);
+      }
+
+      // Función para validar NIT (formato guatemalteco: 1234567-8 o CF)
+      function validateNIT(nit) {
+          const regex = /^(CF|[0-9]+-[0-9kK])$/i; // 'i' para ignorar mayúsculas/minúsculas en CF o K
+          return regex.test(nit);
+      }
+
+      // Función para validar Teléfono (XXXX-XXXX)
+      function validatePhoneNumber(phone) {
+          const regex = /^\d{4}-\d{4}$/;
+          return regex.test(phone);
+      }
+
+      // Función para validar Email
+      function validateEmail(email) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(email);
+      }
+
+      // Función para validar fecha de nacimiento (mayor de 18 años)
+      function validateBirthDate(birthDateStr) {
+          const birthDate = new Date(birthDateStr);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+          }
+          return age >= 18;
+      }
+
+      // --- Event Listeners para validaciones en tiempo real (Formulario de Registro) ---
+      // Se adjuntarán después de que la sección de clientes se cargue dinámicamente
+
+      // --- Event Listeners para validaciones en tiempo real (Modal de Edición) ---
+      // Se adjuntarán después de que el modal de edición se cargue y se abra
+
+      function setupEditModalListeners() {
+          if (editarEmail) {
+              editarEmail.addEventListener('input', () => {
+                  const isValid = validateEmail(editarEmail.value);
+                  editarEmailWarning.classList.toggle("hidden", isValid);
+              });
+          }
+          if (editarDPI) {
+              editarDPI.addEventListener('input', () => {
+                  const value = editarDPI.value.replace(/\D/g, ''); // Solo números
+                  editarDPI.value = value; // Actualizar el valor del input
+                  const isValid = validateDPI(value);
+                  editarDpiWarning.classList.toggle("hidden", isValid);
+              });
+          }
+          if (editarNIT) {
+              editarNIT.addEventListener('input', () => {
+                  let value = editarNIT.value.replace(/[^0-9kK]/gi, ''); // Solo números, k, K (sin guiones), 'i' para case-insensitive
+                  let formattedValue = '';
+
+                  if (value.length > 1) { // Si hay al menos 2 caracteres, intentar formatear
+                      // Asumimos que el último caracter es el dígito verificador si hay más de 1 digito
+                      formattedValue = value.substring(0, value.length - 1) + '-' + value.substring(value.length - 1);
+                  } else {
+                      formattedValue = value;
+                  }
+
+                  // Limitar la longitud total a 10 (8 dígitos + guion + 1 dígito/letra)
+                  // Esto es una estimación, el NIT real puede variar, pero para el formato GT es común
+                  if (formattedValue.length > 10) {
+                      formattedValue = formattedValue.substring(0, 10);
+                  }
+
+                  editarNIT.value = formattedValue.toUpperCase(); // Convertir a mayúsculas para 'K'
+                  const isValid = validateNIT(editarNIT.value);
+                  editarNitWarning.classList.toggle("hidden", isValid);
+              });
+          }
+          if (editarTelefono) {
+              editarTelefono.addEventListener('input', () => {
+                  let value = editarTelefono.value.replace(/\D/g, ''); // Eliminar no dígitos
+                  if (value.length > 4) {
+                      value = value.substring(0, 4) + '-' + value.substring(4, 8);
+                  }
+                  editarTelefono.value = value;
+                  const isValid = validatePhoneNumber(value);
+                  editarPhoneWarning.classList.toggle("hidden", isValid);
+              });
+          }
+          if (editarBirthDate) {
+              editarBirthDate.addEventListener('change', () => {
+                  const isValid = validateBirthDate(editarBirthDate.value);
+                  editarBirthDateWarning.classList.toggle("hidden", isValid);
+              });
+          }
+
+          if (editarNewPassword) {
+              editarNewPassword.addEventListener('input', () => {
+                  validatePasswordPolicy(editarNewPassword.value, editPasswordPolicyIndicators);
+                  if (editarConfirmNewPassword.value !== '') {
+                      validateEditPasswordsMatch();
+                  }
+              });
+          }
+          if (editarConfirmNewPassword) {
+              editarConfirmNewPassword.addEventListener('input', validateEditPasswordsMatch);
+          }
+      }
+
+      function validateEditPasswordsMatch() {
+          const newPass = editarNewPassword.value;
+          const confirmPass = editarConfirmNewPassword.value;
+          if (newPass === confirmPass && newPass !== '') {
+              editMatchWarning.classList.add('hidden');
+              return true;
+          } else {
+              editMatchWarning.classList.remove('hidden');
+              return false;
+          }
+      }
+
+      // --- Fetching Data Functions ---
+
+      async function cargarEstadisticasDashboard() {
+          try {
+              // CAMBIADO: Ahora se llama al nuevo endpoint específico para admin
+              const response = await fetch(`${window.location.origin}/api/admin/dashboard-stats`);
+              if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              const data = await response.json();
+              dashboardStats.totalUsers = data.totalUsers;
+              dashboardStats.activeUsers = data.activeUsers;
+              dashboardStats.inactiveUsers = data.inactiveUsers;
+              dashboardStats.blockedUsers = data.blockedUsers;
+
+              // Actualizar contenido de la sección de inicio si ya está cargada
+              // La sección de inicio tiene ahora un id="dashboard"
+              const dashboardSection = contenido.querySelector('#dashboard');
+              if (dashboardSection) {
+                  // Re-renderizar el contenido de la sección de inicio con los datos actualizados
+                  dashboardSection.innerHTML = secciones.inicio(dashboardStats);
+                  
+                  // Re-renderizar gráficos después de actualizar el HTML
+                  const ctxClients = document.getElementById('clientsChart').getContext('2d');
+                  clientsChartInstance = new Chart(ctxClients, {
+                      type: 'pie',
+                      data: {
+                          labels: ['Activos', 'Inactivos', 'Bloqueados'],
+                          datasets: [{
+                              data: [dashboardStats.activeUsers, dashboardStats.inactiveUsers, dashboardStats.blockedUsers],
+                              backgroundColor: ['#10B981', '#EF4444', '#F59E0B'], // emerald, red, yellow
+                              hoverOffset: 4
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          plugins: {
+                              legend: {
+                                  labels: {
+                                      color: '#CBD5E0' // text-gray-300
+                                  }
+                              },
+                              title: {
+                                  display: true,
+                                  text: 'Distribución de Clientes',
+                                  color: '#CBD5E0'
+                              }
+                          }
+                      }
+                  });
+
+                  // Gráfico de transacciones (datos ficticios por ahora)
+                  const ctxTransacciones = document.getElementById("graficoTransacciones");
+                  if (ctxTransacciones) {
+                      crearGrafico(
+                          ctxTransacciones.getContext('2d'),
+                          ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+                          dashboardStats.volumenTransaccionesMes,
+                          "Volumen de Transacciones (GTQ)",
+                          "rgba(34,197,94,1)"
+                      );
+                  }
+
+                  // Adjuntar listener al botón de reporte de accesos
+                  const btnReporteAccesosDashboard = document.getElementById("btnReporteAccesos");
+                  if (btnReporteAccesosDashboard) {
+                      btnReporteAccesosDashboard.addEventListener("click", generarReporteAccesos);
+                  }
+              }
+
+          } catch (error) {
+              console.error('Error al cargar estadísticas del dashboard:', error);
+              showSweetAlert("error", "Error", "No se pudieron cargar las estadísticas del dashboard.");
+          }
+      }
+
+
+      async function cargarClientes() {
+        try {
+          const response = await fetch(`${window.location.origin}/api/admin/users`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          serverUsers = await response.json(); // Actualiza la variable global
+          renderClientes(); // Vuelve a renderizar la tabla con los datos actualizados
+
+        } catch (error) {
+          console.error("Error al cargar clientes:", error);
+          showSweetAlert("error", "Error", "No se pudieron cargar los clientes.");
         }
-      });
+      }
 
-      overlay.addEventListener("click", () => {
-        ocultarSidebar();
-      });
+      async function cargarTodosLosMovimientos() {
+          const tablaTodosMovimientos = document.getElementById('tablaTodosMovimientos');
+          if (!tablaTodosMovimientos) return; // Asegurarse de que el elemento exista
 
-// Referencias a modal y botones
-const modalEditar = document.getElementById("modalEditarCliente");
-const btnCancelarEditar = document.getElementById("btnCancelarEditar");
-const formEditar = document.getElementById("formEditarCliente");
-const editarIdCliente = document.getElementById("editarIdCliente");
+          tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-gray-400">Cargando todos los movimientos...</td></tr>';
 
-const modalConfirmacion = document.getElementById("modalConfirmacion");
-const btnConfirmarCancelar = document.getElementById("btnConfirmarCancelar");
+          try {
+              const filtroFechaInicioMov = document.getElementById('filtroFechaInicioMov').value;
+              const filtroFechaFinMov = document.getElementById('filtroFechaFinMov').value;
+              const filtroTipoMov = document.getElementById('filtroTipoMov').value;
+              const buscadorMovimientos = document.getElementById('buscadorMovimientos').value;
 
-// Cerrar modal de edición al hacer clic en cancelar
-if (btnCancelarEditar) {
-    btnCancelarEditar.addEventListener("click", () => {
-      modalEditar.classList.add("hidden");
+              const params = new URLSearchParams();
+              if (filtroFechaInicioMov) params.append('startDate', filtroFechaInicioMov);
+              if (filtroFechaFinMov) params.append('endDate', filtroFechaFinMov);
+              if (filtroTipoMov) params.append('type', filtroTipoMov.toUpperCase());
+              if (buscadorMovimientos) params.append('searchTerm', buscadorMovimientos);
+
+              const cacheBuster = new Date().getTime();
+              let url = `${window.location.origin}/api/admin/movements/all?_=${cacheBuster}&${params.toString()}`;
+              console.log("URL de fetch para todos los movimientos:", url);
+
+              const response = await fetch(url, { cache: 'no-store' });
+              if (!response.ok) {
+                  console.error(`Error de respuesta para /api/admin/movements/all: Estado ${response.status}, Mensaje: ${response.statusText}`);
+                  if (response.status === 401 || response.status === 403) {
+                      window.location.href = `${window.location.origin}/login`;
+                      throw new Error('No autenticado para ver todos los movimientos.');
+                  }
+                  throw new Error('Error al obtener todos los movimientos.');
+              }
+              const movements = await response.json();
+              console.log("Todos los movimientos recibidos para admin:", movements);
+
+              // Limpiar la tabla antes de cargar nuevos datos
+              tablaTodosMovimientos.innerHTML = '';
+
+              if (movements.length === 0) {
+                  const noDataRow = document.createElement('tr');
+                  noDataRow.innerHTML = '<td colspan="6" class="p-3 text-center text-gray-400">No hay movimientos registrados que coincidan con los filtros.</td>';
+                  tablaTodosMovimientos.appendChild(noDataRow);
+                  return;
+              }
+
+              // Ordenar los datos por fecha descendente (más reciente primero)
+              movements.sort((a, b) => {
+                  const dateA = new Date(a.date);
+                  const dateB = new Date(b.date);
+                  if (dateB.getTime() !== dateA.getTime()) {
+                      return dateB.getTime() - dateA.getTime();
+                  }
+                  return b.id - a.id;
+              });
+
+              movements.forEach(mov => {
+                  const tipoDisplay = mov.type === 'INCOME' ? 'Depósito' :
+                                      (mov.type === 'EXPENSE' ? 'Retiro/Transferencia' : capitalizeFirstLetter(mov.type));
+                  const amountClass = mov.type === 'INCOME' ? 'text-green-400' : 'text-red-400';
+                  const amountSign = mov.type === 'INCOME' ? '+' : '-';
+
+                  const row = document.createElement('tr');
+                  row.className = 'border-t border-gray-700 hover:bg-gray-700 transition';
+                  row.innerHTML = `
+                      <td class="py-3 px-4">${mov.date}</td>
+                      <td class="py-3 px-4">${mov.description || 'N/A'}</td>
+                      <td class="py-3 px-4">${mov.accountNumber || 'N/A'}</td>
+                      <td class="py-3 px-4">${tipoDisplay}</td>
+                      <td class="py-3 px-4 ${amountClass}">
+                          ${amountSign}${formatoMoneda(Math.abs(mov.amount))}
+                      </td>
+                      <td class="py-3 px-4">${mov.userName || 'Desconocido'}</td>
+                  `;
+                  tablaTodosMovimientos.appendChild(row);
+              });
+
+          } catch (error) {
+              console.error('Error al cargar todos los movimientos:', error);
+              tablaTodosMovimientos.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-red-400">Error al cargar todos los movimientos.</td></tr>';
+              showSweetAlert("error", "Error", `No se pudieron cargar todos los movimientos: ${error.message}`);
+          }
+      }
+
+      // --- Form Submission Handlers ---
+
+      // Manejar el envío del formulario de registro de cliente
+      if (formRegistrarCliente) {
+          formRegistrarCliente.addEventListener("submit", async (e) => {
+              e.preventDefault();
+
+              // Validaciones de frontend antes de enviar
+              let allValid = true;
+              if (!validateEmail(regEmailInput.value)) {
+                  emailWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  emailWarning.classList.add("hidden");
+              }
+              if (!validateDPI(regDPIInput.value)) {
+                  dpiWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  dpiWarning.classList.add("hidden");
+              }
+              if (!validateNIT(regNITInput.value)) {
+                  nitWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  nitWarning.classList.add("hidden");
+              }
+              if (!validatePhoneNumber(regPhoneNumberInput.value)) {
+                  phoneWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  phoneWarning.classList.add("hidden");
+              }
+              if (!validateBirthDate(regBirthDateInput.value)) {
+                  birthDateWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  birthDateWarning.classList.add("hidden");
+              }
+
+              if (!allValid) {
+                  showSweetAlert("error", "Error de Validación", "Por favor, corrija los errores en el formulario.");
+                  return;
+              }
+
+              const userData = {
+                  firstName: regFirstNameInput.value,
+                  lastName: regLastNameInput.value,
+                  email: regEmailInput.value,
+                  dpi: regDPIInput.value.replace(/\D/g, ''), // Enviar solo números
+                  nit: regNITInput.value.toUpperCase(), // Enviar NIT en mayúsculas
+                  phoneNumber: regPhoneNumberInput.value.replace(/-/g, ''), // Enviar solo números
+                  birthDate: regBirthDateInput.value, // Formato DD-MM-YYYY
+                  address: regAddressInput.value,
+                  // enabled: true se establece en el backend ahora
+              };
+
+              try {
+                  const response = await fetch(`${window.location.origin}/register`, { // Endpoint de registro
+                      method: "POST",
+                      headers: {
+                          "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(userData),
+                  });
+
+                  if (response.ok) {
+                      const newUser = await response.json(); // Espera que el backend devuelva email y password
+                      
+                      // Mostrar modal de credenciales
+                      crearUsuarioEmailSpan.textContent = newUser.email;
+                      crearUsuarioPasswordSpan.textContent = newUser.generatedPassword; // Asume que el backend devuelve 'generatedPassword'
+                      modalCredenciales.classList.remove("hidden");
+
+                      // Recargar clientes y limpiar formulario
+                      cargarClientes();
+                      modalRegistrarCliente.classList.add("hidden");
+                      formRegistrarCliente.reset();
+                      // Ocultar todas las advertencias al limpiar el formulario
+                      emailWarning.classList.add("hidden");
+                      dpiWarning.classList.add("hidden");
+                      nitWarning.classList.add("hidden");
+                      phoneWarning.classList.add("hidden");
+                      birthDateWarning.classList.add("hidden");
+
+                  } else {
+                      const errorData = await response.json(); // Asume que el backend devuelve JSON de error
+                      showSweetAlert("error", "Error al Registrar Cliente", errorData.message || `Error al registrar cliente: ${response.statusText}`);
+                  }
+              } catch (error) {
+                  console.error('Error al enviar la solicitud de registro:', error);
+                  showSweetAlert("error", "Error de Conexión", "No se pudo conectar con el servidor para registrar el cliente.");
+              }
+          });
+      }
+
+
+      // Manejar el envío del formulario de depósito
+      // Se adjuntará después de que la sección de depósito se cargue dinámicamente
+
+      // --- Modal de Edición ---
+      function abrirModalEditar(user) {
+        editarIdCliente.value = user.id;
+        editarNombre.value = user.firstName;
+        editarApellido.value = user.lastName;
+        editarEmail.value = user.email;
+        editarDPI.value = user.dpi || '';
+        editarNIT.value = user.nit || '';
+        editarTelefono.value = user.phoneNumber || '';
+        editarAddress.value = user.address || '';
+        // Formatear la fecha de nacimiento a YYYY-MM-DD para el input type="date"
+        if (user.birthDate) {
+            editarBirthDate.value = user.birthDate;
+        } else {
+            editarBirthDate.value = '';
+        }
+
+        // Seleccionar el estado correcto en el select
+        // Ahora se usa user.status directamente
+        const estadoOption = Array.from(editarEstado.options).find(option => option.value === user.status);
+        if (estadoOption) {
+            editarEstado.value = estadoOption.value;
+        } else {
+            editarEstado.value = 'INACTIVO'; // Fallback si no encuentra
+        }
+
+        // Limpiar campos de contraseña al abrir el modal
+        editarNewPassword.value = '';
+        editarConfirmNewPassword.value = '';
+        editMatchWarning.classList.add('hidden');
+        // Resetear indicadores de política de contraseña
+        validatePasswordPolicy('', editPasswordPolicyIndicators); // Pasa una cadena vacía para resetear
+
+        // Ocultar todas las advertencias del modal de edición al abrirlo
+        editarEmailWarning.classList.add("hidden");
+        editarDpiWarning.classList.add("hidden");
+        editarNitWarning.classList.add("hidden");
+        editarPhoneWarning.classList.add("hidden");
+        editarBirthDateWarning.classList.add("hidden");
+        editMatchWarning.classList.add("hidden");
+
+
+        modalEditarCliente.classList.remove("hidden");
+        setupEditModalListeners(); // Adjuntar listeners cada vez que se abre el modal
+      }
+
+      // Enviar formulario de edición al backend
+      if (formEditarCliente) {
+          formEditarCliente.addEventListener("submit", async function (e) {
+              e.preventDefault();
+
+              // Validaciones de frontend antes de enviar
+              let allValid = true;
+              if (!validateEmail(editarEmail.value)) {
+                  editarEmailWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  editarEmailWarning.classList.add("hidden");
+              }
+              if (!validateDPI(editarDPI.value)) {
+                  editarDpiWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  editarDpiWarning.classList.add("hidden");
+              }
+              if (!validateNIT(editarNIT.value)) {
+                  editarNitWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  editarNitWarning.classList.add("hidden");
+              }
+              if (!validatePhoneNumber(editarTelefono.value)) {
+                  editarPhoneWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  editarPhoneWarning.classList.add("hidden");
+              }
+              if (!validateBirthDate(editarBirthDate.value)) {
+                  editarBirthDateWarning.classList.remove("hidden");
+                  allValid = false;
+              } else {
+                  editarBirthDateWarning.classList.add("hidden");
+              }
+
+              // Validar nueva contraseña si se ha ingresado
+              const newPassword = editarNewPassword.value;
+              const confirmNewPassword = editarConfirmNewPassword.value;
+
+              if (newPassword !== '') { // Si se intenta cambiar la contraseña
+                  if (!validatePasswordPolicy(newPassword, editPasswordPolicyIndicators)) {
+                      showSweetAlert('error', 'Error de Contraseña', 'La nueva contraseña no cumple con la política de seguridad.');
+                      return; // Detener el envío si la política no se cumple
+                  }
+                  if (newPassword !== confirmNewPassword) {
+                      showSweetAlert('error', 'Error de Contraseña', 'Las nuevas contraseñas no coinciden.');
+                      return; // Detener el envío si no coinciden
+                  }
+              } else if (confirmNewPassword !== '') { // Si solo se llenó el campo de confirmación
+                  showSweetAlert('error', 'Error de Contraseña', 'Por favor, ingresa la nueva contraseña en ambos campos.');
+                  return; // Detener el envío
+              }
+
+              if (!allValid) {
+                  showSweetAlert("error", "Error de Validación", "Por favor, corrija los errores en el formulario.");
+                  return;
+              }
+
+              const datosActualizados = {
+                  id: editarIdCliente.value,
+                  firstName: editarNombre.value,
+                  lastName: editarApellido.value,
+                  email: editarEmail.value,
+                  dpi: editarDPI.value.replace(/\D/g, ''), // Enviar solo números
+                  nit: editarNIT.value.toUpperCase(), // Enviar NIT en mayúsculas
+                  phoneNumber: editarTelefono.value.replace(/-/g, ''), // Enviar solo números
+                  address: editarAddress.value,
+                  birthDate: editarBirthDate.value,
+                  status: editarEstado.value, // Ahora se envía el campo 'status'
+                  newPassword: newPassword // Incluir la nueva contraseña si se proporcionó
+              };
+
+              try {
+                  const response = await fetch(`${window.location.origin}/api/users/${datosActualizados.id}`, {
+                      method: 'PUT',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify(datosActualizados)
+                  });
+
+                  const data = await response.json();
+
+                  if (response.ok) {
+                      showSweetAlert('success', 'Actualización Exitosa', data.message || 'Cliente actualizado correctamente.', () => {
+                          modalEditarCliente.classList.add('hidden');
+                          cargarClientes(); // Recargar la tabla de clientes
+                          cargarEstadisticasDashboard(); // Recargar estadísticas por si el estado cambió
+                      });
+                  } else {
+                      showSweetAlert('error', 'Error al Actualizar', data.message || 'Ocurrió un error al actualizar el cliente.', true);
+                  }
+              } catch (error) {
+                  console.error('Error al actualizar cliente:', error);
+                  showSweetAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor para actualizar el cliente.', true);
+              }
+          });
+      }
+
+      // Cerrar modal de edición al hacer clic en cancelar
+      if (btnCancelarEditar) {
+          btnCancelarEditar.addEventListener("click", () => {
+            modalEditarCliente.classList.add("hidden");
+          });
+      }
+
+      // Cerrar modal de registro al hacer clic en cancelar
+      if (btnCancelarRegistro) {
+          btnCancelarRegistro.addEventListener("click", () => {
+            modalRegistrarCliente.classList.add("hidden");
+            formRegistrarCliente.reset(); // Limpiar el formulario al cerrar
+            // Ocultar todas las advertencias al cerrar el modal
+            emailWarning.classList.add("hidden");
+            dpiWarning.classList.add("hidden");
+            nitWarning.classList.add("hidden");
+            phoneWarning.classList.add("hidden");
+            birthDateWarning.classList.add("hidden");
+          });
+      }
+
+      // Cerrar modal de credenciales
+      if (btnCerrarCredenciales) {
+          btnCerrarCredenciales.addEventListener("click", () => {
+              modalCredenciales.classList.add("hidden");
+          });
+      }
+
+      // Cerrar modal de confirmación al hacer clic en cancelar
+      if (btnConfirmarCancelar) {
+          btnConfirmarCancelar.addEventListener("click", () => {
+              modalConfirmacion.classList.add("hidden");
+          });
+      }
+
+      // Manejar la eliminación del cliente
+      if (btnConfirmarEliminar) {
+          btnConfirmarEliminar.addEventListener('click', async () => {
+              if (clienteIdAEliminar) {
+                  try {
+                      const response = await fetch(`${window.location.origin}/api/users/${clienteIdAEliminar}`, {
+                          method: 'DELETE'
+                      });
+
+                      if (response.ok) {
+                          showSweetAlert('success', 'Eliminación Exitosa', 'Cliente eliminado correctamente.', () => {
+                              modalConfirmacion.classList.add('hidden');
+                              cargarClientes(); // Recargar la tabla de clientes
+                              cargarEstadisticasDashboard(); // Recargar estadísticas
+                          });
+                      } else {
+                          const errorData = await response.json();
+                          showSweetAlert('error', 'Error al Eliminar', errorData.message || 'Ocurrió un error al eliminar el cliente.', true);
+                      }
+                  } catch (error) {
+                      console.error('Error al eliminar cliente:', error);
+                      showSweetAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor para eliminar el cliente.', true);
+                  } finally {
+                      clienteIdAEliminar = null;
+                  }
+              }
+          });
+      }
+
+    // --- Lógica de Depósito para Administradores ---
+    async function buscarCuentaPorNumero(accountNumber) {
+        try {
+            const response = await fetch(`${window.location.origin}/api/accounts/number/${accountNumber}`);
+            if (!response.ok) {
+                console.error(`Error de respuesta para /api/accounts/number/${accountNumber}: Estado ${response.status}, Mensaje: ${response.statusText}`);
+                if (response.status === 404) {
+                    showSweetAlert("error", `Cuenta No Encontrada`, `Cuenta con número ${accountNumber} no encontrada.`);
+                } else if (response.status === 401 || response.status === 403) {
+                    window.location.href = `${window.location.origin}/login`;
+                    throw new Error('No autenticado');
+                } else {
+                    throw new Error('Error al buscar la cuenta. Intente de nuevo.');
+                }
+            }
+            const accountData = await response.json();
+            return accountData;
+        } catch (error) {
+            console.error('Error al buscar cuenta:', error);
+            showSweetAlert("error", `Error de Conexión`, `No se pudo buscar la cuenta: ${error.message}`);
+            return null;
+        }
+    }
+
+    function inicializarDepositoAdmin() {
+        // Obtener referencias a los elementos del DOM de la sección de depósito
+        formDepositoAdmin = document.getElementById('formDepositoAdmin');
+        numeroCuentaBusquedaInput = document.getElementById('numeroCuentaBusqueda');
+        btnBuscarCuenta = document.getElementById('btnBuscarCuenta');
+        datosCuentaDiv = document.getElementById('datosCuenta');
+        camposDepositoDiv = document.getElementById('camposDeposito');
+
+        nombreTitularInput = document.getElementById('nombreTitular');
+        apellidoTitularInput = document.getElementById('apellidoTitular');
+        tipoCuentaInput = document.getElementById('tipoCuenta');
+        saldoActualInput = document.getElementById('saldoActual');
+        montoDepositoAdminInput = document.getElementById('montoDepositoAdmin');
+        descripcionDepositoAdminInput = document.getElementById('descripcionDepositoAdmin');
+        btnConfirmarDeposito = document.getElementById('btnConfirmarDeposito');
+
+        // Resetear el estado inicial de la sección
+        if (datosCuentaDiv) datosCuentaDiv.classList.add('hidden');
+        if (camposDepositoDiv) camposDepositoDiv.classList.add('hidden');
+        currentAccountForDeposit = null;
+
+        if (btnBuscarCuenta) {
+            btnBuscarCuenta.onclick = async () => {
+                const accountNumber = numeroCuentaBusquedaInput.value.trim();
+                if (!accountNumber) {
+                    showSweetAlert("warning", 'Advertencia', 'Por favor, ingrese un número de cuenta.');
+                    return;
+                }
+
+                // Limpiar campos y ocultar secciones al buscar una nueva cuenta
+                if (nombreTitularInput) nombreTitularInput.value = '';
+                if (apellidoTitularInput) apellidoTitularInput.value = '';
+                if (tipoCuentaInput) tipoCuentaInput.value = '';
+                if (saldoActualInput) saldoActualInput.value = '';
+                if (datosCuentaDiv) datosCuentaDiv.classList.add('hidden');
+                if (camposDepositoDiv) camposDepositoDiv.classList.add('hidden');
+                currentAccountForDeposit = null;
+
+                const account = await buscarCuentaPorNumero(accountNumber);
+
+                if (account) {
+                    currentAccountForDeposit = account;
+                    if (nombreTitularInput) nombreTitularInput.value = account.userName || 'N/A';
+                    if (apellidoTitularInput) apellidoTitularInput.value = account.userLastName || 'N/A';
+                    if (tipoCuentaInput) tipoCuentaInput.value = account.accountType || 'N/A';
+                    if (saldoActualInput) saldoActualInput.value = formatoMoneda(account.balance);
+
+                    if (datosCuentaDiv) datosCuentaDiv.classList.remove('hidden');
+                    if (camposDepositoDiv) camposDepositoDiv.classList.remove('hidden');
+                    if (montoDepositoAdminInput) montoDepositoAdminInput.focus();
+                } else {
+                    if (datosCuentaDiv) datosCuentaDiv.classList.add('hidden');
+                    if (camposDepositoDiv) camposDepositoDiv.classList.add('hidden');
+                }
+            };
+        }
+
+        if (formDepositoAdmin) {
+            formDepositoAdmin.onsubmit = async e => {
+                e.preventDefault();
+
+                if (!currentAccountForDeposit) {
+                    showSweetAlert("error", 'Error', 'Por favor, busque y seleccione una cuenta primero.');
+                    return;
+                }
+
+                const accountNumber = currentAccountForDeposit.accountNumber;
+                const amount = parseFloat(montoDepositoAdminInput.value);
+                const description = descripcionDepositoAdminInput.value.trim();
+
+                if (isNaN(amount) || amount <= 0) {
+                    showSweetAlert("error", 'Error de Monto', 'Por favor, ingrese un monto válido mayor a cero.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${window.location.origin}/api/transactions/deposit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            accountNumber: accountNumber,
+                            amount: amount,
+                            description: description,
+                            type: 'INCOME'
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        console.error(`Error de respuesta para /api/transactions/deposit: Estado ${response.status}, Mensaje: ${response.statusText}`);
+                        showSweetAlert("error", 'Error en Depósito', data.message || 'Error al realizar el depósito. Verifique los datos e intente de nuevo.');
+                        return;
+                    }
+
+                    showSweetAlert("success", 'Depósito Exitoso', `Depósito de ${formatoMoneda(amount)} en la cuenta ${accountNumber} realizado con éxito. Nuevo saldo: ${formatoMoneda(data.newOriginAccountBalance)}`, () => {
+                        formDepositoAdmin.reset();
+                        if (numeroCuentaBusquedaInput) numeroCuentaBusquedaInput.value = '';
+                        if (datosCuentaDiv) datosCuentaDiv.classList.add('hidden');
+                        if (camposDepositoDiv) camposDepositoDiv.classList.add('hidden');
+                        currentAccountForDeposit = null;
+                        // Opcional: Recargar la tabla de movimientos si está visible
+                        if (contenido.querySelector('#tablaTodosMovimientos')) {
+                            cargarTodosMovimientos();
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error al realizar el depósito:', error);
+                    showSweetAlert("error", 'Error de Conexión', `No se pudo conectar con el servidor para realizar el depósito: ${error.message}`);
+                }
+            };
+        }
+    }
+
+    // Function to initialize the "Todos los Movimientos" section
+    function inicializarTodosMovimientos() {
+        console.log("Inicializando Todos los Movimientos...");
+        cargarTodosLosMovimientos(); // Call the function to fetch and display movements
+    }
+
+
+    /**
+     * Inicializa la sección del Dashboard de Administrador.
+     */
+    async function inicializarDashboardAdmin() {
+        console.log("Inicializando Dashboard de Administrador...");
+        await cargarEstadisticasDashboard(); // Carga las estadísticas y actualiza el HTML de la sección 'inicio'
+    }
+
+    /**
+     * Función para generar reportes PDF (JasperReports).
+     * Estas funciones se conectan a tus endpoints de Spring Boot.
+     */
+    async function generarReporteClientes() {
+        try {
+            window.open(`${window.location.origin}/api/reports/clients/pdf`, '_blank');
+        } catch (error) {
+            console.error('Error al generar reporte de clientes:', error);
+            showSweetAlert("error", "Error", "No se pudo generar el reporte de clientes.");
+        }
+    }
+
+    async function generarReporteMovimientos() {
+        try {
+            // Obtener los valores de los filtros para pasarlos al backend
+            const filtroFechaInicioMov = document.getElementById('filtroFechaInicioMov');
+            const filtroFechaFinMov = document.getElementById('filtroFechaFinMov');
+            const filtroTipoMov = document.getElementById('filtroTipoMov');
+            const buscadorMovimientos = document.getElementById('buscadorMovimientos');
+
+            const params = new URLSearchParams();
+            if (filtroFechaInicioMov && filtroFechaInicioMov.value) params.append('startDate', filtroFechaInicioMov.value);
+            if (filtroFechaFinMov && filtroFechaFinMov.value) params.append('endDate', filtroFechaFinMov.value);
+            if (filtroTipoMov && filtroTipoMov.value) params.append('type', filtroTipoMov.value.toUpperCase());
+            if (buscadorMovimientos && buscadorMovimientos.value) params.append('searchTerm', buscadorMovimientos.value); // Pasar el término de búsqueda
+
+            window.open(`${window.location.origin}/api/reports/movements/pdf?${params.toString()}`, '_blank');
+        } catch (error) {
+            console.error('Error al generar reporte de movimientos:', error);
+            showSweetAlert("error", "Error", "No se pudo generar el reporte de movimientos.");
+        }
+    }
+
+    async function generarReporteAccesos() {
+        try {
+            window.open(`${window.location.origin}/api/reports/user-access/pdf`, '_blank');
+        } catch (error) {
+            console.error('Error al generar reporte de accesos:', error);
+            showSweetAlert("error", "Error", "No se pudo generar el reporte de accesos.");
+        }
+    }
+
+
+    // Renderiza la lista de clientes con filtro y acciones
+    function renderClientes() {
+        const tbody = document.getElementById("tablaClientes");
+        const buscadorClientes = document.getElementById("buscadorClientes");
+        const filtro = buscadorClientes ? buscadorClientes.value.toLowerCase() : "";
+        let html = "";
+
+        const filtrados = serverUsers.filter(
+            (c) =>
+                c.id.toString().includes(filtro) ||
+                c.firstName.toLowerCase().includes(filtro) ||
+                c.lastName.toLowerCase().includes(filtro) ||
+                c.email.toLowerCase().includes(filtro) ||
+                (c.dpi && c.dpi.toLowerCase().includes(filtro)) ||
+                (c.nit && c.nit.toLowerCase().includes(filtro)) ||
+                (c.phoneNumber && c.phoneNumber.toLowerCase().includes(filtro))
+        );
+
+        if (tbody) { // Asegurarse de que el tbody exista antes de manipularlo
+            if (filtrados.length === 0) {
+                html = `<tr><td colspan="9" class="text-center py-6 text-gray-500">No se encontraron clientes.</td></tr>`;
+            } else {
+                filtrados.forEach((c) => {
+                    html += `
+                        <tr class="border-b border-gray-700 last:border-b-0">
+                            <td class="py-3 px-4">${c.id}</td>
+                            <td class="py-3 px-4">${c.firstName}</td>
+                            <td class="py-3 px-4">${c.lastName}</td>
+                            <td class="py-3 px-4">${c.email}</td>
+                            <td class="py-3 px-4">${c.dpi || 'N/A'}</td>
+                            <td class="py-3 px-4">${c.nit || 'N/A'}</td>
+                            <td class="py-3 px-4">${c.phoneNumber || 'N/A'}</td>
+                            <td class="py-3 px-4">${c.status || 'N/A'}</td> <!-- Usar c.status -->
+                            <td class="py-3 px-4 space-x-2">
+                                <button class="text-yellow-400 hover:underline btnEditarCliente" data-id="${c.id}">Editar</button>
+                                <button class="text-red-500 hover:underline btnEliminarCliente" data-id="${c.id}">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            tbody.innerHTML = html;
+
+            // Re-adjuntar event listeners a los botones de editar/eliminar después de recargar la tabla
+            document.querySelectorAll(".btnEditarCliente").forEach(button => {
+                button.addEventListener("click", (e) => {
+                    const clienteId = e.target.dataset.id;
+                    const clienteAEditar = serverUsers.find(user => user.id.toString() === clienteId);
+                    if (clienteAEditar) {
+                        abrirModalEditar(clienteAEditar);
+                    }
+                });
+            });
+
+            document.querySelectorAll(".btnEliminarCliente").forEach(button => {
+                button.addEventListener("click", (e) => {
+                    clienteIdAEliminar = e.target.dataset.id;
+                    modalConfirmacion.classList.remove('hidden');
+                });
+            });
+        }
+    }
+
+
+    // Función para cargar sección y activar enlaces
+    function cambiarPestania(id) {
+        // Quitar clase active de todos
+        sidebarLinks.forEach((link) => {
+            link.classList.remove("bg-emerald-600", "text-white");
+            link.classList.add("hover:bg-emerald-700");
+        });
+        // Agregar active al clickeado
+        const linkActivo = Array.from(sidebarLinks).find(
+            (link) => link.dataset.id === id
+        );
+        if (linkActivo) {
+            linkActivo.classList.add("bg-emerald-600", "text-white");
+            linkActivo.classList.remove("hover:bg-emerald-700");
+        }
+        
+        // Cambiar contenido
+        contenido.innerHTML = secciones[id](dashboardStats) || '<p class="text-center mt-20 text-gray-400">Sección no disponible.</p>';
+
+        // Cerrar sidebar en móvil después de seleccionar una opción
+        if (window.innerWidth < 1024) {
+          ocultarSidebar();
+        }
+
+        // Al cargar cada sección, ejecutar funciones específicas
+        if (id === "inicio") {
+          inicializarDashboardAdmin();
+        } else if (id === "clientes") {
+            cargarClientes();
+            // Adjuntar listeners para el formulario de registro y buscador después de cargar la sección
+            const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistro");
+            if (btnAbrirModalRegistro) {
+                btnAbrirModalRegistro.addEventListener("click", () => {
+                    modalRegistrarCliente.classList.remove("hidden");
+                    // Limpiar y resetear advertencias al abrir el modal de registro
+                    formRegistrarCliente.reset();
+                    emailWarning.classList.add("hidden");
+                    dpiWarning.classList.add("hidden");
+                    nitWarning.classList.add("hidden");
+                    phoneWarning.classList.add("hidden");
+                    birthDateWarning.classList.add("hidden");
+                });
+            }
+            const buscadorClientesElem = document.getElementById("buscadorClientes");
+            if (buscadorClientesElem) {
+                buscadorClientesElem.addEventListener("input", renderClientes);
+            }
+            const btnReporteClientesSection = document.getElementById("btnReporteClientes");
+            if (btnReporteClientesSection) {
+                btnReporteClientesSection.addEventListener("click", generarReporteClientes);
+            }
+
+            // Adjuntar listeners de validación para el formulario de registro
+            if (regEmailInput) regEmailInput.addEventListener('input', () => {
+                const isValid = validateEmail(regEmailInput.value);
+                emailWarning.classList.toggle("hidden", isValid);
+            });
+            if (regDPIInput) regDPIInput.addEventListener('input', () => {
+                const value = regDPIInput.value.replace(/\D/g, ''); // Solo números
+                regDPIInput.value = value; // Actualizar el valor del input
+                const isValid = validateDPI(value);
+                dpiWarning.classList.toggle("hidden", isValid);
+            });
+            if (regNITInput) regNITInput.addEventListener('input', () => {
+                let value = regNITInput.value.replace(/[^0-9kK]/gi, ''); // Solo números, k, K (sin guiones), 'i' para case-insensitive
+                let formattedValue = '';
+
+                if (value.length > 1) { // Si hay al menos 2 caracteres, intentar formatear
+                    formattedValue = value.substring(0, value.length - 1) + '-' + value.substring(value.length - 1);
+                } else {
+                    formattedValue = value;
+                }
+
+                if (formattedValue.length > 10) {
+                    formattedValue = formattedValue.substring(0, 10);
+                }
+
+                regNITInput.value = formattedValue.toUpperCase(); // Convertir a mayúsculas para 'K'
+                const isValid = validateNIT(regNITInput.value);
+                nitWarning.classList.toggle("hidden", isValid);
+            });
+            if (regPhoneNumberInput) regPhoneNumberInput.addEventListener('input', () => {
+                let value = regPhoneNumberInput.value.replace(/\D/g, ''); // Eliminar no dígitos
+                if (value.length > 4) {
+                    value = value.substring(0, 4) + '-' + value.substring(4, 8);
+                }
+                regPhoneNumberInput.value = value;
+                const isValid = validatePhoneNumber(value);
+                phoneWarning.classList.toggle("hidden", isValid);
+            });
+            if (regBirthDateInput) regBirthDateInput.addEventListener('change', () => {
+                const isValid = validateBirthDate(regBirthDateInput.value);
+                birthDateWarning.classList.toggle("hidden", isValid);
+            });
+
+
+        } else if (id === "deposito") {
+            inicializarDepositoAdmin();
+        } else if (id === "todosMovimientos") {
+            inicializarTodosMovimientos();
+            // Adjuntar listener para el botón de reporte de movimientos
+            const btnReporteMovimientosSection = document.getElementById("btnReporteMovimientos");
+            if (btnReporteMovimientosSection) {
+                btnReporteMovimientosSection.addEventListener("click", generarReporteMovimientos);
+            }
+            const filtroFechaInicioMov = document.getElementById('filtroFechaInicioMov');
+            const filtroFechaFinMov = document.getElementById('filtroFechaFinMov');
+            const filtroTipoMov = document.getElementById('filtroTipoMov');
+            const buscadorMovimientos = document.getElementById('buscadorMovimientos');
+            const btnFiltrarMovimientos = document.getElementById('btnFiltrarMovimientos');
+
+            if (btnFiltrarMovimientos) {
+                btnFiltrarMovimientos.onclick = cargarTodosMovimientos;
+            }
+            if (filtroFechaInicioMov) filtroFechaInicioMov.addEventListener("change", cargarTodosMovimientos);
+            if (filtroFechaFinMov) filtroFechaFinMov.addEventListener("change", cargarTodosMovimientos);
+            if (filtroTipoMov) filtroTipoMov.addEventListener("change", cargarTodosMovimientos);
+            if (buscadorMovimientos) buscadorMovimientos.addEventListener("input", cargarTodosMovimientos);
+
+        } else if (id === "reportes") {
+            // Adjuntar listeners a los botones de reporte
+            const btnReporteClientesSection = document.getElementById("btnReporteClientes");
+            const btnReporteMovimientosSection = document.getElementById("btnReporteMovimientos");
+            const btnReporteAccesosSection = document.getElementById("btnReporteAccesos");
+
+            if (btnReporteClientesSection) {
+                btnReporteClientesSection.addEventListener("click", generarReporteClientes);
+            }
+            if (btnReporteMovimientosSection) {
+                btnReporteMovimientosSection.addEventListener("click", generarReporteMovimientos);
+            }
+            if (btnReporteAccesosSection) {
+                btnReporteAccesosSection.addEventListener("click", generarReporteAccesos);
+            }
+        }
+    }
+
+    // --- Event Listeners Globales ---
+    btnToggleSidebar.addEventListener("click", mostrarSidebar); // Cambiado a mostrarSidebar
+    overlay.addEventListener("click", ocultarSidebar); // Cambiado a ocultarSidebar
+
+    sidebarLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const id = link.dataset.id;
+            cambiarPestania(id);
+        });
     });
-}
 
-// Enviar formulario de edición al backend
-if (formEditar) {
-    formEditar.addEventListener("submit", function (e) {
-      e.preventDefault(); // Evitar el envío de formulario por defecto
-      actualizarCliente(); // Llama a la función para enviar la actualización
-    });
-}
-
-// Cerrar modal de confirmación al hacer clic en cancelar
-if (btnConfirmarCancelar) {
-    btnConfirmarCancelar.addEventListener("click", () => {
-        modalConfirmacion.classList.add("hidden");
-    });
-}
-
-      // Manejar el cierre de sesión
-      document.querySelector('a[data-id="cerrarSesion"]').addEventListener('click', (e) => {
+    // Manejar el cierre de sesión
+    document.querySelector('a[data-id="cerrarSesion"]').addEventListener('click', (e) => {
         e.preventDefault();
-        // Redirige a la URL de logout de Spring Security
-        window.location.href = `${window.location.origin}/logout`; // Usar URL absoluta
-      });
+        window.location.href = `${window.location.origin}/logout`;
+    });
 
 
-      // Mostrar dashboard por defecto
-      // Se ejecuta después de que el DOM esté completamente cargado
-      document.addEventListener('DOMContentLoaded', () => {
-          cambiarPestania("dashboard");
-      });
+    // Mostrar inicio por defecto al cargar el DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        cambiarPestania("inicio");
+    });
     </script>
   </body>
 </html>

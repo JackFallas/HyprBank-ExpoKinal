@@ -4,7 +4,7 @@ package com.hyprbank.online.bancavirtual.hyprbank.controller;
 import com.hyprbank.online.bancavirtual.hyprbank.dto.MovementDTO;
 
 // Importaciones de Entidades y Enums
-import com.hyprbank.online.bancavirtual.hyprbank.model.User;
+// import com.hyprbank.online.bancavirtual.hyprbank.model.User; // ELIMINADO: No se usa directamente aquí
 import com.hyprbank.online.bancavirtual.hyprbank.model.Movement.MovementType; // Importa el enum anidado
 
 // Importaciones de Repositorios
@@ -29,37 +29,32 @@ import org.springframework.web.bind.annotation.CrossOrigin; // Importar CrossOri
 // Importaciones de Java Utilities
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map; // Importar Map para respuestas de error
+import java.util.Map;
 
-// Importaciones de Logging
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * Controlador REST para la gestion de movimientos bancarios.
+ * Controlador REST para la gestión de movimientos bancarios.
  *
- * Proporciona endpoints para que los usuarios autenticados puedan consultar su historial de movimientos,
- * con opciones de filtrado por rango de fechas, tipo de movimiento y un límite de resultados.
+ * Proporciona un endpoint para que los usuarios autenticados puedan consultar
+ * su historial de movimientos, aplicando filtros por rango de fechas y tipo de movimiento.
  *
- * La anotacion @RestController combina @Controller y @ResponseBody, indicando que las
- * respuestas de los metodos se serializaran directamente al cuerpo de la respuesta HTTP.
+ * La anotación @RestController combina @Controller y @ResponseBody, indicando que las
+ * respuestas de los métodos se serializarán directamente al cuerpo de la respuesta HTTP.
  * @RequestMapping("/api/movements") define la ruta base para todos los endpoints de este controlador.
- * @CrossOrigin permite solicitudes de origen cruzado desde el frontend especificado.
+ * @CrossOrigin permite solicitudes de origen cruzado, útil para desarrollo frontend separado.
  */
 @RestController
 @RequestMapping("/api/movements")
-@CrossOrigin(origins = "http://localhost:8081") // Asegúrate de que este origen coincida con tu frontend
+@CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:8080", "http://localhost:8081"})
 public class MovementController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MovementController.class); // Inicializar logger
+    private static final Logger logger = LoggerFactory.getLogger(MovementController.class);
 
     private final MovementService movementService;
-    private final UserRepository userRepository;
+    private final UserRepository userRepository; // Necesario para obtener el ID del usuario
 
-    /*
-     * Constructor para la inyeccion de dependencias.
-     * Spring inyectara las instancias de MovementService y UserRepository.
-     */
     @Autowired
     public MovementController(MovementService movementService, UserRepository userRepository) {
         this.movementService = movementService;
@@ -67,25 +62,23 @@ public class MovementController {
     }
 
     /**
-     * Endpoint para obtener el historial de movimientos del usuario autenticado.
-     * Permite filtrar los movimientos por un rango de fechas y/o por tipo de movimiento,
-     * y limitar el número de resultados.
+     * Obtiene el historial de movimientos de una cuenta para el usuario autenticado.
+     * Permite filtrar por rango de fechas, tipo de movimiento y limitar la cantidad de resultados.
      *
-     * @param userDetails Objeto UserDetails inyectado por Spring Security, que representa al usuario autenticado.
-     * @param startDate Fecha de inicio para el filtro del historial (opcional, formato ISO_DATE 'YYYY-MM-DD').
-     * @param endDate Fecha de fin para el filtro del historial (opcional, formato ISO_DATE 'YYYY-MM-DD').
-     * @param type Tipo de movimiento (INCOME o EXPENSE, o null/vacío para todos) (opcional).
-     * @param limit Número máximo de movimientos a devolver (opcional).
-     * @return ResponseEntity con una lista de MovementDTOs que cumplen con los criterios de filtro,
-     * o un mensaje de error si ocurre una excepción.
+     * @param userDetails Objeto UserDetails proporcionado por Spring Security, que contiene los detalles del usuario autenticado.
+     * @param startDate   Fecha de inicio para filtrar movimientos (opcional).
+     * @param endDate     Fecha de fin para filtrar movimientos (opcional).
+     * @param type        Tipo de movimiento a filtrar (INCOME, EXPENSE) (opcional).
+     * @param limit       Número máximo de movimientos a devolver (opcional).
+     * @return ResponseEntity con una lista de {@link MovementDTO} que representan el historial de movimientos.
      */
     @GetMapping("/history")
-    public ResponseEntity<?> getMovementHistory( // Cambiado a ResponseEntity<?> para permitir Map en caso de error
+    public ResponseEntity<?> getMovementHistory(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String type, // Cambiado a String para manejar "todos" y luego convertir en el servicio
-            @RequestParam(required = false) Integer limit // <-- AGREGADO: Parámetro para limitar resultados
+            @RequestParam(required = false) MovementType type,
+            @RequestParam(required = false) Integer limit // AGREGADO: Parámetro para limitar resultados
     ) {
         try {
             // El email del usuario autenticado se obtiene del objeto UserDetails proporcionado por Spring Security.

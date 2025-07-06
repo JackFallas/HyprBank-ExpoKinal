@@ -1,50 +1,70 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bienvenido a HyprBank</title>
+    <!-- Carga de Tailwind CSS desde CDN para desarrollo rápido.
+         En producción, deberías usar tu archivo local compilado (output.css). -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/output.css" />
+    <style>
+      /* Estilos personalizados si son necesarios */
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white flex flex-col min-h-screen">
+    <!-- Encabezado / Barra de Navegación -->
+    <header class="bg-gray-800 shadow-lg py-4 px-6 flex justify-between items-center">
+      <div class="text-2xl font-bold text-emerald-400">HyprBank</div>
+      <nav>
+        <ul class="flex space-x-6">
+          <li>
+            <a href="/" class="text-gray-300 hover:text-emerald-400 transition duration-300">Inicio</a>
+          </li>
+          <li>
+            <a href="/login" class="text-gray-300 hover:text-emerald-400 transition duration-300">Iniciar Sesión</a>
+          </li>
+          <!-- Si decides tener una página de registro en el futuro, puedes añadirla aquí -->
+          <!-- <li>
+            <a href="/register" class="text-gray-300 hover:text-emerald-400 transition duration-300">Registrarse</a>
+          </li> -->
+        </ul>
+      </nav>
+    </header>
 
-<head>
-    <meta charset="utf-8">
-    <title>Inicio</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-</head>
-
-<body>
-
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                    aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span
-                        class="icon-bar"></span> <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#" th:href="@{/}">Registro y
-                    Inicio de sesión</a>
-            </div>
-            <div id="navbar" class="collapse navbar-collapse">
-                <ul class="nav navbar-nav">
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/logout}">Logout</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Iniciar Sesión</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Registrarse</a></li>
-                </ul>
-            </div>
+    <!-- Contenido Principal -->
+    <main class="flex-grow flex items-center justify-center p-6">
+      <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center max-w-2xl w-full">
+        <h1 class="text-5xl font-extrabold text-emerald-400 mb-6 animate-fade-in-down">
+          Bienvenido a HyprBank
+        </h1>
+        <p class="text-gray-300 text-lg mb-8 animate-fade-in-up">
+          Tu banca virtual segura y eficiente. Gestiona tus finanzas con total confianza y facilidad.
+        </p>
+        <div class="space-y-4 sm:space-y-0 sm:space-x-4 flex flex-col sm:flex-row justify-center">
+          <a
+            href="/login"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+          >
+            Iniciar Sesión
+          </a>
+          <!-- Si decides tener una página de registro en el futuro, puedes añadirla aquí -->
+          <!-- <a
+            href="/register"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+          >
+            Abrir una Cuenta
+          </a> -->
         </div>
-    </nav>
+      </div>
+    </main>
 
-    <br>
-    <br>
-
-    <div class="container">
-        <h1>Registro e Inicio de Sesión con Spring Boot + Spring Security</h1>
-        <span sec:authorize="isAuthenticated()">Bienvenido <span sec:authentication="principal.username"></span></span>
-    </div>
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
-</body>
-
+    <!-- Pie de Página -->
+    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-sm mt-auto">
+      &copy; 2025 HyprBank. Todos los derechos reservados.
+    </footer>
+  </body>
 </html>

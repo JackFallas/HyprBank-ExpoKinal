@@ -9,10 +9,10 @@ import java.util.Optional;
 /*
  * Interfaz de Repositorio para la entidad User
  *
- * Proporciona metodos para interactuar con la base de datos utilizando CRUD
+ * Proporciona métodos para interactuar con la base de datos utilizando CRUD
  *
  * Extiende JpaRepository de Spring Data JPA
- * esto nos da acceso a metodos predefinidos del crud
+ * esto nos da acceso a métodos predefinidos del crud
  *
  * @param <User> El tipo de la entidad con la que trabaja este repositorio
  * @param <Long> El tipo de PK de la entidad User (El ID)
@@ -20,13 +20,16 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     /*
-     * Este metodo busca a un usuario por su email utilizando este
-     * mismo como el "username" para iniciar sesion
+     * Este método busca a un usuario por su email utilizando este
+     * mismo como el "username" para iniciar sesión
      *
-     * @param email Es la direccion de correo del usuario a buscar
-     * @return Un Optional que devuelve el usuario si lo encuentra, si no devuelve un Optional vacio
+     * @param email Es la dirección de correo del usuario a buscar
+     * @return Un Optional que devuelve el usuario si lo encuentra, si no devuelve un Optional vacío
      * lo utilizamos para manejar posibles ausencias de usuarios de forma segura evitando NullPointerExceptions
      *
      */
     Optional<User> findByEmail(String email);
+
+    // ELIMINADO: public abstract long com.hyprbank.online.bancavirtual.hyprbank.repository.UserRepository.countByStatus(java.lang.String);
+    // Este método causaba el error porque la entidad User no tiene una propiedad 'status'.
 }

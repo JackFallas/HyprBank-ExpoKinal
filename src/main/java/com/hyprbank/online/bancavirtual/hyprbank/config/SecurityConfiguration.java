@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UserDetailsService; // Necesario para el DaoAuthenticationProvider
 import com.hyprbank.online.bancavirtual.hyprbank.config.RolAccess;
 
 // Importaciones para CORS
@@ -31,15 +31,16 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    private final RolAccess accesoRol;
+    private final RolAccess rolAccess;
 
-    public SecurityConfiguration(RolAccess accesoRol) {
-        this.accesoRol = accesoRol;
+    // Ya no inyectamos UserDetailsService directamente en el constructor de SecurityConfiguration.
+    // Esto es clave para romper el ciclo de dependencias.
+    public SecurityConfiguration(RolAccess rolAccess) {
+        this.rolAccess = rolAccess;
     }
 
     /**
-     * Define el bean para el codificador de contraseñas.
-     * Se recomienda BCryptPasswordEncoder para encriptar contraseñas de forma segura.
+     * Define el bean para el codificador de contraseñas (BCryptPasswordEncoder).
      *
      * @return Una instancia de {@link BCryptPasswordEncoder}.
      */
@@ -49,60 +50,55 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Configura el proveedor de autenticación DAO (Data Access Object).
-     * Este proveedor utiliza el {@link UserDetailsService} (que tu UserService implementa)
-     * para cargar los detalles del usuario y el {@link BCryptPasswordEncoder} para verificar la contraseña.
+     * Configura el proveedor de autenticación DAO.
+     * Este bean ahora toma UserDetailsService y BCryptPasswordEncoder como parámetros.
+     * Spring se encargará de inyectar estos beans cuando cree este proveedor,
+     * lo que ayuda a evitar el ciclo de dependencias.
      *
-     * @param userDetailsService Spring inyectará automáticamente tu implementación de UserDetailsService.
+     * @param userDetailsService El servicio de detalles de usuario (UserServiceImpl).
+     * @param passwordEncoder El codificador de contraseñas.
      * @return Una instancia de {@link DaoAuthenticationProvider}.
      */
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, BCryptPasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
         auth.setUserDetailsService(userDetailsService);
-        auth.setPasswordEncoder(passwordEncoder());
+        auth.setPasswordEncoder(passwordEncoder);
         return auth;
     }
 
     /**
-     * Define la cadena de filtros de seguridad HTTP.
-     * En esta configuración se establecen las reglas de autorización para las diferentes URLs,
-     * la configuración del formulario de login y el manejo del logout.
+     * Configura la cadena de filtros de seguridad HTTP.
+     * Define las reglas de autorización para diferentes rutas, la página de login,
+     * el manejo de logout y la integración con el proveedor de autenticación.
      *
-     * @param http El objeto HttpSecurity para configurar la seguridad.
-     * @return Una instancia de {@link SecurityFilterChain}.
+     * @param http El objeto {@link HttpSecurity} para configurar la seguridad.
+     * @param authenticationProvider El proveedor de autenticación DAO, que Spring inyectará.
+     * @return La cadena de filtros de seguridad configurada.
      * @throws Exception Si ocurre un error durante la configuración.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // CSRF deshabilitado para simplificar el desarrollo
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable()) // Deshabilita CSRF para simplificar, considera habilitarlo en producción
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilita CORS con la configuración definida
             .authorizeHttpRequests(authorize -> authorize
-                // Rutas públicas: accesibles sin autenticación.
-                // Aseguramos acceso a la página de login y a todos los recursos estáticos.
                 .requestMatchers(
-                    "/login", "/login**", // La página de login en sí
-                    "/css/**", "/js/**", "/img/**", "/webjars/**", // Recursos estáticos comunes
-                    "/resources/**", "/static/**" // Rutas adicionales para recursos estáticos si se usan
-                ).permitAll()
-
-                // La página de registro es solo para ADMIN
-                .requestMatchers("/register", "/register**").hasRole("ADMIN")
-
-                // Rutas protegidas por roles específicos.
-                .requestMatchers("/dashboard/admin").hasRole("ADMIN")
-                .requestMatchers("/dashboard/user").hasRole("USER")
-
-                // Cualquier otra solicitud no especificada requiere autenticación.
-                .anyRequest().authenticated()
+                    // Rutas permitidas para todos (sin autenticación)
+                    new AntPathRequestMatcher("/css/**"),     // Permitir acceso a recursos CSS
+                    new AntPathRequestMatcher("/js/**"),      // Permitir acceso a recursos JS
+                    new AntPathRequestMatcher("/images/**"),  // Permitir acceso a recursos de imágenes
+                    new AntPathRequestMatcher("/"),           // Permitir acceso a la página de inicio (index.html)
+                    new AntPathRequestMatcher("/login**")     // Permitir acceso a la página de login (login.html)
+                ).permitAll() // Permitir a todos acceder a estas rutas
+                .requestMatchers(new AntPathRequestMatcher("/dashboard/admin**")).hasRole("ADMIN") // Solo ADMIN puede acceder al dashboard de admin
+                .requestMatchers(new AntPathRequestMatcher("/dashboard/user**")).hasAnyRole("USER", "ADMIN") // USER y ADMIN pueden acceder al dashboard de usuario
+                .anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
             )
             .formLogin(form -> form
-                .loginPage("/login") // La URL de tu página de login
-                .loginProcessingUrl("/login") // URL a la que el formulario POST se envía
-                .successHandler(accesoRol) // Manejador de éxito personalizado
-                .failureUrl("/login?error") // Redirige aquí si el login falla
-                .permitAll() // Permite a todos acceder al formulario de login
+                .loginPage("/login") // Especifica la página de login personalizada
+                .successHandler(rolAccess) // Usa el handler personalizado para redirección post-login
+                .permitAll() // Permitir a todos acceder al formulario de login
             )
             .logout(logout -> logout
                 .invalidateHttpSession(true) // Invalida la sesión HTTP
@@ -110,7 +106,9 @@ public class SecurityConfiguration {
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // URL para cerrar sesión
                 .logoutSuccessUrl("/login?logout") // Redirige aquí después de cerrar sesión
                 .permitAll() // Permite a todos acceder al proceso de logout
-            );
+            )
+            // IMPORTANTE: Añadir el proveedor de autenticación a HttpSecurity
+            .authenticationProvider(authenticationProvider);
 
         return http.build();
     }

@@ -30,9 +30,7 @@ public interface UserService extends UserDetailsService {
     User save(RegistrationRequest registrationDTO);
 
     /**
-     * Lista todos los usuarios registrados en el sistema.
-     *
-     * @return Una {@link List} de todas las entidades {@link User} existentes.
+     * Lista todos los {@link User} existentes.
      */
     List<User> listUsers();
 
@@ -61,7 +59,7 @@ public interface UserService extends UserDetailsService {
      * @return La entidad {@link User} actualizada.
      * @throws RuntimeException Si el usuario no se encuentra o hay un problema al actualizar.
      */
-    User updateUser(UserUpdateRequest updateRequest); // Cambiado para aceptar UserUpdateRequest
+    User updateUser(UserUpdateRequest updateRequest);
 
     /**
      * Elimina un usuario por su ID.
@@ -70,4 +68,13 @@ public interface UserService extends UserDetailsService {
      * @throws RuntimeException Si el usuario no se encuentra.
      */
     void deleteUser(Long id);
+
+    /**
+     * Cambia la contraseña de un usuario específico.
+     *
+     * @param userId El ID del usuario cuya contraseña se va a cambiar.
+     * @param newPassword La nueva contraseña en texto plano.
+     * @throws RuntimeException Si el usuario no se encuentra o hay un problema al actualizar la contraseña.
+     */
+    User changeUserPassword(Long userId, String newPassword);
 }

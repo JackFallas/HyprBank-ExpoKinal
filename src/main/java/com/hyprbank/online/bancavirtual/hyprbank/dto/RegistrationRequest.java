@@ -21,12 +21,14 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor // Anotacion lombok que genera un constructor con todos los argumentos
 
 public class RegistrationRequest {
-    private Long id; 
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
-    private String dpi;        
-    private String nit;   
-    private String phoneNumber; 
+    private String password; // Este campo se usará para devolver la contraseña generada
+    private String dpi;
+    private String nit;
+    private String phoneNumber;
+    private String address; // Añadido el campo address
+    private String birthDate; // Asegurarse de que sea String para coincidir con el HTML y User.java
 }

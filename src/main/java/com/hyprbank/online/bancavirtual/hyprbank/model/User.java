@@ -13,7 +13,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set; // Importar Set para la colección de roles
 
+/*
+ * Entidad JPA que representa un usuario en la base de datos.
+ *
+ * Mapea la tabla 'users' y define la estructura de los datos
+ * relacionados con los usuarios de la aplicación.
+ *
+ * Implementa UserDetails de Spring Security para ser reconocida
+ * como un principal de seguridad.
+ *
+ * Utilizaremos Lombok para generar automáticamente getters, setters, toString(), equals() y hashCode() para todos los campos.
+ * El constructor sin argumentos es obligatorio para JPA.
+ */
 @Entity
 @Table(name = "users")
 @Data
@@ -48,16 +61,24 @@ public class User implements UserDetails {
     @Column(nullable = true)
     private String phoneNumber;
 
-    // --- NUEVO CAMPO AÑADIDO: 'enabled' ---
-    @Column(nullable = false) // Generalmente un usuario está habilitado o deshabilitado
-    private boolean enabled;
-    // --- FIN NUEVO CAMPO ---
+    // --- Campos de estado para Spring Security ---
+    @Column(nullable = false)
+    private boolean enabled = true; // Si la cuenta está habilitada (puede iniciar sesión)
 
-    // Relación OneToMany con Account: Un usuario puede tener muchas cuentas
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Account> accounts = new ArrayList<>();
+    @Column(nullable = false)
+    private boolean accountNonExpired = true; // Si la cuenta no ha expirado
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @Column(nullable = false)
+    private boolean accountNonLocked = true; // Si la cuenta no está bloqueada
+
+    @Column(nullable = false)
+    private boolean credentialsNonExpired = true; // Si las credenciales no han expirado
+    // --- Fin Campos de estado ---
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Account> accounts;
+
+    @ManyToMany(fetch = FetchType.EAGER) // Cargar roles inmediatamente con el usuario
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -87,6 +108,8 @@ public class User implements UserDetails {
         if (this.roles != null && !this.roles.isEmpty()) {
             return this.roles;
         }
+        // Si no tiene roles asignados, por defecto le damos el rol de usuario básico.
+        // Esto es un fallback, lo ideal es que siempre tenga al menos ROLE_USER.
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
@@ -102,23 +125,36 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return accountNonExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return credentialsNonExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        // Este método es parte de UserDetails y ahora devuelve el valor de la propiedad 'enabled'
-        return this.enabled;
+        return enabled;
+    }
+
+    /**
+     * Este método es añadido para resolver el error en tiempo de ejecución
+     * "The method getRequiresPasswordChange() is undefined for the type User".
+     * Si no tienes una lógica específica para forzar el cambio de contraseña,
+     * simplemente devuelve `false`.
+     *
+     * @return `true` si el usuario debe cambiar su contraseña, `false` en caso contrario.
+     */
+    public boolean getRequiresPasswordChange() {
+        // Por ahora, siempre devuelve false. Si en el futuro necesitas una lógica
+        // para forzar el cambio de contraseña (ej. después del primer login, o si la contraseña expira),
+        // la implementarías aquí, quizás con un nuevo campo en la base de datos para el usuario.
+        return false;
     }
 }
-

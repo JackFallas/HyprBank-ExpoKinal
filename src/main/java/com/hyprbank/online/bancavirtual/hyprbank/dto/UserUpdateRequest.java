@@ -23,7 +23,8 @@ public class UserUpdateRequest {
     private String dpi;
     private String nit;
     private String phoneNumber;
-    private String estado; // Campo para el estado (Activo, Inactivo, Bloqueado) como String
-    // No incluimos la contraseña aquí por seguridad; la actualización de contraseña
-    // debería ser un proceso separado.
+    private String address; // Añadido el campo address
+    private String birthDate; // Añadido el campo birthDate
+    private String status; // Campo para el estado (Activo, Inactivo, Bloqueado) como String
+    private String newPassword; // Campo opcional para la nueva contraseña
 }
