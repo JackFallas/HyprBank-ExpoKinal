@@ -1,125 +1,134 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" class="dark" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8">
-<title>Registro de usuarios</title>
-<!-- Latest compiled and minified CSS -->
-<!-- Si ya configuraste Bootstrap localmente, usa th:href="@{/css/bootstrap.min.css}" -->
-<link rel="stylesheet"
-    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-    xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-    crossorigin="anonymous">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyprBank - Registro de Usuarios</title>
 
-<!-- Optional theme -->
-<!-- Si ya configuraste Bootstrap localmente, usa th:href="@{/css/bootstrap-theme.min.css}" -->
-<link rel="stylesheet"
-    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-    xintegrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-    crossorigin="anonymous">
+    <!-- Link to your local Tailwind CSS file -->
+    <link rel="stylesheet" href="/css/output.css">
+    
+    <!-- CDN for SweetAlert2 for alert messages -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center">
 
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed"
-                    data-toggle="collapse" data-target="#navbar" aria-expanded="false"
-                    aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span> <span
-                        class="icon-bar"></span> <span class="icon-bar"></span> <span
-                        class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#" th:href="@{/}">Registro y
-                    inicio de sesión</a>
+    <div class="container mx-auto px-4">
+        <div class="max-w-md mx-auto bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700/30">
+
+            <!-- Logo and HyprBank Title -->
+            <div class="flex items-center justify-center mb-6">
+                <img src="/img/hyprland-logo.svg" alt="HyprBank Logo" class="w-10 h-10 mr-3">
+                <h1 class="text-3xl font-bold text-white">HyprBank</h1>
             </div>
-        </div>
-    </nav>
 
-    <br>
-    <br>
+            <h2 class="text-2xl font-bold mb-6 text-center text-emerald-500">Regístrate</h2>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 col-md-offset-3">
-                <!-- Mensaje de éxito si viene el parámetro 'exito' -->
-                <div th:if="${param.exito}">
-                    <div class="alert alert-info">Se ha registrado exitosamente a
-                        la aplicación</div>
+            <!-- Success message if 'exito' parameter is present -->
+            <div th:if="${param.exito}" id="registrationSuccessParam" data-message="Se ha registrado exitosamente a la aplicación"></div>
+
+            <!-- Success message if 'registrationSuccess' flash attribute is present -->
+            <div th:if="${registrationSuccess}" id="registrationSuccessFlash" th:attr="data-message=${registrationSuccess}"></div>
+
+            <!-- Error message if 'registrationError' flash attribute is present -->
+            <div th:if="${registrationError}" id="registrationErrorFlash" th:attr="data-message=${registrationError}"></div>
+
+            <form th:action="@{/register}" th:object="${user}" method="post" class="space-y-4">
+
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="firstName">Nombre : </label>
+                    <input id="firstName" type="text" th:field="*{firstName}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required autofocus="autofocus" placeholder="Ingresa tu nombre">
                 </div>
 
-                <!-- Mensaje de éxito si viene el atributo flash 'registrationSuccess' (como en tu AuthController) -->
-                <div th:if="${registrationSuccess}" class="alert alert-info">
-                    <p th:text="${registrationSuccess}"></p>
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="lastName">Apellido : </label>
+                    <input id="lastName" th:field="*{lastName}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingresa tu apellido">
                 </div>
 
-                <!-- Mensaje de error si viene el atributo flash 'registrationError' (como en tu AuthController) -->
-                <div th:if="${registrationError}" class="alert alert-danger">
-                    <p th:text="${registrationError}"></p>
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="email">Email : </label>
+                    <input id="email" type="email" th:field="*{email}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingresa tu email">
                 </div>
 
-                <h1>Regístrate</h1>
-                <!-- th:object="${user}" coincide con @ModelAttribute("user") en AuthController -->
-                <form th:action="@{/register}" th:object="${user}" method="post">
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="password">Password : </label>
+                    <input type="password" id="password" th:field="*{password}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingresa tu contraseña">
+                </div>
 
-                    <div class="form-group">
-                        <label class="control-label" for="firstName">Nombre : </label>
-                        <input id="firstName" type="text" class="form-control" th:field="*{firstName}"
-                            required autofocus="autofocus">
-                    </div>
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="dpi">DPI : </label>
+                    <input id="dpi" type="text" th:field="*{dpi}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingrese el DPI del cliente">
+                </div>
 
-                    <div class="form-group">
-                        <label class="control-label" for="lastName">Apellido : </label>
-                        <input id="lastName" class="form-control" th:field="*{lastName}"
-                            required autofocus="autofocus">
-                    </div>
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="nit">NIT : </label>
+                    <input id="nit" type="text" th:field="*{nit}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingrese el NIT del cliente">
+                </div>
 
-                    <div class="form-group">
-                        <label class="control-label" for="email">Email : </label>
-                        <input id="email" type="email" class="form-control" th:field="*{email}"
-                            required autofocus="autofocus">
-                    </div>
+                <div class="form-group">
+                    <label class="block text-gray-300 text-sm font-semibold mb-2" for="phoneNumber">Número de Teléfono : </label>
+                    <input id="phoneNumber" type="text" th:field="*{phoneNumber}"
+                        class="shadow appearance-none border border-gray-700/50 rounded w-full py-2 px-3 bg-gray-900 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500 transition duration-200"
+                        required placeholder="Ingrese el número de teléfono del cliente">
+                </div>
+           
+                <div class="flex flex-col items-center justify-center space-y-4 pt-4">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline cursor-pointer w-full transition duration-200">
+                        Registrar
+                    </button>
+                    <!-- Link to login if already registered -->
+                    <span class="text-gray-300">Si estás registrado <a th:href="@{/login}" class="text-emerald-400 hover:text-emerald-300 hover:underline">inicia sesión aquí</a></span>
+                </div>
+            </form>
 
-                    <div class="form-group">
-                        <label class="control-label" for="password">Password : </label>
-                        <input type="password" id="password" class="form-control" th:field="*{password}"
-                            required autofocus="autofocus">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label" for="dpi">DPI : </label>
-                        <input id="dpi" type="text" class="form-control" th:field="*{dpi}"
-                            required placeholder="Ingrese el DPI del cliente">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label" for="nit">NIT : </label>
-                        <input id="nit" type="text" class="form-control" th:field="*{nit}"
-                            required placeholder="Ingrese el NIT del cliente">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label" for="phoneNumber">Número de Teléfono : </label>
-                        <input id="phoneNumber" type="text" class="form-control" th:field="*{phoneNumber}"
-                            required placeholder="Ingrese el número de teléfono del cliente">
-                    </div>
-               
-
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-success">Registrar</button>
-                        <!-- Enlace para iniciar sesión si ya está registrado -->
-                        <span>Si estas registrado <a th:href="@{/login}">inicia sesión aquí</a></span>
-                    </div>
-                </form>
-
-            </div>
         </div>
     </div>
 
-    <!-- Latest compiled and minified JavaScript -->
-    <!-- Si ya configuraste jQuery y Bootstrap JS localmente, usa th:src="@{/js/jquery.min.js}" y th:src="@{/js/bootstrap.min.js}" -->
-    <script
-        src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        xintegrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
+    <script>
+        // Function to show SweetAlert2
+        function showSweetAlert(icon, title, text) {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                background: '#2D3748', // bg-gray-800
+                color: '#CBD5E0', // text-gray-300
+                confirmButtonColor: '#10B981', // bg-emerald-600
+            });
+        }
+
+        // Handle success message from URL parameter 'exito'
+        const registrationSuccessParamDiv = document.getElementById('registrationSuccessParam');
+        if (registrationSuccessParamDiv) {
+            showSweetAlert('success', 'Registro Exitoso', registrationSuccessParamDiv.dataset.message);
+        }
+
+        // Handle success message from flash attribute 'registrationSuccess'
+        const registrationSuccessFlashDiv = document.getElementById('registrationSuccessFlash');
+        if (registrationSuccessFlashDiv) {
+            showSweetAlert('success', 'Registro Exitoso', registrationSuccessFlashDiv.dataset.message);
+        }
+
+        // Handle error message from flash attribute 'registrationError'
+        const registrationErrorFlashDiv = document.getElementById('registrationErrorFlash');
+        if (registrationErrorFlashDiv) {
+            showSweetAlert('error', 'Error en el Registro', registrationErrorFlashDiv.dataset.message);
+        }
+
+        // Clear URL parameters to prevent the alert from showing again on reload
+        window.history.replaceState({}, document.title, window.location.pathname);
+    </script>
 </body>
 </html>

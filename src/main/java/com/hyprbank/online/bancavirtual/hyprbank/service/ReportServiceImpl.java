@@ -1,37 +1,50 @@
 package com.hyprbank.online.bancavirtual.hyprbank.service;
-
 // Importaciones de Entidades
 import com.hyprbank.online.bancavirtual.hyprbank.model.UserAccess;
+import com.hyprbank.online.bancavirtual.hyprbank.model.User;
+import com.hyprbank.online.bancavirtual.hyprbank.model.Account; // Necesaria para el mapeo de movimientos
+import com.hyprbank.online.bancavirtual.hyprbank.model.Movement;
+import com.hyprbank.online.bancavirtual.hyprbank.model.Movement.MovementType; // Necesaria para el mapeo de movimientos
 
 // Importaciones de DTOs
 import com.hyprbank.online.bancavirtual.hyprbank.dto.AccessReportDTO;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.ClientReportDTO;
+import com.hyprbank.online.bancavirtual.hyprbank.dto.AdminMovementDTO;
 
 // Importaciones de Repositorios
 import com.hyprbank.online.bancavirtual.hyprbank.repository.UserAccessRepository;
+import com.hyprbank.online.bancavirtual.hyprbank.repository.UserRepository; // ¡Añadido!
+import com.hyprbank.online.bancavirtual.hyprbank.repository.MovementRepository; // ¡Añadido!
+
 
 // Importaciones de JasperReports
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperExportManager; // Puede que no sea estrictamente necesario con JRPdfExporter
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
 
 // Importaciones de Spring Framework
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
+import org.springframework.util.ResourceUtils; // Aunque se recomienda getResourceAsStream, mantenemos si lo usas
 
 // Importaciones de Java Utilities e IO
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.File; // Para ResourceUtils.getFile
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors; // Para usar Streams API
 
 /*
  * Implementacion de la interfaz {@link ReportService}.
@@ -45,14 +58,21 @@ import java.util.Map;
 public class ReportServiceImpl implements ReportService {
 
     private final UserAccessRepository userAccessRepository;
+    private final UserRepository userRepository; // Correcto: inyectamos UserRepository
+    private final MovementRepository movementRepository; // Correcto: inyectamos MovementRepository
+
 
     /*
      * Constructor para la inyeccion de dependencias.
-     * Spring inyectara la instancia de UserAccessRepository.
+     * Spring inyectara las instancias de UserAccessRepository, UserRepository y MovementRepository.
      */
     @Autowired
-    public ReportServiceImpl(UserAccessRepository userAccessRepository) {
+    public ReportServiceImpl(UserAccessRepository userAccessRepository,
+                             UserRepository userRepository,
+                             MovementRepository movementRepository) {
         this.userAccessRepository = userAccessRepository;
+        this.userRepository = userRepository; // Inicializamos
+        this.movementRepository = movementRepository; // Inicializamos
     }
 
     /**
@@ -74,27 +94,24 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public byte[] generateUserAccessReportPdf() throws FileNotFoundException, JRException, IOException {
-        // 1. Cargar el archivo JRXML desde los recursos.
-        // Asegurate de que el archivo 'user_access_report.jrxml' este en src/main/resources/reports/
-        File file = ResourceUtils.getFile("classpath:reports/user_access_report.jrxml");
+        // Usamos getClass().getResourceAsStream() para mayor robustez en entornos empaquetados (JAR)
+        InputStream reportStream = getClass().getResourceAsStream("/reports/reporte_accesos_usuarios.jrxml");
+        if (reportStream == null) {
+            throw new FileNotFoundException("Reporte JRXML de acceso de usuarios no encontrado en classpath: /reports/user_access_report.jrxml");
+        }
 
-        // 2. Compilar el reporte JRXML.
-        JasperReport jasperReport = JasperCompileManager.compileReport(file.getAbsolutePath());
+        JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
 
-        // 3. Obtener los datos de accesos de usuarios.
         List<UserAccess> accesses = userAccessRepository.findAll();
 
-        // 4. Mapear las entidades AccesoUsuario a AccessReportDTOs.
         List<AccessReportDTO> data = new ArrayList<>();
         for (UserAccess access : accesses) {
             AccessReportDTO dto = new AccessReportDTO();
-            // Asegurarse de manejar el caso donde el usuario podria ser null (ej. login fallido de usuario inexistente)
             if (access.getUser() != null) {
                 dto.setUserName(access.getUser().getFirstName());
                 dto.setUserLastName(access.getUser().getLastName());
                 dto.setUserEmail(access.getUser().getEmail());
             } else {
-                // Valores por defecto si el usuario asociado al acceso es nulo
                 dto.setUserName("N/A");
                 dto.setUserLastName("N/A");
                 dto.setUserEmail("N/A");
@@ -105,21 +122,138 @@ public class ReportServiceImpl implements ReportService {
             data.add(dto);
         }
 
-        // Crear la fuente de datos de JasperReports a partir de la lista de DTOs.
-        // JRBeanCollectionDataSource permite a JasperReports iterar sobre una coleccion de Java Beans.
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(data);
 
-        // 5. Definir los parametros del reporte (actualmente vacios, se pueden agregar mas si es necesario).
         Map<String, Object> parameters = new HashMap<>();
-        // Ejemplo: parameters.put("reportTitle", "Reporte de Accesos de Usuarios");
 
-        // 6. Llenar el reporte: se combina la plantilla compilada, los parametros y la fuente de datos.
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
 
-        // 7. Exportar el reporte lleno a un arreglo de bytes en formato PDF.
-        // Se utiliza un ByteArrayOutputStream para escribir el PDF directamente en memoria.
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+        JRPdfExporter exporter = new JRPdfExporter();
+        exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+        exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+        exporter.exportReport();
+
         return outputStream.toByteArray();
+    }
+
+    /**
+     * Genera un reporte de clientes en formato PDF.
+     * Este método es responsable de compilar el archivo JRXML, llenar el reporte con datos
+     * y exportarlo a un arreglo de bytes en formato PDF.
+     *
+     * @return Un arreglo de bytes que representa el documento PDF generado.
+     * @throws FileNotFoundException Si el archivo de definición del reporte (JRXML) no se encuentra.
+     * @throws JRException Si ocurre un error durante la generación del reporte con JasperReports.
+     * @throws IOException Si ocurre un error de entrada/salida durante la escritura del PDF.
+     */
+    @Override
+    public byte[] generateClientReportPdf() throws FileNotFoundException, JRException, IOException {
+        // 1. Obtener los datos directamente del userRepository y mapearlos a DTOs
+        List<User> users = userRepository.findAll(); // ¡Ahora podemos usar userRepository!
+        List<ClientReportDTO> clients = users.stream().map(user -> {
+            ClientReportDTO dto = new ClientReportDTO();
+            dto.setId(user.getId());
+            dto.setFirstName(user.getFirstName());
+            dto.setLastName(user.getLastName());
+            dto.setEmail(user.getEmail());
+            dto.setDpi(user.getDpi());
+            dto.setNit(user.getNit());
+            dto.setPhoneNumber(user.getPhoneNumber());
+            dto.setEnabled(user.isEnabled());
+            return dto;
+        }).collect(Collectors.toList());
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(clients);
+
+        // 2. Cargar y compilar el archivo JRXML del reporte de clientes
+        InputStream reportStream = getClass().getResourceAsStream("/reports/clients_report.jrxml");
+        if (reportStream == null) {
+            throw new FileNotFoundException("Reporte JRXML de clientes no encontrado en classpath: /reports/client_report.jrxml");
+        }
+        JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+
+        // 3. Parámetros del reporte
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("ReportTitle", "Reporte de Clientes");
+
+        // 4. Llenar el reporte con los datos
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        // 5. Exportar el reporte a PDF
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JRPdfExporter exporter = new JRPdfExporter();
+        exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+        exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
+        exporter.exportReport();
+
+        return baos.toByteArray();
+    }
+
+    /**
+     * Genera un reporte de todos los movimientos (transacciones) en formato PDF.
+     * Similar al reporte de clientes, pero para la información de los movimientos.
+     *
+     * @return Un arreglo de bytes que representa el documento PDF generado.
+     * @throws FileNotFoundException Si el archivo de definición del reporte (JRXML) no se encuentra.
+     * @throws JRException Si ocurre un error durante la generación del reporte con JasperReports.
+     * @throws IOException Si ocurre un error de entrada/salida durante la escritura del PDF.
+     */
+    @Override
+    public byte[] generateMovementReportPdf() throws FileNotFoundException, JRException, IOException {
+        // 1. Obtener los datos directamente del movementRepository y mapearlos a DTOs
+       
+        List<Movement> rawMovements = movementRepository.findAll(); 
+        List<AdminMovementDTO> movements = rawMovements.stream().map(movement -> {
+            AdminMovementDTO dto = new AdminMovementDTO();
+            dto.setId(movement.getId());
+            dto.setDate(movement.getDate());
+            dto.setDescription(movement.getDescription());
+            dto.setType(movement.getType().name()); // Convertir el enum a String
+            dto.setAmount(movement.getAmount());
+
+            // Para obtener el número de cuenta y el nombre del usuario
+            // Asegúrate de que tus entidades Movement y Account tienen las relaciones JPA correctas
+            if (movement.getAccount() != null) {
+                Account account = movement.getAccount();
+                dto.setAccountNumber(account.getAccountNumber());
+
+                if (account.getUser() != null) {
+                    User user = account.getUser();
+                    dto.setUserName(user.getFirstName() + " " + user.getLastName());
+                } else {
+                    dto.setUserName("Usuario Desconocido");
+                }
+            } else {
+                dto.setAccountNumber("N/A");
+                dto.setUserName("Cuenta Desconocida");
+            }
+            return dto; 
+        }).collect(Collectors.toList());
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(movements);
+
+        // 2. Cargar y compilar el archivo JRXML del reporte de movimientos
+        InputStream reportStream = getClass().getResourceAsStream("/reports/transactions_report.jrxml");
+        if (reportStream == null) {
+            throw new FileNotFoundException("Reporte JRXML de movimientos no encontrado en classpath: /reports/transactions_report.jrxml");
+        }
+        JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+
+        // 3. Parámetros del reporte
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("ReportTitle", "Reporte de Movimientos Bancarios");
+
+        // 4. Llenar el reporte con los datos
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        // 5. Exportar el reporte a PDF
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JRPdfExporter exporter = new JRPdfExporter();
+        exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+        exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
+        exporter.exportReport();
+
+        return baos.toByteArray();
     }
 }

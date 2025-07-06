@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import com.hyprbank.online.bancavirtual.hyprbank.config.RolAccess;
+import com.hyprbank.online.bancavirtual.hyprbank.config.RolAccess; // Asumo que esta clase existe y es tu SuccessHandler
 
 // Importaciones para CORS
 import org.springframework.web.cors.CorsConfiguration;
@@ -93,6 +93,10 @@ public class SecurityConfiguration {
                 // Rutas protegidas por roles específicos.
                 .requestMatchers("/dashboard/admin").hasRole("ADMIN")
                 .requestMatchers("/dashboard/user").hasRole("USER")
+
+                
+                // Esto protegerá /api/reports/clients/pdf, /api/reports/movements/pdf, etc.
+                .requestMatchers("/api/reports/**").hasRole("ADMIN")
 
                 // Cualquier otra solicitud no especificada requiere autenticación.
                 .anyRequest().authenticated()
